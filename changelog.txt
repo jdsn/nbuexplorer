@@ -1,0 +1,95 @@
+History & Changelog
+===================
+Version 1.13 (current)
+
+ - no functional change, only some internal code refactoring before publication
+   of source code, because this is first version with full public access to the
+   source code via SVN repository at sourceforge
+ - readme.txt with short description, license.txt with GNU GPL license v3
+   and this changelog.txt added to official distribution
+
+Version 1.12
+
+ - fixed:    4GB nbu backup file limit removed
+ - improved: minor improvements in MMS parser
+ - improved: minor improvements in vcard parser
+ - added:    another S60 folder structure type (0x1008) parsing
+ - added:    compressed S60 folder structure type (0x1002, 0x1004 and 0x1006)
+             parsing with output only to decompressed fragments (still not
+             ordered to final file structure, but closer...)
+
+Version 1.11
+
+ - changed:  project name changed from "Nokia NbuExplorer" just to "NbuExplorer"
+ - improved: mono compatibility (conditional usage of function that prevented
+             application to run under mono on linux), tested on Ubuntu 9.10
+             after installing winforms2.0 extension (can be done with command
+             "sudo apt-get install libmono-winforms2.0-cil"). Thanks to
+             Ricardo Pereira 
+ - improved: changes in files datetime parsing - it should not throw
+             "Not a valid Win32 FileTime" exception now
+
+Version 1.10
+
+ - added:    more folder structure types parsing
+ - added:    secondary calendar structure parsing (output only to the log)
+ - added:    scan progress reporting and other parse log improvements
+ - added:    information about backup date and time
+ - added:    auto bruteforce mode option on unknown structure detection
+ - added:    analyze request on unknown structure detection 
+ - improved: GUI response during parsing/scan
+
+Version 1.9
+
+ - added:    "bruteforce scan" mode (available as filter in file open dialog)
+             this mode will not find more files and works slower, but can help
+             to recover contacts, messages, calendar and bookmarks when classic
+             parsing method fails, it could also work with damaged backup files
+             or different types of files containing phone data in form of vcards
+             (for example communication center cache files such as
+             PCCSContact.db, PCCSSMS.db etc.)
+
+Version 1.8
+
+ - added:    mms header and content parsing
+ - added:    parsing of more nbu sections (file coverage increased - for
+             example important C:\System\Data\Contacts.cdb file is now
+             recognized in backups from symbian phones)
+ - added:    contact and groups multimedia files extraction (images, ringtones)
+ - added:    drag drop of backup files onto main form is now supported
+ - improved: internal code reorganisation and minor fixes
+ - improved: all system sections output (Message2, Settings2 etc.) moved under
+             Settings folder
+ - improved: case insensitive folders processing when costructing folder tree
+ - fixed:    preview and export of files with invalid chars in filename
+
+Version 1.7
+
+ - added:    date/time parsing (files, calendar, messages)
+ - added:    sorting files by date/time
+ - added:    exporting files with parsed date/time
+ - added:    calendar subdirectories for different item types (APPOINTMENT,
+             TODO...)
+ - added:    sender/receiver contact name added to vmg (messages) filenames
+ - improved: vcard (contacts, calendar items, messages) parser
+
+Version 1.6
+
+ - added:    "Yes to all" & "No to all" option in overwrite confirm dialog
+ - fixed:    renaming of duplicate filenames (counter)
+ - fixed:    main form controls (menu) are disabled during export operation
+
+Version 1.5
+
+ - fix in skipping of section "Bookmarks2"
+ - added support for new section type (N86 Files)
+ - added file coverage counter to end of log
+ - fixed support for nfb & nfc (5100, 6610)
+ - added parsing of filenames in nfb & nfc
+
+Version 1.4
+
+ - optimized preview of large text files
+ - experimental support for older backup formats (nfb & nfc)
+
+Version 1.0 to 1.3 - no changelog
