@@ -1,6 +1,12 @@
 History & Changelog
 ===================
-Version 1.13 (current)
+
+Version 1.14 (current)
+ - added:    experimental *.arc backup format (phone side created) support,
+             only first part (proably with user data) decoded (10-30% file
+             coverage with available samples achieved)
+
+Version 1.13
 
  - no functional change, only some internal code refactoring before publication
    of source code, because this is first version with full public access to the

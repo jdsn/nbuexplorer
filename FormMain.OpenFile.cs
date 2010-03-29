@@ -417,6 +417,49 @@ namespace NbuExplorer
 					}
 				}
 				#endregion
+				#region arc
+				else if (!bruteForceScan && fileext == ".arc")
+				{
+					byte[] seq = new byte[] { 0, 0, 0, 1, 0, 0, 0, 0 };
+					byte[] buff = new byte[8];
+
+					fs.Seek(0x3C, SeekOrigin.Begin);
+					addLine("Phone model: " + StreamUtils.ReadShortString(fs));
+					addLine("");
+
+					long startAddr = fs.Position;
+
+					if (StreamUtils.SeekTo(seq, fs))
+					{
+						do
+						{
+							fs.Seek(12, SeekOrigin.Current);
+							string filename = StreamUtils.ReadStringTo(fs, 0, 0x80);
+							fs.Seek(27, SeekOrigin.Current);
+							long compLength = StreamUtils.ReadUInt64asLong(fs);
+
+							addLine(filename + " - compressed size: " + compLength);
+
+							string dir = Path.GetDirectoryName(filename);
+							filename = Path.GetFileName(filename);
+							List<FileInfo> list = findOrCreateFileInfoList(dir);
+							list.Add(new FileInfo(filename, startAddr, compLength, DateTime.MinValue, true));
+
+							StreamUtils.Counter += compLength;
+							startAddr += compLength;
+
+							fs.Seek(1, SeekOrigin.Current);
+							fs.Read(buff, 0, buff.Length);
+						}
+						while (NokiaConstants.CompareByteArr(seq, buff));
+					}
+
+					foreach (TreeNode tn in treeViewDirs.Nodes)
+					{
+						tn.Expand();
+					}
+				}
+				#endregion
 				#region bruteforce
 				else
 				{

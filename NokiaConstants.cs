@@ -62,7 +62,7 @@ namespace NbuExplorer
 			throw new ApplicationException("Unknown section type");
 		}
 
-		private static bool CompareByteArr(byte[] arr1, byte[] arr2)
+		public static bool CompareByteArr(byte[] arr1, byte[] arr2)
 		{
 			if (arr1.Length != arr2.Length) return false;
 			for (int i = 0; i < arr1.Length; i++)

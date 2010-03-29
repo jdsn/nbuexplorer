@@ -21,6 +21,7 @@
 
 *******************************************************************************/
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -81,6 +82,14 @@ namespace NbuExplorer
 			return Encoding.Unicode.GetString(buff);
 		}
 
+		public static string ReadShortString(Stream s)
+		{
+			byte[] buff = new byte[s.ReadByte()];
+			s.Read(buff, 0, buff.Length);
+			Counter += 1 + buff.Length;
+			return Encoding.ASCII.GetString(buff);
+		}
+
 		public static DateTime ReadNokiaDateTime(Stream s)
 		{
 			byte[] buff = new byte[8];
@@ -107,5 +116,45 @@ namespace NbuExplorer
 			DateTime dt = new DateTime((int)year, (int)buff[2], (int)buff[3], (int)buff[4], (int)buff[5], (int)buff[6]);
 			return dt;
 		}
+
+		public static bool SeekTo(byte[] sequence, Stream s)
+		{
+			int index = 0;
+			while (true)
+			{
+				int b = s.ReadByte();
+				if (b == -1) return false;
+				else if (b == sequence[index])
+				{
+					index++;
+					if (index == sequence.Length) return true;
+				}
+				else
+				{
+					index = 0;
+				}
+			}
+		}
+
+		public static string ReadStringTo(Stream s, params byte[] termination)
+		{
+			List<byte> termList = new List<byte>(termination);
+			StringBuilder sb = new StringBuilder();
+			while (true)
+			{
+				int b = s.ReadByte();
+				if (b == -1) throw new EndOfStreamException();
+				else if (termList.Contains((byte)b))
+				{
+					Counter += sb.Length;
+					return sb.ToString();
+				}
+				else
+				{
+					sb.Append((char)b);
+				}
+			}
+		}
+
 	}
 }
