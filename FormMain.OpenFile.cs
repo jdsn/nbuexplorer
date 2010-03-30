@@ -452,6 +452,37 @@ namespace NbuExplorer
 							fs.Read(buff, 0, buff.Length);
 						}
 						while (NokiaConstants.CompareByteArr(seq, buff));
+
+						seq[3] = 0;
+						byte[] compHead = new byte[] { 0x78, 0xDA };
+
+						List<FileInfo> compFr = findOrCreateFileInfoList("Compressed fragments");
+						UInt32 lenComp;
+						UInt32 lenUncomp;
+
+						while (true)
+						{
+							fs.Read(buff, 0, buff.Length);
+							if (NokiaConstants.CompareByteArr(seq, buff))
+							{
+								fs.Seek(4, SeekOrigin.Current);
+								do
+								{
+									lenComp = StreamUtils.ReadUInt32(fs);
+									lenUncomp = StreamUtils.ReadUInt32(fs);
+									compFr.Add(new FileInfo(numToAddr(fs.Position), fs.Position, lenComp, DateTime.MinValue, true));
+									addLine(numToAddr(fs.Position) + " - compressed fragment");
+									fs.Seek(lenComp, SeekOrigin.Current);
+									StreamUtils.Counter += lenComp;
+								}
+								while (lenUncomp == 65536);
+							}
+							else if (StreamUtils.SeekTo(compHead, fs))
+							{
+								fs.Seek(-22, SeekOrigin.Current);
+							}
+							else break;
+						}
 					}
 
 					foreach (TreeNode tn in treeViewDirs.Nodes)
