@@ -1024,11 +1024,6 @@ namespace NbuExplorer
 			for (int j = 0; j < count; j++)
 			{
 				int c3 = fs.ReadByte(); // element count
-				if (c3 > 32) // ???
-				{
-					fs.Seek(3, SeekOrigin.Current);
-					c3 = fs.ReadByte();
-				}
 
 				string s = "";
 				int x = 0;
@@ -1108,7 +1103,7 @@ namespace NbuExplorer
 					}
 				}
 
-				if (x == 0x302 || x == 0x304 || x == 0x306) // ???
+				if (x == 0x302 || x == 0x304 || x == 0x305 || x == 0x306) // ???
 				{
 					fs.Seek(4, SeekOrigin.Current);
 				}
