@@ -957,6 +957,7 @@ namespace NbuExplorer
 						case 0x4C: // address 4
 						case 0x4D: // address 5
 						case 0x4E: // address 6
+						case 0x3F: // X-SIP
 							s += StreamUtils.ReadString(fs) + ";";
 							break;
 						default:
