@@ -68,15 +68,19 @@ namespace NbuExplorer
 
 		public static string ReadString(Stream s)
 		{
-			byte[] buff = new byte[ReadUInt16(s) * 2];
-			s.Read(buff, 0, buff.Length);
-			Counter += buff.Length;
-			return Encoding.Unicode.GetString(buff);
+			int len = ReadUInt16(s);
+			return ReadString(s, len);
 		}
 
 		public static string ReadString2(Stream s)
 		{
-			byte[] buff = new byte[ReadUInt32asInt(s) * 2];
+			int len = ReadUInt32asInt(s);
+			return ReadString(s, len);
+		}
+
+		public static string ReadString(Stream s, int len)
+		{
+			byte[] buff = new byte[len * 2];
 			s.Read(buff, 0, buff.Length);
 			Counter += buff.Length;
 			return Encoding.Unicode.GetString(buff);
