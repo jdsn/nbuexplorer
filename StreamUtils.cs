@@ -140,6 +140,13 @@ namespace NbuExplorer
 			}
 		}
 
+		public static bool MatchSequence(byte[] sequence, Stream s)
+		{
+			byte[] buff = new byte[sequence.Length];
+			s.Read(buff, 0, sequence.Length);
+			return (NokiaConstants.CompareByteArr(sequence, buff));
+		}
+
 		public static string ReadStringTo(Stream s, params byte[] termination)
 		{
 			List<byte> termList = new List<byte>(termination);

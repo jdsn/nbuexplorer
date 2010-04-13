@@ -153,7 +153,7 @@ namespace NbuExplorer
 			{
 				ListViewItem li = listViewFiles.Items.Add(fi.Filename);
 				li.Tag = fi;
-				li.SubItems.Add(fi.Length.ToString("### ### ##0 Bytes"));
+				li.SubItems.Add(fi.FileSize.ToString("### ### ##0 Bytes"));
 				if (fi.FileTimeIsValid) li.SubItems.Add(fi.FileTime.ToString("dd.MM.yyyy HH:mm"));
 
 				string safename = fi.SafeFilename;
@@ -215,7 +215,7 @@ namespace NbuExplorer
 			exportSelectedFilesToolStripMenuItem.Enabled = exportSelectedFilesToolStripMenuItem1.Enabled = true;
 
 			FileInfo fi = listViewFiles.SelectedItems[0].Tag as FileInfo;
-			if (fi == null || fi.Length > 5000000)
+			if (fi == null || fi.FileSize > 5000000)
 			{
 				hidePreview();
 				return;

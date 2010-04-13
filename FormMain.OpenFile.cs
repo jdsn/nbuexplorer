@@ -108,7 +108,7 @@ namespace NbuExplorer
 												}
 
 												List<FileInfo> l2 = findOrCreateFileInfoList(homeDir + "\\" + Path.GetDirectoryName(fileNames[index]));
-												l2.Add(new FileInfo(Path.GetFileName(fileNames[index]), list[j].Start, list[j].Length));
+												l2.Add(new FileInfo(Path.GetFileName(fileNames[index]), list[j].Start, list[j].FileSize));
 												list.RemoveAt(j);
 
 												addLine(fileNames[index]);
@@ -453,10 +453,12 @@ namespace NbuExplorer
 						}
 						while (NokiaConstants.CompareByteArr(seq, buff));
 
-						seq[3] = 0;
-						byte[] compHead = new byte[] { 0x78, 0xDA };
+						addLine(""); // end of first section
 
-						List<FileInfo> compFr = findOrCreateFileInfoList("Compressed fragments");
+						seq[3] = 0;
+
+						List<FileInfo> compFr = findOrCreateFileInfoList("compressed fragments");
+
 						UInt32 lenComp;
 						UInt32 lenUncomp;
 
@@ -470,14 +472,26 @@ namespace NbuExplorer
 								{
 									lenComp = StreamUtils.ReadUInt32(fs);
 									lenUncomp = StreamUtils.ReadUInt32(fs);
-									compFr.Add(new FileInfo(numToAddr(fs.Position), fs.Position, lenComp, DateTime.MinValue, true));
-									addLine(numToAddr(fs.Position) + " - compressed fragment");
+
+									FileInfo fi = new FileInfo(numToAddr(fs.Position), fs.Position, lenComp, DateTime.MinValue, true);
+									compFr.Add(fi);
+
+									if (lenUncomp == 16)
+									{
+										addLine(fi.Filename + " - empty compressed fragment");
+									}
+									else
+									{
+										addLine(fi.Filename + " - compressed fragment");
+									}
+
+									parseCompressedFragment("", fi);
+
 									fs.Seek(lenComp, SeekOrigin.Current);
-									StreamUtils.Counter += lenComp;
 								}
 								while (lenUncomp == 65536);
 							}
-							else if (StreamUtils.SeekTo(compHead, fs))
+							else if (StreamUtils.SeekTo(NokiaConstants.compHead, fs))
 							{
 								fs.Seek(-22, SeekOrigin.Current);
 							}
@@ -602,6 +616,130 @@ namespace NbuExplorer
 				menuStripMain.Enabled = true;
 				treeViewDirs.Enabled = true;
 				this.Cursor = Cursors.Default;
+			}
+		}
+
+		private FileInfoCfMultiPart currentIncompleteMultipartFile = null;
+
+		private void parseCompressedFragment(string rootFolder, FileInfo fi)
+		{
+			long initCounter = StreamUtils.Counter;
+
+			MemoryStream ms = new MemoryStream();
+			fi.CopyToStream(this.currentFileName, ms);
+
+			if (currentIncompleteMultipartFile != null)
+			{
+				long missingLength = currentIncompleteMultipartFile.MissingLength;
+				if (missingLength > ms.Length)
+				{
+					currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.FileSize, fi.FileTime, 0, ms.Length));
+					StreamUtils.Counter += ms.Length;
+					addLine("still incomplete file, continue on next fragment...");
+				}
+				else
+				{
+					currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.FileSize, fi.FileTime, 0, missingLength));
+					StreamUtils.Counter += missingLength;
+					ms.Seek(missingLength, SeekOrigin.Current);
+					currentIncompleteMultipartFile.Finish();
+					addLine(string.Format("multipart file '{0}' complete.", currentIncompleteMultipartFile.Filename));
+					currentIncompleteMultipartFile = null;
+
+					if (ms.Length > missingLength)
+					{
+						addLine("looking for next files in rest of fragment...");
+						parseCompressedFragmentFiles(rootFolder, fi, ms);
+					}
+				}
+			}
+			else
+			{
+				ms.Seek(9, SeekOrigin.Begin);
+				if (StreamUtils.MatchSequence(NokiaConstants.cfType1Header, ms))
+				{
+					ms.Seek(0, SeekOrigin.Begin);
+					parseCompressedFragmentFiles(rootFolder, fi, ms);
+				}
+				else
+				{
+					ms.Seek(5, SeekOrigin.Begin);
+					if (StreamUtils.MatchSequence(NokiaConstants.cfType2Header, ms))
+					{
+						/*if (StreamUtils.SeekTo(NokiaConstants.cfHeader, ms))
+						{
+							int fileCnt = StreamUtils.ReadUInt32asInt(ms);
+							for (int i = 0; i < fileCnt; i++)
+							{
+								int len = ms.ReadByte();
+								if ((len & 3) > 0)
+								{
+									len = len >> 2;
+									len += ms.ReadByte() << 6;
+									len = len >> 1;
+								}
+								else
+								{
+									len = len >> 2;
+								}
+								byte[] buffName = new byte[len];
+								ms.Read(buffName, 0, len);
+								string fname = System.Text.Encoding.Default.GetString(buffName);
+								addLine(fname);
+							}
+						}*/
+
+						ms.Seek(0, SeekOrigin.Begin);
+						UInt32 headerLength = StreamUtils.ReadUInt32(ms);
+						ms.Seek(headerLength, SeekOrigin.Current);
+						parseCompressedFragmentFiles(rootFolder, fi, ms);
+					}
+					else
+					{
+						addLine("unknown fragment type");
+					}
+				}
+			}
+
+			long uncompressedCoverage = StreamUtils.Counter - initCounter;
+			double ratio = (double)uncompressedCoverage / ms.Length;
+
+			addLine(string.Format("Compressed fragment coverage {0:0.##}%", 100 * ratio));
+			addLine("");
+
+			StreamUtils.Counter = initCounter + (long)(fi.FileSize * ratio);
+		}
+
+		private void parseCompressedFragmentFiles(string rootFolder, FileInfo fi, MemoryStream ms)
+		{
+			List<FileInfo> compFr2;
+			while (ms.Position < ms.Length)
+			{
+				int fnameLen = StreamUtils.ReadUInt32asInt(ms);
+				long fsize = StreamUtils.ReadUInt32(ms);
+				ms.Seek(16, SeekOrigin.Current);
+				string fname = StreamUtils.ReadString(ms, fnameLen);
+				addLine(fname);
+
+				compFr2 = findOrCreateFileInfoList(rootFolder + "\\" + Path.GetDirectoryName(fname));
+				fname = Path.GetFileName(fname).Trim();
+				if (fname.Length > 0)
+				{
+					if (ms.Length >= ms.Position + fsize)
+					{
+						compFr2.Add(new FileInfoCfPart(fname, fi.Start, fi.FileSize, DateTime.MinValue, ms.Position, fsize));
+						StreamUtils.Counter += fsize;
+					}
+					else
+					{
+						currentIncompleteMultipartFile = new FileInfoCfMultiPart(fname, DateTime.MinValue, fsize, compFr2);
+						currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.FileSize, DateTime.MinValue, ms.Position, ms.Length - ms.Position));
+						StreamUtils.Counter += (ms.Length - ms.Position);
+						addLine("incomplete file, continue on next fragment...");
+					}
+				}
+
+				ms.Seek(fsize, SeekOrigin.Current);
 			}
 		}
 
@@ -822,10 +960,11 @@ namespace NbuExplorer
 									else filename = numToAddr(fs.Position);
 
 									addLine("fragment: " + filename);
-
-									partFiles.Add(new FileInfo(filename, fs.Position, len, DateTime.MinValue, true));
+									FileInfo fi = new FileInfo(filename, fs.Position, len, DateTime.MinValue, true);
+									parseCompressedFragment(sectName, fi);
+									partFiles.Add(fi);
 									fs.Seek(len, SeekOrigin.Current);
-									StreamUtils.Counter += len;
+									//StreamUtils.Counter += len;
 
 									if (x == 0) break;
 									else if (x == 1)

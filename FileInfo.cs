@@ -29,7 +29,7 @@ namespace NbuExplorer
 {
 	public class FileInfo
 	{
-		private string filename;
+		protected string filename;
 		public string Filename
 		{
 			get { return filename; }
@@ -54,16 +54,16 @@ namespace NbuExplorer
 			return sb.ToString();
 		}
 
-		private long start;
+		protected long start;
 		public long Start { get { return start; } }
 
-		private long length;
-		public long Length { get { return length; } }
+		protected long length;
+		public virtual long FileSize { get { return length; } }
 
-		private DateTime fileTime;
+		protected DateTime fileTime;
 		public DateTime FileTime { get { return fileTime; } }
 
-		private bool compressed;
+		protected bool compressed;
 		public bool Compressed { get { return compressed; } }
 
 		public bool FileTimeIsValid
@@ -90,7 +90,7 @@ namespace NbuExplorer
 			this.compressed = compressed;
 		}
 
-		public void CopyToStream(string sourceNbuFile, Stream fstgt)
+		public virtual void CopyToStream(string sourceNbuFile, Stream fstgt)
 		{
 			FileStream fssrc = File.OpenRead(sourceNbuFile);
 			try
@@ -98,7 +98,7 @@ namespace NbuExplorer
 				fssrc.Seek(this.Start, SeekOrigin.Begin);
 
 				byte[] buff = new byte[1024];
-				long rest = this.Length;
+				long rest = this.length;
 
 				if (compressed)
 				{
@@ -130,6 +130,91 @@ namespace NbuExplorer
 		}
 	}
 
+	public class FileInfoCfPart : FileInfo
+	{
+		protected long subPartStart = 0;
+		protected long subPartLength = 0;
+
+		public FileInfoCfPart(string filename, long startOfFragment, long compressedLengthOfFragment, DateTime fileTime, long subPartStart, long subPartLength)
+			: base(filename, startOfFragment, compressedLengthOfFragment, fileTime, true)
+		{
+			this.subPartStart = subPartStart;
+			this.subPartLength = subPartLength;
+		}
+
+		public override void CopyToStream(string sourceNbuFile, Stream fstgt)
+		{
+			MemoryStream ms = new MemoryStream();
+			base.CopyToStream(sourceNbuFile, ms);
+
+			ms.Seek(subPartStart, SeekOrigin.Begin);
+			byte[] buff = new byte[1024];
+			long rest = subPartLength;
+			int readCnt;
+			while ((readCnt = ms.Read(buff, 0, (int)Math.Min(buff.Length, rest))) > 0)
+			{
+				fstgt.Write(buff, 0, readCnt);
+			}
+
+			ms.Dispose();
+		}
+
+		public override long FileSize
+		{
+			get { return this.subPartLength; }
+		}
+	}
+
+	public class FileInfoCfMultiPart : FileInfo
+	{
+		private List<FileInfoCfPart> parts = new List<FileInfoCfPart>();
+		public List<FileInfoCfPart> Parts
+		{
+			get { return parts; }
+		}
+
+		private List<FileInfo> parentList = null;
+		public void Finish()
+		{
+			parentList.Add(this);
+		}
+
+		protected long totalLength;
+
+		public override long FileSize
+		{
+			get { return totalLength; }
+		}
+
+		public long MissingLength
+		{
+			get
+			{
+				long result = totalLength;
+				foreach (FileInfoCfPart part in parts)
+				{
+					result -= part.FileSize;
+				}
+				return result;
+			}
+		}
+
+		public FileInfoCfMultiPart(string filename, DateTime fileTime, long totalLength, List<FileInfo> parentList)
+			: base(filename, 0, 0, fileTime, true)
+		{
+			this.totalLength = totalLength;
+			this.parentList = parentList;
+		}
+
+		public override void CopyToStream(string sourceNbuFile, Stream fstgt)
+		{
+			foreach (FileInfoCfPart part in parts)
+			{
+				part.CopyToStream(sourceNbuFile, fstgt);
+			}
+		}
+	}
+
 	public enum FileInfoSortType { name, extension, size, time };
 
 	public class FileInfoComparer : System.Collections.IComparer
@@ -149,7 +234,7 @@ namespace NbuExplorer
 				switch (SortType)
 				{
 					case FileInfoSortType.size:
-						result = xfi.Length.CompareTo(yfi.Length);
+						result = xfi.FileSize.CompareTo(yfi.FileSize);
 						break;
 					case FileInfoSortType.extension:
 						result = Path.GetExtension(xfi.Filename).CompareTo(Path.GetExtension(yfi.Filename));
