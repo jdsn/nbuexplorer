@@ -154,6 +154,8 @@ namespace NbuExplorer
 			while ((readCnt = ms.Read(buff, 0, (int)Math.Min(buff.Length, rest))) > 0)
 			{
 				fstgt.Write(buff, 0, readCnt);
+				rest -= readCnt;
+				if (rest == 0) break;
 			}
 
 			ms.Dispose();
