@@ -476,15 +476,7 @@ namespace NbuExplorer
 									FileInfo fi = new FileInfo(numToAddr(fs.Position), fs.Position, lenComp, DateTime.MinValue, true);
 									compFr.Add(fi);
 
-									if (lenUncomp == 16)
-									{
-										addLine(fi.Filename + " - empty compressed fragment");
-									}
-									else
-									{
-										addLine(fi.Filename + " - compressed fragment");
-									}
-
+									addLine(fi.Filename + " - compressed fragment");
 									parseCompressedFragment("", fi);
 
 									fs.Seek(lenComp, SeekOrigin.Current);
@@ -620,6 +612,7 @@ namespace NbuExplorer
 		}
 
 		private FileInfoCfMultiPart currentIncompleteMultipartFile = null;
+		private long currentHeaderLengthToSkip = 0;
 
 		private void parseCompressedFragment(string rootFolder, FileInfo fi)
 		{
@@ -628,8 +621,37 @@ namespace NbuExplorer
 			MemoryStream ms = new MemoryStream();
 			fi.CopyToStream(this.currentFileName, ms);
 
-			if (currentIncompleteMultipartFile != null)
+			if (fi.FileSize == 11 && ms.Length == 16)
 			{
+				addLine("empty fragment\r\n");
+				return;
+			}
+
+			if (previousMs != null)
+			{
+				// continue recovery mode started by previous fragment
+				ms.Seek(0, SeekOrigin.Begin);
+				parseCompressedFragmentFiles(rootFolder, fi, ms);
+			}
+			else if (currentHeaderLengthToSkip > 0)
+			{
+				// continnue skipping useless header
+				if (currentHeaderLengthToSkip > ms.Length)
+				{
+					currentHeaderLengthToSkip -= ms.Length;
+					addLine("still incomplete header, continue on next fragment...");
+				}
+				else
+				{
+					ms.Seek(currentHeaderLengthToSkip, SeekOrigin.Begin);
+					currentHeaderLengthToSkip = 0;
+					addLine("end of header reached, looking for files in rest of fragment...");
+					parseCompressedFragmentFiles(rootFolder, fi, ms);
+				}
+			}
+			else if (currentIncompleteMultipartFile != null)
+			{
+				// continue collecting parts of multifragment file
 				long missingLength = currentIncompleteMultipartFile.MissingLength;
 				if (missingLength > ms.Length)
 				{
@@ -641,7 +663,7 @@ namespace NbuExplorer
 				{
 					currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.FileSize, fi.FileTime, 0, missingLength));
 					StreamUtils.Counter += missingLength;
-					ms.Seek(missingLength, SeekOrigin.Current);
+					ms.Seek(missingLength, SeekOrigin.Begin);
 					currentIncompleteMultipartFile.Finish();
 					addLine(string.Format("multipart file '{0}' complete.", currentIncompleteMultipartFile.Filename));
 					currentIncompleteMultipartFile = null;
@@ -655,6 +677,7 @@ namespace NbuExplorer
 			}
 			else
 			{
+				// detect fragment type
 				ms.Seek(9, SeekOrigin.Begin);
 				if (StreamUtils.MatchSequence(NokiaConstants.cfType1Header, ms))
 				{
@@ -666,33 +689,18 @@ namespace NbuExplorer
 					ms.Seek(5, SeekOrigin.Begin);
 					if (StreamUtils.MatchSequence(NokiaConstants.cfType2Header, ms))
 					{
-						/*if (StreamUtils.SeekTo(NokiaConstants.cfHeader, ms))
-						{
-							int fileCnt = StreamUtils.ReadUInt32asInt(ms);
-							for (int i = 0; i < fileCnt; i++)
-							{
-								int len = ms.ReadByte();
-								if ((len & 3) > 0)
-								{
-									len = len >> 2;
-									len += ms.ReadByte() << 6;
-									len = len >> 1;
-								}
-								else
-								{
-									len = len >> 2;
-								}
-								byte[] buffName = new byte[len];
-								ms.Read(buffName, 0, len);
-								string fname = System.Text.Encoding.Default.GetString(buffName);
-								addLine(fname);
-							}
-						}*/
-
 						ms.Seek(0, SeekOrigin.Begin);
-						UInt32 headerLength = StreamUtils.ReadUInt32(ms);
-						ms.Seek(headerLength, SeekOrigin.Current);
-						parseCompressedFragmentFiles(rootFolder, fi, ms);
+						UInt32 headerLength = StreamUtils.ReadUInt32(ms) + 4;
+						if (headerLength > ms.Length)
+						{
+							currentHeaderLengthToSkip = headerLength - ms.Length;
+							addLine("header fragment start, continue on next fragment...");
+						}
+						else
+						{
+							ms.Seek(headerLength, SeekOrigin.Begin);
+							parseCompressedFragmentFiles(rootFolder, fi, ms);
+						}
 					}
 					else
 					{
@@ -702,46 +710,103 @@ namespace NbuExplorer
 			}
 
 			long uncompressedCoverage = StreamUtils.Counter - initCounter;
-			double ratio = (double)uncompressedCoverage / ms.Length;
 
-			addLine(string.Format("Compressed fragment coverage {0:0.##}%", 100 * ratio));
+			if (uncompressedCoverage > 0)
+			{
+				double ratio = (double)uncompressedCoverage / ms.Length;
+				StreamUtils.Counter = initCounter + (long)(fi.FileSize * ratio);
+				addLine(string.Format("fragment coverage {0:0.##}%", 100 * ratio));
+			}
+
 			addLine("");
-
-			StreamUtils.Counter = initCounter + (long)(fi.FileSize * ratio);
 		}
+
+		MemoryStream previousMs = null;
 
 		private void parseCompressedFragmentFiles(string rootFolder, FileInfo fi, MemoryStream ms)
 		{
-			List<FileInfo> compFr2;
-			while (ms.Position < ms.Length)
+			try
 			{
-				int fnameLen = StreamUtils.ReadUInt32asInt(ms);
-				long fsize = StreamUtils.ReadUInt32(ms);
-				ms.Seek(16, SeekOrigin.Current);
-				string fname = StreamUtils.ReadString(ms, fnameLen);
-				addLine(fname);
+				List<FileInfo> compFr2 = null;
+				int fnameLen;
+				long fsize;
+				string fname;
 
-				compFr2 = findOrCreateFileInfoList(rootFolder + "\\" + Path.GetDirectoryName(fname));
-				fname = Path.GetFileName(fname).Trim();
-				if (fname.Length > 0)
+				while (ms.Position < ms.Length)
 				{
-					if (ms.Length >= ms.Position + fsize)
+					if (previousMs != null) // recovery mode
 					{
-						compFr2.Add(new FileInfoCfPart(fname, fi.Start, fi.FileSize, DateTime.MinValue, ms.Position, fsize));
-						StreamUtils.Counter += fsize;
+						byte[] buff = new byte[24];
+						int a = previousMs.Read(buff, 0, buff.Length);
+						if (a < buff.Length) ms.Read(buff, a, buff.Length - a);
+
+						fnameLen = BitConverter.ToInt32(buff, 0);
+						fsize = BitConverter.ToUInt32(buff, 4);
+
+						buff = new byte[fnameLen * 2];
+						a = previousMs.Read(buff, 0, buff.Length);
+						if (a < buff.Length) ms.Read(buff, a, buff.Length - a);
+
+						fname = System.Text.Encoding.Unicode.GetString(buff);
+						previousMs.Dispose();
+						previousMs = null; // leave recovery mode
+						addLine("leaving recovery mode with filename: " + fname);
 					}
 					else
 					{
-						currentIncompleteMultipartFile = new FileInfoCfMultiPart(fname, DateTime.MinValue, fsize, compFr2);
-						currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.FileSize, DateTime.MinValue, ms.Position, ms.Length - ms.Position));
-						StreamUtils.Counter += (ms.Length - ms.Position);
-						addLine("incomplete file, continue on next fragment...");
-					}
-				}
 
-				ms.Seek(fsize, SeekOrigin.Current);
+						if ((ms.Position + 24) > ms.Length) // 24 = sizeof(fnameLen + fsize) + 16
+						{
+							previousMs = ms;
+							addLine("file header behind end of fragment - entering recovery mode");
+							return;
+						}
+
+						fnameLen = StreamUtils.ReadUInt32asInt(ms);
+						fsize = StreamUtils.ReadUInt32(ms);
+						ms.Seek(16, SeekOrigin.Current);
+
+						if ((ms.Position + fnameLen) > ms.Length)
+						{
+							ms.Seek(-24, SeekOrigin.Current);
+							previousMs = ms; // enter recovery mode
+							addLine("file name behind end of fragment - entering recovery mode");
+							return;
+						}
+
+						fname = StreamUtils.ReadString(ms, fnameLen);
+					}
+
+					addLine(fname);
+
+					compFr2 = findOrCreateFileInfoList(rootFolder + "\\" + Path.GetDirectoryName(fname));
+					fname = Path.GetFileName(fname).Trim();
+					if (fname.Length > 0)
+					{
+						if (ms.Length >= ms.Position + fsize)
+						{
+							compFr2.Add(new FileInfoCfPart(fname, fi.Start, fi.FileSize, DateTime.MinValue, ms.Position, fsize));
+							StreamUtils.Counter += fsize;
+						}
+						else
+						{
+							currentIncompleteMultipartFile = new FileInfoCfMultiPart(fname, DateTime.MinValue, fsize, compFr2);
+							currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.FileSize, DateTime.MinValue, ms.Position, ms.Length - ms.Position));
+							StreamUtils.Counter += (ms.Length - ms.Position);
+							addLine("incomplete file, continue on next fragment...");
+						}
+					}
+
+					ms.Seek(fsize, SeekOrigin.Current);
+				}
 			}
+			catch (Exception exc)
+			{
+				addLine(string.Format("Parsing ERROR at position {0}: {1}", ms.Position.ToString("X"), exc.Message));
+			}
+
 		}
+
 
 		private void parseFolder(FileStream fs, long start, string sectName, Dictionary<string, string> phNumToName, ref bool analyzeRequest)
 		{
@@ -906,7 +971,7 @@ namespace NbuExplorer
 							#region compressed fragments
 							addLine(string.Format("S60 compressed folder structure (0x{0})", tst.ToString("X")));
 
-							partFiles = findOrCreateFileInfoList(sectName + "\\compressed fragments\\" + tst.ToString("X"));
+							partFiles = findOrCreateFileInfoList("compressed fragments\\" + tst.ToString("X"));
 
 							while (fs.Position < fs.Length)
 							{
@@ -964,7 +1029,6 @@ namespace NbuExplorer
 									parseCompressedFragment(sectName, fi);
 									partFiles.Add(fi);
 									fs.Seek(len, SeekOrigin.Current);
-									//StreamUtils.Counter += len;
 
 									if (x == 0) break;
 									else if (x == 1)
