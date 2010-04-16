@@ -620,17 +620,11 @@ namespace NbuExplorer
 
 			MemoryStream ms = new MemoryStream();
 			fi.CopyToStream(this.currentFileName, ms);
-
-			if (fi.FileSize == 11 && ms.Length == 16)
-			{
-				addLine("empty fragment\r\n");
-				return;
-			}
+			ms.Seek(0, SeekOrigin.Begin);
 
 			if (previousMs != null)
 			{
 				// continue recovery mode started by previous fragment
-				ms.Seek(0, SeekOrigin.Begin);
 				parseCompressedFragmentFiles(rootFolder, fi, ms);
 			}
 			else if (currentHeaderLengthToSkip > 0)
@@ -677,35 +671,52 @@ namespace NbuExplorer
 			}
 			else
 			{
-				// detect fragment type
-				ms.Seek(9, SeekOrigin.Begin);
-				if (StreamUtils.MatchSequence(NokiaConstants.cfType1Header, ms))
+				if (ms.Length <= 16)
+				{
+					addLine("empty fragment\r\n");
+					return;
+				}
+
+				// detection of fragment type
+				ms.Seek(0, SeekOrigin.Begin);
+				UInt32 test1 = StreamUtils.ReadUInt32(ms);
+				UInt32 test2 = StreamUtils.ReadUInt32(ms);
+				UInt32 test3 = StreamUtils.ReadUInt32(ms);
+				UInt32 test4 = StreamUtils.ReadUInt32(ms);
+
+				if (test3 == 0x20 || test3 == 0 || (test3 == 1 && test4 == 8))
 				{
 					ms.Seek(0, SeekOrigin.Begin);
 					parseCompressedFragmentFiles(rootFolder, fi, ms);
 				}
-				else
+				else if (test3 == 1 || test3 == 2)
 				{
-					ms.Seek(5, SeekOrigin.Begin);
-					if (StreamUtils.MatchSequence(NokiaConstants.cfType2Header, ms))
+					ms.Seek(0, SeekOrigin.Begin);
+					UInt32 headerLength = StreamUtils.ReadUInt32(ms) + 4;
+					if (headerLength > ms.Length)
 					{
-						ms.Seek(0, SeekOrigin.Begin);
-						UInt32 headerLength = StreamUtils.ReadUInt32(ms) + 4;
-						if (headerLength > ms.Length)
-						{
-							currentHeaderLengthToSkip = headerLength - ms.Length;
-							addLine("header fragment start, continue on next fragment...");
-						}
-						else
-						{
-							ms.Seek(headerLength, SeekOrigin.Begin);
-							parseCompressedFragmentFiles(rootFolder, fi, ms);
-						}
+						currentHeaderLengthToSkip = headerLength - ms.Length;
+						addLine("header fragment start, continue on next fragment...");
 					}
 					else
 					{
-						addLine("unknown fragment type");
+						ms.Seek(headerLength, SeekOrigin.Begin);
+						parseCompressedFragmentFiles(rootFolder, fi, ms);
 					}
+				}
+				else if (test1 == 1 && test2 == 1 && test4 == 0x10202be9)
+				{
+					addLine("phone settings fragment type\r\n");
+					return;
+				}
+				else if (test1 == 0 && (test2 & 0xFFF00F) == 4) // test2 == 0x0224 || 0x24 || 0x0464 || 0x0444 || 0x0434
+				{
+					addLine("ignored fragment type\r\n");
+					return;
+				}
+				else
+				{
+					addLine(string.Format("{0} - unknown fragment type\r\n", fi.Filename));
 				}
 			}
 
@@ -764,9 +775,9 @@ namespace NbuExplorer
 
 						fnameLen = StreamUtils.ReadUInt32asInt(ms);
 						fsize = StreamUtils.ReadUInt32(ms);
-						ms.Seek(16, SeekOrigin.Current);
+						ms.Seek(16, SeekOrigin.Current); // 8 bytes?? + 8bytes date and time??
 
-						if ((ms.Position + fnameLen) > ms.Length)
+						if ((ms.Position + 2 * fnameLen) > ms.Length)
 						{
 							ms.Seek(-24, SeekOrigin.Current);
 							previousMs = ms; // enter recovery mode
