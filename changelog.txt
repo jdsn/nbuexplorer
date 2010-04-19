@@ -1,7 +1,12 @@
 History & Changelog
 ===================
 
-Version 1.15 (current)
+Version 1.16 (current)
+ - added:    status bar with file and filesize counter
+ - added:    option to save parsing log into text file
+ - improved: parsing of compressed fragments
+
+Version 1.15
  - added:    experimental parsing of compressed fragments in nbu and arc backup
              formats, more files from symbian phones backups can be exported
              now
