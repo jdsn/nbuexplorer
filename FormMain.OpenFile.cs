@@ -41,6 +41,9 @@ namespace NbuExplorer
 			listViewFiles.Items.Clear();
 			listViewFiles_SelectedIndexChanged(this, EventArgs.Empty);
 
+			recountTotal();
+			statusLabelSelected.Text = "-";
+
 			this.menuStripMain.Enabled = false;
 			this.treeViewDirs.Enabled = false;
 			this.Cursor = Cursors.AppStarting;
@@ -433,6 +436,8 @@ namespace NbuExplorer
 					{
 						do
 						{
+							if (fs.Position <= 0x60) break; // contacts.arc
+
 							fs.Seek(12, SeekOrigin.Current);
 							string filename = StreamUtils.ReadStringTo(fs, 0, 0x80);
 							fs.Seek(27, SeekOrigin.Current);
@@ -598,6 +603,8 @@ namespace NbuExplorer
 
 				exportAllToolStripMenuItem.Enabled = (treeViewDirs.Nodes.Count > 0);
 				exportToolStripMenuItem.Enabled = exportSelectedFolderToolStripMenuItem.Enabled = (treeViewDirs.SelectedNode != null);
+
+				recountTotal();
 			}
 			catch (Exception exc)
 			{
@@ -607,6 +614,7 @@ namespace NbuExplorer
 			{
 				menuStripMain.Enabled = true;
 				treeViewDirs.Enabled = true;
+				saveParsingLogToolStripMenuItem.Enabled = (textBoxLog.Text.Trim().Length > 0);
 				this.Cursor = Cursors.Default;
 			}
 		}

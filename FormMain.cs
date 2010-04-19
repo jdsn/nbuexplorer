@@ -33,10 +33,15 @@ namespace NbuExplorer
 		string currentFileName = "";
 		string appTitle = "";
 		FileInfoComparer fic = new FileInfoComparer();
+		System.Globalization.NumberFormatInfo fileSizeFormat;
 
 		public FormMain()
 		{
 			InitializeComponent();
+
+			fileSizeFormat = new System.Globalization.NumberFormatInfo();
+			fileSizeFormat.NumberGroupSeparator = " ";
+			fileSizeFormat.NumberDecimalDigits = 0;
 
 			appTitle = this.Text;
 
@@ -57,6 +62,8 @@ namespace NbuExplorer
 			listViewFiles.ListViewItemSorter = fic;
 			listViewFiles_Resize(this, EventArgs.Empty);
 			listViewFiles_SelectedIndexChanged(this, EventArgs.Empty);
+
+			recountTotal();
 		}
 
 		private void addLine(string line)
@@ -144,16 +151,21 @@ namespace NbuExplorer
 
 			listViewFiles.Items.Clear();
 			listViewFiles_SelectedIndexChanged(sender, EventArgs.Empty);
-
 			listViewFiles.ListViewItemSorter = null;
+
+			if (treeViewDirs.SelectedNode != null)
+			{
+				recountSelected(treeViewDirs.SelectedNode);
+			}
 
 			List<FileInfo> lfi = treeViewDirs.SelectedNode.Tag as List<FileInfo>;
 			if (lfi == null || lfi.Count == 0) return;
+
 			foreach (FileInfo fi in lfi)
 			{
 				ListViewItem li = listViewFiles.Items.Add(fi.Filename);
 				li.Tag = fi;
-				li.SubItems.Add(fi.FileSize.ToString("### ### ##0 Bytes"));
+				li.SubItems.Add(fi.FileSize.ToString("N", fileSizeFormat) + " Bytes");
 				if (fi.FileTimeIsValid) li.SubItems.Add(fi.FileTime.ToString("dd.MM.yyyy HH:mm"));
 
 				string safename = fi.SafeFilename;
@@ -173,6 +185,7 @@ namespace NbuExplorer
 			}
 
 			listViewFiles.ListViewItemSorter = fic;
+
 		}
 
 		private void listViewFiles_DoubleClick(object sender, EventArgs e)
@@ -211,6 +224,8 @@ namespace NbuExplorer
 				exportSelectedFilesToolStripMenuItem.Enabled = exportSelectedFilesToolStripMenuItem1.Enabled = false;
 				return;
 			}
+
+			recountSelected(listViewFiles.SelectedItems);
 
 			exportSelectedFilesToolStripMenuItem.Enabled = exportSelectedFilesToolStripMenuItem1.Enabled = true;
 
@@ -668,6 +683,66 @@ namespace NbuExplorer
 			{
 				MessageBox.Show(exc.Message, exc.Source, MessageBoxButtons.OK, MessageBoxIcon.Error);
 			}
+		}
+
+		private void saveParsingLogToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			SaveFileDialog sfd = new SaveFileDialog();
+			sfd.Filter = "*.txt|*.txt";
+			sfd.FileName = Path.GetFileNameWithoutExtension(currentFileName) + "_log";
+			if (sfd.ShowDialog() == DialogResult.OK)
+			{
+				StreamWriter sw = new StreamWriter(sfd.FileName);
+				sw.WriteLine(currentFileName);
+				sw.WriteLine();
+				sw.Write(textBoxLog.Text);
+				sw.Close();
+			}
+			sfd.Dispose();
+		}
+
+		private void addCountNode(TreeNode tn, ref int fileCount, ref long totalSize)
+		{
+			foreach (FileInfo fi in (List<FileInfo>)tn.Tag)
+			{
+				fileCount++;
+				totalSize += fi.FileSize;
+			}
+
+			foreach (TreeNode chtn in tn.Nodes)
+			{
+				addCountNode(chtn, ref fileCount, ref totalSize);
+			}
+		}
+
+		private void recountTotal()
+		{
+			int fileCount = 0;
+			long totalSize = 0;
+			foreach (TreeNode tn in treeViewDirs.Nodes)
+			{
+				addCountNode(tn, ref fileCount, ref totalSize);
+			}
+			statusLabelTotal.Text = string.Format(fileSizeFormat, "Total: {0} files / {1:N} Bytes", fileCount, totalSize);
+		}
+
+		private void recountSelected(TreeNode selNode)
+		{
+			int fileCount = 0;
+			long totalSize = 0;
+			addCountNode(selNode, ref fileCount, ref totalSize);
+			statusLabelSelected.Text = string.Format(fileSizeFormat, "Selected: {0} files, {1:N} Bytes", fileCount, totalSize);
+		}
+
+		private void recountSelected(System.Windows.Forms.ListView.SelectedListViewItemCollection selFiles)
+		{
+			int fileCount = selFiles.Count;
+			long totalSize = 0;
+			foreach (ListViewItem it in selFiles)
+			{
+				totalSize += ((FileInfo)it.Tag).FileSize;
+			}
+			statusLabelSelected.Text = string.Format(fileSizeFormat, "Selected: {0} files, {1:N} Bytes", fileCount, totalSize);
 		}
 
 	}

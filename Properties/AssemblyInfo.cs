@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("NbuExplorer")]
-[assembly: AssemblyCopyright("Copyright © Petr Vilém 2009")]
+[assembly: AssemblyCopyright("Copyright © Petr Vilém 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -38,6 +38,8 @@
 			this.exportSelectedFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exportSelectedFolderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exportAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
+			this.saveParsingLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
 			this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -80,6 +82,9 @@
 			this.pictureBoxPreview = new System.Windows.Forms.PictureBox();
 			this.textBoxPreview = new System.Windows.Forms.TextBox();
 			this.tabPageLog = new System.Windows.Forms.TabPage();
+			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+			this.statusLabelTotal = new System.Windows.Forms.ToolStripStatusLabel();
+			this.statusLabelSelected = new System.Windows.Forms.ToolStripStatusLabel();
 			this.menuStripMain.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPageFileContent.SuspendLayout();
@@ -94,6 +99,7 @@
 			this.toolStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.pictureBoxPreview)).BeginInit();
 			this.tabPageLog.SuspendLayout();
+			this.statusStrip1.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// textBoxLog
@@ -105,7 +111,7 @@
 			this.textBoxLog.Name = "textBoxLog";
 			this.textBoxLog.ReadOnly = true;
 			this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-			this.textBoxLog.Size = new System.Drawing.Size(553, 344);
+			this.textBoxLog.Size = new System.Drawing.Size(553, 322);
 			this.textBoxLog.TabIndex = 1;
 			this.textBoxLog.WordWrap = false;
 			// 
@@ -128,6 +134,8 @@
             this.exportSelectedFilesToolStripMenuItem,
             this.exportSelectedFolderToolStripMenuItem,
             this.exportAllToolStripMenuItem,
+            this.toolStripMenuItem5,
+            this.saveParsingLogToolStripMenuItem,
             this.toolStripMenuItem1,
             this.exitToolStripMenuItem});
 			this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -175,6 +183,19 @@
 			this.exportAllToolStripMenuItem.Text = "&Export all";
 			this.exportAllToolStripMenuItem.Click += new System.EventHandler(this.exportAllToolStripMenuItem_Click);
 			// 
+			// toolStripMenuItem5
+			// 
+			this.toolStripMenuItem5.Name = "toolStripMenuItem5";
+			this.toolStripMenuItem5.Size = new System.Drawing.Size(226, 6);
+			// 
+			// saveParsingLogToolStripMenuItem
+			// 
+			this.saveParsingLogToolStripMenuItem.Enabled = false;
+			this.saveParsingLogToolStripMenuItem.Name = "saveParsingLogToolStripMenuItem";
+			this.saveParsingLogToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+			this.saveParsingLogToolStripMenuItem.Text = "Save parsing log";
+			this.saveParsingLogToolStripMenuItem.Click += new System.EventHandler(this.saveParsingLogToolStripMenuItem_Click);
+			// 
 			// toolStripMenuItem1
 			// 
 			this.toolStripMenuItem1.Name = "toolStripMenuItem1";
@@ -210,7 +231,7 @@
 			this.tabControl1.Location = new System.Drawing.Point(0, 24);
 			this.tabControl1.Name = "tabControl1";
 			this.tabControl1.SelectedIndex = 0;
-			this.tabControl1.Size = new System.Drawing.Size(567, 376);
+			this.tabControl1.Size = new System.Drawing.Size(567, 354);
 			this.tabControl1.TabIndex = 3;
 			// 
 			// tabPageFileContent
@@ -219,7 +240,7 @@
 			this.tabPageFileContent.Location = new System.Drawing.Point(4, 22);
 			this.tabPageFileContent.Name = "tabPageFileContent";
 			this.tabPageFileContent.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPageFileContent.Size = new System.Drawing.Size(559, 350);
+			this.tabPageFileContent.Size = new System.Drawing.Size(559, 328);
 			this.tabPageFileContent.TabIndex = 1;
 			this.tabPageFileContent.Text = "File content";
 			this.tabPageFileContent.UseVisualStyleBackColor = true;
@@ -237,7 +258,7 @@
 			// splitContainer1.Panel2
 			// 
 			this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-			this.splitContainer1.Size = new System.Drawing.Size(553, 344);
+			this.splitContainer1.Size = new System.Drawing.Size(553, 322);
 			this.splitContainer1.SplitterDistance = 183;
 			this.splitContainer1.TabIndex = 0;
 			// 
@@ -251,7 +272,7 @@
 			this.treeViewDirs.Location = new System.Drawing.Point(0, 0);
 			this.treeViewDirs.Name = "treeViewDirs";
 			this.treeViewDirs.SelectedImageIndex = 0;
-			this.treeViewDirs.Size = new System.Drawing.Size(183, 344);
+			this.treeViewDirs.Size = new System.Drawing.Size(183, 322);
 			this.treeViewDirs.TabIndex = 0;
 			this.treeViewDirs.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewDirs_AfterSelect);
 			this.treeViewDirs.MouseDown += new System.Windows.Forms.MouseEventHandler(this.treeViewDirs_MouseDown);
@@ -325,8 +346,8 @@
 			// 
 			this.splitContainer2.Panel2.Controls.Add(this.pictureBoxPreview);
 			this.splitContainer2.Panel2.Controls.Add(this.textBoxPreview);
-			this.splitContainer2.Size = new System.Drawing.Size(366, 344);
-			this.splitContainer2.SplitterDistance = 172;
+			this.splitContainer2.Size = new System.Drawing.Size(366, 322);
+			this.splitContainer2.SplitterDistance = 161;
 			this.splitContainer2.TabIndex = 1;
 			// 
 			// listViewFiles
@@ -342,7 +363,7 @@
 			this.listViewFiles.LargeImageList = this.imageListFilesLarge;
 			this.listViewFiles.Location = new System.Drawing.Point(0, 25);
 			this.listViewFiles.Name = "listViewFiles";
-			this.listViewFiles.Size = new System.Drawing.Size(366, 147);
+			this.listViewFiles.Size = new System.Drawing.Size(366, 136);
 			this.listViewFiles.SmallImageList = this.imageListFilesSmall;
 			this.listViewFiles.TabIndex = 0;
 			this.listViewFiles.UseCompatibleStateImageBehavior = false;
@@ -540,7 +561,7 @@
 			this.pictureBoxPreview.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.pictureBoxPreview.Location = new System.Drawing.Point(0, 0);
 			this.pictureBoxPreview.Name = "pictureBoxPreview";
-			this.pictureBoxPreview.Size = new System.Drawing.Size(366, 73);
+			this.pictureBoxPreview.Size = new System.Drawing.Size(366, 62);
 			this.pictureBoxPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
 			this.pictureBoxPreview.TabIndex = 0;
 			this.pictureBoxPreview.TabStop = false;
@@ -549,7 +570,7 @@
 			// 
 			this.textBoxPreview.BackColor = System.Drawing.SystemColors.Window;
 			this.textBoxPreview.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.textBoxPreview.Location = new System.Drawing.Point(0, 73);
+			this.textBoxPreview.Location = new System.Drawing.Point(0, 62);
 			this.textBoxPreview.Multiline = true;
 			this.textBoxPreview.Name = "textBoxPreview";
 			this.textBoxPreview.ReadOnly = true;
@@ -564,10 +585,33 @@
 			this.tabPageLog.Location = new System.Drawing.Point(4, 22);
 			this.tabPageLog.Name = "tabPageLog";
 			this.tabPageLog.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPageLog.Size = new System.Drawing.Size(559, 350);
+			this.tabPageLog.Size = new System.Drawing.Size(559, 328);
 			this.tabPageLog.TabIndex = 0;
 			this.tabPageLog.Text = "File parsing log";
 			this.tabPageLog.UseVisualStyleBackColor = true;
+			// 
+			// statusStrip1
+			// 
+			this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.statusLabelTotal,
+            this.statusLabelSelected});
+			this.statusStrip1.Location = new System.Drawing.Point(0, 378);
+			this.statusStrip1.Name = "statusStrip1";
+			this.statusStrip1.Size = new System.Drawing.Size(567, 22);
+			this.statusStrip1.TabIndex = 4;
+			this.statusStrip1.Text = "statusStrip1";
+			// 
+			// statusLabelTotal
+			// 
+			this.statusLabelTotal.Name = "statusLabelTotal";
+			this.statusLabelTotal.Size = new System.Drawing.Size(11, 17);
+			this.statusLabelTotal.Text = "-";
+			// 
+			// statusLabelSelected
+			// 
+			this.statusLabelSelected.Name = "statusLabelSelected";
+			this.statusLabelSelected.Size = new System.Drawing.Size(11, 17);
+			this.statusLabelSelected.Text = "-";
 			// 
 			// FormMain
 			// 
@@ -577,6 +621,7 @@
 			this.ClientSize = new System.Drawing.Size(567, 400);
 			this.Controls.Add(this.tabControl1);
 			this.Controls.Add(this.menuStripMain);
+			this.Controls.Add(this.statusStrip1);
 			this.MainMenuStrip = this.menuStripMain;
 			this.MinimumSize = new System.Drawing.Size(320, 240);
 			this.Name = "FormMain";
@@ -602,6 +647,8 @@
 			((System.ComponentModel.ISupportInitialize)(this.pictureBoxPreview)).EndInit();
 			this.tabPageLog.ResumeLayout(false);
 			this.tabPageLog.PerformLayout();
+			this.statusStrip1.ResumeLayout(false);
+			this.statusStrip1.PerformLayout();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -659,6 +706,11 @@
 		private System.Windows.Forms.ColumnHeader colTime;
 		private System.Windows.Forms.ToolStripMenuItem byTimeAscendingToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem byTimeDescendingToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
+		private System.Windows.Forms.ToolStripMenuItem saveParsingLogToolStripMenuItem;
+		private System.Windows.Forms.StatusStrip statusStrip1;
+		private System.Windows.Forms.ToolStripStatusLabel statusLabelTotal;
+		private System.Windows.Forms.ToolStripStatusLabel statusLabelSelected;
 	}
 }
 
