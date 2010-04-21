@@ -625,7 +625,32 @@ namespace NbuExplorer
 			}
 		}
 
-		private static void recursiveRenameDuplicates(TreeNodeCollection col)
+		private bool compareFileByContent(FileInfo f1, FileInfo f2)
+		{
+			if (f1.FileSize != f2.FileSize) return false;
+
+			MemoryStream ms1 = new MemoryStream();
+			f1.CopyToStream(currentFileName, ms1);
+			ms1.Seek(0, SeekOrigin.Begin);
+
+			MemoryStream ms2 = new MemoryStream();
+			f2.CopyToStream(currentFileName, ms2);
+			ms2.Seek(0, SeekOrigin.Begin);
+
+			while (ms1.Position < ms1.Length)
+			{
+				if (ms1.ReadByte() != ms2.ReadByte())
+				{
+					ms1.Dispose();
+					ms2.Dispose();
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private void recursiveRenameDuplicates(TreeNodeCollection col)
 		{
 			foreach (TreeNode tn in col)
 			{
@@ -634,28 +659,45 @@ namespace NbuExplorer
 			}
 		}
 
-		private static void renameDuplicates(TreeNode node)
+		private void renameDuplicates(TreeNode node)
 		{
 			List<FileInfo> list = node.Tag as List<FileInfo>;
 			if (list == null || list.Count < 2) return;
 			List<string> usednames = new List<string>();
-			foreach (FileInfo fi in list)
+
+			for (int i = list.Count - 1; i > -1; i--)
 			{
+				bool remove = false;
+				FileInfo fi = list[i];
 				string lowername = fi.Filename.ToLower();
 				if (usednames.Contains(lowername))
 				{
-					int counter = 0;
-					string filename = Path.GetFileNameWithoutExtension(fi.Filename);
-					string ext = Path.GetExtension(fi.Filename);
-					do
+					for (int j = list.Count - 1; j > i; j--)
 					{
-						counter++;
-						fi.Filename = string.Format("{0}[{1}]{2}", filename, counter, ext);
-						lowername = fi.Filename.ToLower();
+						FileInfo fi2 = list[j];
+						if (fi.Filename.ToLower() == fi2.Filename.ToLower() && compareFileByContent(fi, fi2))
+						{
+							remove = true;
+							addLine(string.Format("Removing duplicated file '{1}\\{0}'", fi2.Filename, node.Text));
+							list.RemoveAt(j);
+						}
 					}
-					while (usednames.Contains(lowername));
+
+					if (!remove)
+					{
+						int counter = 0;
+						string filename = Path.GetFileNameWithoutExtension(fi.Filename);
+						string ext = Path.GetExtension(fi.Filename);
+						do
+						{
+							counter++;
+							fi.Filename = string.Format("{0}[{1}]{2}", filename, counter, ext);
+							lowername = fi.Filename.ToLower();
+						}
+						while (usednames.Contains(lowername));
+					}
 				}
-				usednames.Add(lowername);
+				if (!remove) usednames.Add(lowername);
 			}
 		}
 

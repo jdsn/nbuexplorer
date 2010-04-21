@@ -32,7 +32,7 @@ namespace NbuExplorer
 		public void OpenFile(string nbufilename, bool bruteForceScan)
 		{
 			this.Text = Path.GetFileName(nbufilename) + " - " + appTitle;
-			this.currentFileName = nbufilename;
+			currentFileName = nbufilename;
 
 			textBoxLog.Clear();
 			StreamUtils.Counter = 0;
@@ -631,6 +631,7 @@ namespace NbuExplorer
 
 				fs.Close();
 
+				addLine("");
 				recursiveRenameDuplicates(treeViewDirs.Nodes);
 
 				exportAllToolStripMenuItem.Enabled = (treeViewDirs.Nodes.Count > 0);
@@ -659,7 +660,7 @@ namespace NbuExplorer
 			long initCounter = StreamUtils.Counter;
 
 			MemoryStream ms = new MemoryStream();
-			fi.CopyToStream(this.currentFileName, ms);
+			fi.CopyToStream(currentFileName, ms);
 			ms.Seek(0, SeekOrigin.Begin);
 
 			if (previousMs != null)
