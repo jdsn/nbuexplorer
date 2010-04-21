@@ -423,35 +423,71 @@ namespace NbuExplorer
 				#region arc
 				else if (!bruteForceScan && fileext == ".arc")
 				{
-					byte[] seq = new byte[] { 0, 0, 0, 1, 0, 0, 0, 0 };
-					byte[] buff = new byte[8];
+					List<FileInfo> compFr = findOrCreateFileInfoList("compressed fragments");
+
+					fs.Seek(0x1C, SeekOrigin.Begin);
+					UInt32 test1 = StreamUtils.ReadUInt32(fs);
+					fs.Seek(4, SeekOrigin.Current);
+					UInt32 test2 = StreamUtils.ReadUInt32(fs);
+					bool startsWithFiles =
+						(test1 == 0 && test2 == 0) ||                   // Backup.arc
+						(test1 == 0x1ea367a4 && test2 == 0xb00d58ae) || // UserFiles.arc
+						(test1 == 0x53fb0d19 && test2 == 0xef7ac531);   // Settings.arc
 
 					fs.Seek(0x3C, SeekOrigin.Begin);
 					addLine("Phone model: " + StreamUtils.ReadShortString(fs));
 					addLine("");
 
 					long startAddr = fs.Position;
+					long lenComp;
+					long lenUncomp;
 
-					if (StreamUtils.SeekTo(seq, fs))
+					byte[] seq = new byte[] { 0, 0, 0, 1, 0, 0, 0, 0 };
+					byte[] buff = new byte[8];
+
+					if (startsWithFiles && StreamUtils.SeekTo(seq, fs))
 					{
+						string filename = "";
+						string dir = "";
+						long recoveryAddr;
+
 						do
 						{
-							if (fs.Position <= 0x60) break; // contacts.arc
+							recoveryAddr = fs.Position;
 
 							fs.Seek(12, SeekOrigin.Current);
-							string filename = StreamUtils.ReadStringTo(fs, 0, 0x80);
-							fs.Seek(27, SeekOrigin.Current);
-							long compLength = StreamUtils.ReadUInt64asLong(fs);
+							filename = StreamUtils.ReadStringTo(fs, 0, 0x80);
+							fs.Seek(11, SeekOrigin.Current);
+							lenUncomp = StreamUtils.ReadUInt32(fs);
+							fs.Seek(12, SeekOrigin.Current);
+							lenComp = StreamUtils.ReadUInt64asLong(fs);
 
-							addLine(filename + " - compressed size: " + compLength);
+							addLine(filename + " - size: " + lenComp + " / " + lenUncomp);
+							try
+							{
+								dir = Path.GetDirectoryName(filename);
+								filename = Path.GetFileName(filename);
+							}
+							catch (Exception exc)
+							{
+								addLine(exc.Message);
 
-							string dir = Path.GetDirectoryName(filename);
-							filename = Path.GetFileName(filename);
+								fs.Seek(recoveryAddr, SeekOrigin.Begin);
+								if (StreamUtils.SeekTo(NokiaConstants.compHead, fs))
+								{
+									fs.Seek(-22, SeekOrigin.Current);
+								}
+								break;
+							}
+
 							List<FileInfo> list = findOrCreateFileInfoList(dir);
-							list.Add(new FileInfo(filename, startAddr, compLength, DateTime.MinValue, true));
+							if (filename.Length > 0 && lenComp > 8)
+							{
+								list.Add(new FileinfoCf(filename, startAddr, lenComp, lenUncomp, DateTime.MinValue));
+							}
 
-							StreamUtils.Counter += compLength;
-							startAddr += compLength;
+							StreamUtils.Counter += lenComp;
+							startAddr += lenComp;
 
 							fs.Seek(1, SeekOrigin.Current);
 							fs.Read(buff, 0, buff.Length);
@@ -459,42 +495,38 @@ namespace NbuExplorer
 						while (NokiaConstants.CompareByteArr(seq, buff));
 
 						addLine(""); // end of first section
-
-						seq[3] = 0;
-
-						List<FileInfo> compFr = findOrCreateFileInfoList("compressed fragments");
-
-						UInt32 lenComp;
-						UInt32 lenUncomp;
-
-						while (true)
-						{
-							fs.Read(buff, 0, buff.Length);
-							if (NokiaConstants.CompareByteArr(seq, buff))
-							{
-								fs.Seek(4, SeekOrigin.Current);
-								do
-								{
-									lenComp = StreamUtils.ReadUInt32(fs);
-									lenUncomp = StreamUtils.ReadUInt32(fs);
-
-									FileInfo fi = new FileInfo(numToAddr(fs.Position), fs.Position, lenComp, DateTime.MinValue, true);
-									compFr.Add(fi);
-
-									addLine(fi.Filename + " - compressed fragment");
-									parseCompressedFragment("", fi);
-
-									fs.Seek(lenComp, SeekOrigin.Current);
-								}
-								while (lenUncomp == 65536);
-							}
-							else if (StreamUtils.SeekTo(NokiaConstants.compHead, fs))
-							{
-								fs.Seek(-22, SeekOrigin.Current);
-							}
-							else break;
-						}
 					}
+
+					seq[3] = 0;
+
+					while (true)
+					{
+						fs.Read(buff, 0, buff.Length);
+						if (NokiaConstants.CompareByteArr(seq, buff))
+						{
+							fs.Seek(4, SeekOrigin.Current);
+							do
+							{
+								lenComp = StreamUtils.ReadUInt32(fs);
+								lenUncomp = StreamUtils.ReadUInt32(fs);
+
+								FileinfoCf fi = new FileinfoCf(numToAddr(fs.Position), fs.Position, lenComp, lenUncomp, DateTime.MinValue);
+								compFr.Add(fi);
+
+								addLine(fi.Filename + " - compressed fragment");
+								parseCompressedFragment("", fi);
+
+								fs.Seek(lenComp, SeekOrigin.Current);
+							}
+							while (lenUncomp == 65536);
+						}
+						else if (StreamUtils.SeekTo(NokiaConstants.compHead, fs))
+						{
+							fs.Seek(-22, SeekOrigin.Current);
+						}
+						else break;
+					}
+
 
 					foreach (TreeNode tn in treeViewDirs.Nodes)
 					{
@@ -622,7 +654,7 @@ namespace NbuExplorer
 		private FileInfoCfMultiPart currentIncompleteMultipartFile = null;
 		private long currentHeaderLengthToSkip = 0;
 
-		private void parseCompressedFragment(string rootFolder, FileInfo fi)
+		private void parseCompressedFragment(string rootFolder, FileinfoCf fi)
 		{
 			long initCounter = StreamUtils.Counter;
 
@@ -657,13 +689,13 @@ namespace NbuExplorer
 				long missingLength = currentIncompleteMultipartFile.MissingLength;
 				if (missingLength > ms.Length)
 				{
-					currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.FileSize, fi.FileTime, 0, ms.Length));
+					currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.RawSize, fi.FileTime, 0, ms.Length));
 					StreamUtils.Counter += ms.Length;
 					addLine("still incomplete file, continue on next fragment...");
 				}
 				else
 				{
-					currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.FileSize, fi.FileTime, 0, missingLength));
+					currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.RawSize, fi.FileTime, 0, missingLength));
 					StreamUtils.Counter += missingLength;
 					ms.Seek(missingLength, SeekOrigin.Begin);
 					currentIncompleteMultipartFile.Finish();
@@ -733,7 +765,7 @@ namespace NbuExplorer
 			if (uncompressedCoverage > 0)
 			{
 				double ratio = (double)uncompressedCoverage / ms.Length;
-				StreamUtils.Counter = initCounter + (long)(fi.FileSize * ratio);
+				StreamUtils.Counter = initCounter + (long)(fi.RawSize * ratio);
 				addLine(string.Format("fragment coverage {0:0.##}%", 100 * ratio));
 			}
 
@@ -804,13 +836,13 @@ namespace NbuExplorer
 					{
 						if (ms.Length >= ms.Position + fsize)
 						{
-							compFr2.Add(new FileInfoCfPart(fname, fi.Start, fi.FileSize, DateTime.MinValue, ms.Position, fsize));
+							compFr2.Add(new FileInfoCfPart(fname, fi.Start, fi.RawSize, DateTime.MinValue, ms.Position, fsize));
 							StreamUtils.Counter += fsize;
 						}
 						else
 						{
 							currentIncompleteMultipartFile = new FileInfoCfMultiPart(fname, DateTime.MinValue, fsize, compFr2);
-							currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.FileSize, DateTime.MinValue, ms.Position, ms.Length - ms.Position));
+							currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.RawSize, DateTime.MinValue, ms.Position, ms.Length - ms.Position));
 							StreamUtils.Counter += (ms.Length - ms.Position);
 							addLine("incomplete file, continue on next fragment...");
 						}
@@ -1028,29 +1060,27 @@ namespace NbuExplorer
 
 								while (true)
 								{
-									long len = StreamUtils.ReadUInt32(fs);
+									long lenComp = StreamUtils.ReadUInt32(fs);
+									long lenUncomp = StreamUtils.ReadUInt32(fs);
 
-									if (fs.Position + len > fs.Length)
+									if (fs.Position + lenComp > fs.Length)
 									{
-										addLine(numToAddr(fs.Position) + " invalid fragment length (" + len + ") out of stream");
+										addLine(numToAddr(fs.Position) + " invalid fragment length (" + lenComp + ") out of stream");
 										analyzeRequest = true;
 										break;
 									}
-
-									fs.Seek(2, SeekOrigin.Current);
-									x = StreamUtils.ReadUInt16(fs);
 
 									if (filename.Length > 0) filename = numToAddr(fs.Position) + " - " + filename;
 									else filename = numToAddr(fs.Position);
 
 									addLine("fragment: " + filename);
-									FileInfo fi = new FileInfo(filename, fs.Position, len, DateTime.MinValue, true);
+									FileinfoCf fi = new FileinfoCf(filename, fs.Position, lenComp, lenUncomp, DateTime.MinValue);
 									parseCompressedFragment(sectName, fi);
 									partFiles.Add(fi);
-									fs.Seek(len, SeekOrigin.Current);
+									fs.Seek(lenComp, SeekOrigin.Current);
 
-									if (x == 0) break;
-									else if (x == 1)
+									if (lenUncomp < 65536) break;
+									else if (lenUncomp == 65536)
 									{
 										filename = "cont";
 									}

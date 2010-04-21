@@ -59,6 +59,7 @@ namespace NbuExplorer
 
 		protected long length;
 		public virtual long FileSize { get { return length; } }
+		public long RawSize { get { return length; } }
 
 		protected DateTime fileTime;
 		public DateTime FileTime { get { return fileTime; } }
@@ -81,7 +82,7 @@ namespace NbuExplorer
 		{
 		}
 
-		public FileInfo(string filename, long start, long length, DateTime fileTime, bool compressed)
+		protected FileInfo(string filename, long start, long length, DateTime fileTime, bool compressed)
 		{
 			this.filename = filename;
 			this.start = start;
@@ -126,6 +127,25 @@ namespace NbuExplorer
 			finally
 			{
 				fssrc.Close();
+			}
+		}
+	}
+
+	public class FileinfoCf : FileInfo
+	{
+		long uncompLength = 0;
+
+		public FileinfoCf(string filename, long start, long compLength, long uncompLength, DateTime fileTime)
+			: base(filename, start, compLength, fileTime, true)
+		{
+			this.uncompLength = uncompLength;
+		}
+
+		public override long FileSize
+		{
+			get
+			{
+				return this.uncompLength;
 			}
 		}
 	}
