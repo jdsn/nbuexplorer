@@ -1,7 +1,13 @@
 History & Changelog
 ===================
 
-Version 1.16 (current)
+Version 1.17 (current)
+ - improved: working with uncompressed file sizes
+ - improved: arc format parsing adapted for partial backups (Bookmarks.arc,
+             Calendar.arc, Contacts.arc, Messages.arc, UserFiles.arc)
+ - improved: filtering of duplicated files
+
+Version 1.16
  - added:    status bar with file and filesize counter
  - added:    option to save parsing log into text file
  - improved: parsing of compressed fragments
