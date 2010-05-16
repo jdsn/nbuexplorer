@@ -33,6 +33,7 @@ namespace NbuExplorer
 
 		private static Regex rexEnc = new Regex("ENCODING=([^;]+)");
 		private static Regex rexChs = new Regex("CHARSET=([^;]+)");
+		private static Regex rexQuoteLineBreak = new Regex(@"=\r\n[\s]*");
 
 		public string[] Keys
 		{
@@ -89,7 +90,7 @@ namespace NbuExplorer
 
 		public Vcard(string data)
 		{
-			string[] lines = data.Replace("=\r\n", "").Replace("\r\n", "\n").Split('\n');
+			string[] lines = rexQuoteLineBreak.Replace(data, "").Replace("\r\n", "\n").Split('\n');
 
 			foreach (string line in lines)
 			{
