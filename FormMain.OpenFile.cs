@@ -1357,7 +1357,7 @@ namespace NbuExplorer
 					}
 				}
 
-				if (x == 0x302 || x == 0x304 || x == 0x305 || x == 0x306) // ???
+				if (x == 0x302 || x == 0x304 || x == 0x305 || x == 0x306 || (todo && x == 0x103)) // ???
 				{
 					fs.Seek(4, SeekOrigin.Current);
 				}
