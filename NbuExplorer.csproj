@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{5D09ED30-689C-4F25-9912-F90EB63517F1}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -72,6 +72,7 @@
     <Compile Include="Mms.cs" />
     <Compile Include="NokiaConstants.cs" />
     <Compile Include="Pattern.cs" />
+    <Compile Include="UnicodeExpander.cs" />
     <Compile Include="Vcard.cs" />
     <Compile Include="FileInfo.cs" />
     <Compile Include="FormMain.cs">

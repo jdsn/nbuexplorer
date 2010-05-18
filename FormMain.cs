@@ -242,6 +242,28 @@ namespace NbuExplorer
 				fi.CopyToStream(currentFileName, ms);
 				ms.Seek(0, SeekOrigin.Begin);
 
+				try
+				{
+					if (treeViewDirs.SelectedNode.Parent.Parent.Text == "Mail2")
+					{
+						textBoxPreview.Visible = true;
+						pictureBoxPreview.Visible = false;
+						if (StreamUtils.SeekTo(UnicodeExpander.msgBodyStartSeq, ms))
+						{
+							string body = UnicodeExpander.Expand(ms);
+
+							textBoxPreview.Text = body;
+							return;
+						}
+						else
+						{
+							textBoxPreview.Text = "Unknown format";
+							return;
+						}
+					}
+				}
+				catch { }
+
 				switch (Path.GetExtension(fi.SafeFilename).ToLower())
 				{
 					case ".vmg":
