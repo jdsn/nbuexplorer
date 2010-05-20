@@ -29,6 +29,8 @@ namespace NbuExplorer
 {
 	public partial class FormMain : Form
 	{
+		private bool analyzeRequest = false;
+
 		public void OpenFile(string nbufilename, bool bruteForceScan)
 		{
 			this.Text = Path.GetFileName(nbufilename) + " - " + appTitle;
@@ -47,10 +49,12 @@ namespace NbuExplorer
 			this.menuStripMain.Enabled = false;
 			this.treeViewDirs.Enabled = false;
 			this.Cursor = Cursors.AppStarting;
+			this.analyzeRequest = false;
 
+			FileStream fs = null;
 			try
 			{
-				FileStream fs = File.OpenRead(currentFileName);
+				fs = File.OpenRead(currentFileName);
 
 				string fileext = Path.GetExtension(currentFileName).ToLower();
 
@@ -139,6 +143,7 @@ namespace NbuExplorer
 					}
 					catch (Exception exc)
 					{
+						analyzeRequest = true;
 						addLine(exc.Message);
 					}
 
@@ -148,8 +153,6 @@ namespace NbuExplorer
 				#region nbu format
 				else if (!bruteForceScan && fileext == ".nbu")
 				{
-					bool analyzeRequest = false;
-
 					fs.Seek(0x14, SeekOrigin.Begin);
 					fs.Seek(StreamUtils.ReadUInt64asLong(fs), SeekOrigin.Begin);
 					fs.Seek(0x14, SeekOrigin.Current);
@@ -403,20 +406,19 @@ namespace NbuExplorer
 									partPos = fs.Position;
 									foldername = null;
 
-									parseFolder(fs, start, sect.name, phNumToName, ref analyzeRequest);
+									parseFolder(fs, start, sect.name, phNumToName);
 
 									fs.Seek(partPos, SeekOrigin.Begin);
 								}
 								break;
 							#endregion
+							case ProcessType.Sbackup:
+								analyzeRequest = true;
+								fs.Seek(8, SeekOrigin.Current); // just skip
+								break;
 						}
 
 						partcount--;
-					}
-
-					if (analyzeRequest)
-					{
-						MessageBox.Show("Unknown structure type found. Please consider providing this backup to the author of application for analyzing and improving application.", this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
 					}
 				}
 				#endregion
@@ -471,6 +473,7 @@ namespace NbuExplorer
 							catch (Exception exc)
 							{
 								addLine(exc.Message);
+								analyzeRequest = true;
 
 								fs.Seek(recoveryAddr, SeekOrigin.Begin);
 								if (StreamUtils.SeekTo(NokiaConstants.compHead, fs))
@@ -629,26 +632,32 @@ namespace NbuExplorer
 				addLine("");
 				addLine(string.Format("Done, file coverage: {0:0.##}%", 100 * (float)StreamUtils.Counter / fs.Length));
 
-				fs.Close();
-
 				addLine("");
 				recursiveRenameDuplicates(treeViewDirs.Nodes);
+			}
+			catch (Exception exc)
+			{
+				MessageBox.Show(string.Format("Following error occured during parse:\r\n{0}\r\nPlease consider providing this backup to the author of application for analyzing and improving application.", exc.Message), this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+				analyzeRequest = false;
+			}
+			finally
+			{
+				if (fs != null) fs.Close();
 
+				menuStripMain.Enabled = true;
+				treeViewDirs.Enabled = true;
+				saveParsingLogToolStripMenuItem.Enabled = (textBoxLog.Text.Trim().Length > 0);
 				exportAllToolStripMenuItem.Enabled = (treeViewDirs.Nodes.Count > 0);
 				exportToolStripMenuItem.Enabled = exportSelectedFolderToolStripMenuItem.Enabled = (treeViewDirs.SelectedNode != null);
 
 				recountTotal();
-			}
-			catch (Exception exc)
-			{
-				MessageBox.Show(exc.Message, exc.Source, MessageBoxButtons.OK, MessageBoxIcon.Error);
-			}
-			finally
-			{
-				menuStripMain.Enabled = true;
-				treeViewDirs.Enabled = true;
-				saveParsingLogToolStripMenuItem.Enabled = (textBoxLog.Text.Trim().Length > 0);
+
 				this.Cursor = Cursors.Default;
+			}
+
+			if (analyzeRequest)
+			{
+				MessageBox.Show("Unknown structure type found. Please consider providing this backup to the author of application for analyzing and improving application.", this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
 		}
 
@@ -860,7 +869,7 @@ namespace NbuExplorer
 		}
 
 
-		private void parseFolder(FileStream fs, long start, string sectName, Dictionary<string, string> phNumToName, ref bool analyzeRequest)
+		private void parseFolder(FileStream fs, long start, string sectName, Dictionary<string, string> phNumToName)
 		{
 			int count;
 			List<FileInfo> partFiles;
@@ -958,14 +967,14 @@ namespace NbuExplorer
 					switch (tst)
 					{
 						case 0x0301: // contacts
-							parseContacts(fs, ref analyzeRequest);
+							parseContacts(fs);
 							break;
 						case 0x0302: // groups
 							parseGroups(fs);
 							break;
 						case 0x0312: // calendar - events
 						case 0x0313: // calendar - todos
-							parseCalendar(fs, ref analyzeRequest);
+							parseCalendar(fs);
 							break;
 						case 0x0314: // memo
 							#region memo
@@ -1152,7 +1161,7 @@ namespace NbuExplorer
 			}
 		}
 
-		private bool parseContacts(FileStream fs, ref bool analyzeRequest)
+		private void parseContacts(FileStream fs)
 		{
 			int count = StreamUtils.ReadUInt32asInt(fs);
 			for (int j = 0; j < count; j++)
@@ -1221,7 +1230,6 @@ namespace NbuExplorer
 				}
 				addLine(s);
 			}
-			return analyzeRequest;
 		}
 
 		private void parseGroups(FileStream fs)
@@ -1269,7 +1277,7 @@ namespace NbuExplorer
 			}
 		}
 
-		private void parseCalendar(FileStream fs, ref bool analyzeRequest)
+		private void parseCalendar(FileStream fs)
 		{
 			fs.ReadByte(); // ?
 			int count = StreamUtils.ReadUInt16(fs);

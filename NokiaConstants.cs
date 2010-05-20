@@ -24,7 +24,7 @@ using System;
 
 namespace NbuExplorer
 {
-	public enum ProcessType { None, FileSystem, Vcards, Memos, GeneralFolders, Groups };
+	public enum ProcessType { None, FileSystem, Vcards, Memos, GeneralFolders, Groups, Sbackup };
 
 	public struct Section
 	{
@@ -159,7 +159,13 @@ namespace NbuExplorer
 			new Section(new byte[] {
 			0x0E, 0x3D, 0x5F, 0x65, 0xAF, 0x22, 0x78, 0x48,
 			0x93, 0x9E, 0xCD, 0x59, 0xA4, 0x5D, 0xF1, 0x29 },
-			ProcessType.FileSystem, "Files", 5)
+			ProcessType.FileSystem, "Files", 5),
+
+			new Section(new byte[] {
+			0x23, 0x91, 0x96, 0x9F, 0x60, 0x33, 0x85, 0x43,
+			0xA5, 0xDE, 0x57, 0x8E, 0x10, 0x70, 0xFA, 0x97 },
+			ProcessType.Sbackup, ptSettings, "Backup", 11)
+
 		};
 
 		public static byte[] compHead = new byte[] {

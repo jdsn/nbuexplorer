@@ -244,7 +244,7 @@ namespace NbuExplorer
 
 				try
 				{
-					if (treeViewDirs.SelectedNode.Parent.Parent.Text == "Mail2")
+					if (treeViewDirs.SelectedNode.Parent.Parent.Text.StartsWith("Mail"))
 					{
 						textBoxPreview.Visible = true;
 						pictureBoxPreview.Visible = false;
@@ -280,6 +280,8 @@ namespace NbuExplorer
 					case ".html":
 					case ".htm":
 					case ".smil":
+					case ".css":
+					case ".wbxml":
 						int b;
 						bool unicode = false;
 						while ((b = ms.ReadByte()) != -1)

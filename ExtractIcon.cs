@@ -63,53 +63,65 @@ namespace NbuExplorer
 			int p = (int)Environment.OSVersion.Platform;
 			if ((p == 4) || (p == 6) || (p == 128))
 			{
-				switch (System.IO.Path.GetExtension(strPath).ToLower())
-				{
-					case ".jpg":
-					case ".jpeg":
-					case ".gif":
-					case ".png":
-					case ".bmp":
-						return Properties.Resources.iconfile_image;
-					case ".3gp":
-					case ".avi":
-					case ".amr":
-					case ".mp3":
-					case ".mid":
-						return Properties.Resources.iconfile_multimedia;
-					case ".vcf":
-						return Properties.Resources.iconfile_contacts;
-					case ".vcs":
-						return Properties.Resources.iconfile_calendar;
-					case ".vmg":
-					case ".mms":
-						return Properties.Resources.iconfile_messages;
-					case ".bmk":
-					case ".url":
-					case ".htm":
-					case ".html":
-						return Properties.Resources.iconfile_bookmark;
-					case ".txt":
-					case ".csv":
-					case ".xml":
-						return Properties.Resources.iconfile_text;
-					default:
-						return Properties.Resources.iconfile;
-				}
+				return GetIconFromResources(strPath);
 			}
 			else
 			{
-				SHFILEINFO info = new SHFILEINFO(true);
-				int cbFileInfo = Marshal.SizeOf(info);
-				SHGFI flags;
-				if (bSmall)
-					flags = SHGFI.Icon | SHGFI.SmallIcon | SHGFI.UseFileAttributes;
-				else
-					flags = SHGFI.Icon | SHGFI.LargeIcon | SHGFI.UseFileAttributes;
-				if (bOpen) flags = flags | SHGFI.OpenIcon;
+				try
+				{
+					SHFILEINFO info = new SHFILEINFO(true);
+					int cbFileInfo = Marshal.SizeOf(info);
+					SHGFI flags;
+					if (bSmall)
+						flags = SHGFI.Icon | SHGFI.SmallIcon | SHGFI.UseFileAttributes;
+					else
+						flags = SHGFI.Icon | SHGFI.LargeIcon | SHGFI.UseFileAttributes;
+					if (bOpen) flags = flags | SHGFI.OpenIcon;
 
-				SHGetFileInfo(strPath, 256, out info, (uint)cbFileInfo, flags);
-				return Icon.FromHandle(info.hIcon);
+					SHGetFileInfo(strPath, 256, out info, (uint)cbFileInfo, flags);
+					return Icon.FromHandle(info.hIcon);
+				}
+				catch
+				{
+					return GetIconFromResources(strPath);
+				}
+			}
+		}
+
+		private static Icon GetIconFromResources(string strPath)
+		{
+			switch (System.IO.Path.GetExtension(strPath).ToLower())
+			{
+				case ".jpg":
+				case ".jpeg":
+				case ".gif":
+				case ".png":
+				case ".bmp":
+					return Properties.Resources.iconfile_image;
+				case ".3gp":
+				case ".avi":
+				case ".amr":
+				case ".mp3":
+				case ".mid":
+					return Properties.Resources.iconfile_multimedia;
+				case ".vcf":
+					return Properties.Resources.iconfile_contacts;
+				case ".vcs":
+					return Properties.Resources.iconfile_calendar;
+				case ".vmg":
+				case ".mms":
+					return Properties.Resources.iconfile_messages;
+				case ".bmk":
+				case ".url":
+				case ".htm":
+				case ".html":
+					return Properties.Resources.iconfile_bookmark;
+				case ".txt":
+				case ".csv":
+				case ".xml":
+					return Properties.Resources.iconfile_text;
+				default:
+					return Properties.Resources.iconfile;
 			}
 		}
 	}

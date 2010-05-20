@@ -1,7 +1,16 @@
 History & Changelog
 ===================
 
-Version 1.17 (current)
+Version 1.18 (current)
+ - fixed:    minor fix in binary "todo" items parsing
+ - fixed:    VCARD parser fix - line break in quoted encoding probably can
+             contain spaces
+ - improved: internal code changes
+ - improved: new (unknown so far) nbu section skipping
+ - improved: filetype icon retreiving function made more resistant
+ - added:    message text preview for items under private\1000484b\Mail2 folder
+ 
+Version 1.17
  - improved: working with uncompressed file sizes
  - improved: arc format parsing adapted for partial backups (Bookmarks.arc,
              Calendar.arc, Contacts.arc, Messages.arc, UserFiles.arc)
