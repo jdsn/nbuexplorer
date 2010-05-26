@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("NbuExplorer")]
-[assembly: AssemblyDescription("Nokia nbu, nfb, nfc and arc backup file parser, extractor and viewer")]
+[assembly: AssemblyDescription("Nokia nbu, nfb, nfc and arc backup file parser, extractor and viewer\r\nSVN rev. [$WCRANGE$$WCMODS?M:$]\r\nC. [$WCDATE=%y/%m/%d %H:%M$] B. [$WCNOW=%y/%m/%d %H:%M$]")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("NbuExplorer")]
-[assembly: AssemblyCopyright("Copyright © Petr Vilém 2010")]
+[assembly: AssemblyCopyright("Copyright © Petr Vilém $WCDATE=%Y$")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.18.*")]
+[assembly: AssemblyVersion("1.18.$WCREV$.*")]
 //[assembly: AssemblyFileVersion("1.0.0.0")]

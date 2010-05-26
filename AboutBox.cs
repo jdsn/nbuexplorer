@@ -20,6 +20,8 @@ namespace NbuExplorer
 			this.labelVersion.Text = String.Format("Version {0}", AssemblyVersion);
 			this.labelCopyright.Text = AssemblyCopyright;
 			this.textBoxDescription.Text = AssemblyDescription;
+
+			this.ActiveControl = okButton;
 		}
 
 		#region Assembly Attribute Accessors
