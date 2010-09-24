@@ -326,6 +326,11 @@ namespace NbuExplorer
 									if (string.IsNullOrEmpty(name)) name = numToName(i + 1);
 
 									partFiles.Add(new FileInfo(string.Format(filenameTemplate, name), start, vclen, time));
+
+									if (crd.Photo != null)
+									{
+										partFiles.Add(new FileInfoMemory(name + "." + crd.PhotoExtension, crd.Photo, time));
+									}
 								}
 
 								fs.Seek(partPos, SeekOrigin.Begin);
@@ -596,6 +601,10 @@ namespace NbuExplorer
 							filename = name;
 							if (filename.Length == 0) filename = numToName(files.Count + 1);
 							files.Add(new FileInfo(filename + ".vcf", Pattern.Contact.StartIndex, Pattern.Contact.Length));
+							if (contact.Photo != null)
+							{
+								files.Add(new FileInfoMemory(filename + "." + contact.PhotoExtension, contact.Photo, DateTime.MinValue));
+							}
 							StreamUtils.Counter += Pattern.Contact.Length;
 							addLine(numToProgressAndAddr(Pattern.Contact.StartIndex, fs.Length) + "\tcontact: " + filename);
 						}

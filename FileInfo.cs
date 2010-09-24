@@ -237,6 +237,26 @@ namespace NbuExplorer
 		}
 	}
 
+	public class FileInfoMemory : FileInfo
+	{
+		private byte[] content;
+		public byte[] Content
+		{
+			get { return content; }
+		}
+
+		public override void CopyToStream(string sourceNbuFile, Stream fstgt)
+		{
+			fstgt.Write(content, 0, content.Length);
+		}
+
+		public FileInfoMemory(string filename, byte[] content, DateTime fileTime)
+			: base(filename, 0, content.Length, fileTime)
+		{
+			this.content = content;
+		}
+	}
+
 	public enum FileInfoSortType { name, extension, size, time };
 
 	public class FileInfoComparer : System.Collections.IComparer

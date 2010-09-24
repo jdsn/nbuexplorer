@@ -230,6 +230,9 @@
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>Subwcrev "$(ProjectDir)\" "$(ProjectDir)Properties\AssemblyInfo_template.cs" "$(ProjectDir)Properties\AssemblyInfo.cs" -f</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

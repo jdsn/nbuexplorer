@@ -34,6 +34,19 @@ namespace NbuExplorer
 		private static Regex rexEnc = new Regex("ENCODING=([^;]+)");
 		private static Regex rexChs = new Regex("CHARSET=([^;]+)");
 		private static Regex rexQuoteLineBreak = new Regex(@"=\r\n[\s]*");
+		private static Regex rexBase64photo = new Regex(@"PHOTO((;ENCODING=BASE64)|(;TYPE=(?<type>.*?))){1,2}:(?<data>.*?(=+)|(\r\n\r\n))", RegexOptions.Singleline);
+
+		byte[] photo = null;
+		public byte[] Photo
+		{
+			get { return photo; }
+		}
+
+		string photoextension = "photo";
+		public string PhotoExtension
+		{
+			get { return photoextension; }
+		}
 
 		public string[] Keys
 		{
@@ -90,6 +103,26 @@ namespace NbuExplorer
 
 		public Vcard(string data)
 		{
+			Match photoMatch = rexBase64photo.Match(data);
+			if (photoMatch.Success)
+			{
+				Group g = photoMatch.Groups["data"];
+				try
+				{
+					photo = Convert.FromBase64String(g.Value);
+					if (photoMatch.Groups["type"].Success)
+					{
+						photoextension = photoMatch.Groups["type"].Value.ToLower();
+					}
+					else if (photo[0] == 0xff && photo[1] == 0xd8 && photo[2] == 0xff)
+					{
+						photoextension = "jpg";
+					}
+					data = data.Substring(0, photoMatch.Index) + data.Substring(photoMatch.Index + photoMatch.Length);
+				}
+				catch { }
+			}
+
 			string[] lines = rexQuoteLineBreak.Replace(data, "").Replace("\r\n", "\n").Split('\n');
 
 			foreach (string line in lines)
