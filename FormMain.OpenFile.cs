@@ -311,6 +311,7 @@ namespace NbuExplorer
 											if (phNumToName.ContainsKey(number)) continue;
 											phNumToName.Add(number, name);
 										}
+										time = crd.GetDateTime("REV");
 									}
 									else if (sect.name == NokiaConstants.ptBookmarks)
 									{
@@ -593,6 +594,7 @@ namespace NbuExplorer
 						{
 							Vcard contact = new Vcard(Pattern.Contact.GetCaptureAsString(fs));
 							string name = contact.Name;
+							DateTime time = contact.GetDateTime("REV");
 							foreach (string number in contact.PhoneNumbers)
 							{
 								if (!phNumToName.ContainsKey(number)) phNumToName.Add(number, name);
@@ -600,10 +602,10 @@ namespace NbuExplorer
 							files = findOrCreateFileInfoList(NokiaConstants.ptContacts);
 							filename = name;
 							if (filename.Length == 0) filename = numToName(files.Count + 1);
-							files.Add(new FileInfo(filename + ".vcf", Pattern.Contact.StartIndex, Pattern.Contact.Length));
+							files.Add(new FileInfo(filename + ".vcf", Pattern.Contact.StartIndex, Pattern.Contact.Length, time));
 							if (contact.Photo != null)
 							{
-								files.Add(new FileInfoMemory(filename + "." + contact.PhotoExtension, contact.Photo, DateTime.MinValue));
+								files.Add(new FileInfoMemory(filename + "." + contact.PhotoExtension, contact.Photo, time));
 							}
 							StreamUtils.Counter += Pattern.Contact.Length;
 							addLine(numToProgressAndAddr(Pattern.Contact.StartIndex, fs.Length) + "\tcontact: " + filename);

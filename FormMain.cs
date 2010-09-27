@@ -186,6 +186,7 @@ namespace NbuExplorer
 
 			listViewFiles.ListViewItemSorter = fic;
 
+			if (listViewFiles.Items.Count > 0) listViewFiles.Items[0].Selected = true;
 		}
 
 		private void listViewFiles_DoubleClick(object sender, EventArgs e)
@@ -264,11 +265,42 @@ namespace NbuExplorer
 				}
 				catch { }
 
+				System.Text.StringBuilder sb;
+				StreamReader sr;
+
 				switch (Path.GetExtension(fi.SafeFilename).ToLower())
 				{
-					case ".vmg":
 					case ".vcf":
 					case ".vcs":
+						// VCARD text preview
+						sr = new StreamReader(ms, true);
+						Vcard vcrd = new Vcard(sr.ReadToEnd());
+						sb = new System.Text.StringBuilder();
+						foreach(string key in vcrd.Keys)
+						{
+							if (key == "VERSION") continue;
+							sb.AppendFormat("{0}: {1}\r\n", key, vcrd[key]);
+						}
+						if (vcrd.PhoneNumbers.Count > 0)
+						{
+							sb.Append("TEL: ");
+							for (int i = 0; i < vcrd.PhoneNumbers.Count; i++)
+							{
+								if (i > 0) sb.Append(", ");
+								sb.Append(vcrd.PhoneNumbers[i]);
+							}
+							sb.AppendLine();
+						}
+						sr.BaseStream.Seek(0, SeekOrigin.Begin);
+						sb.AppendLine("\r\n--- Raw VCARD format ---\r\n");
+						sb.Append(sr.ReadToEnd());
+						sr.Close();
+
+						textBoxPreview.Text = sb.ToString();
+						textBoxPreview.Visible = true;
+						pictureBoxPreview.Visible = false;
+						break;
+					case ".vmg":
 					case ".url":
 					case ".txt":
 					case ".jad":
@@ -282,6 +314,7 @@ namespace NbuExplorer
 					case ".smil":
 					case ".css":
 					case ".wbxml":
+						// general text preview
 						int b;
 						bool unicode = false;
 						while ((b = ms.ReadByte()) != -1)
@@ -294,19 +327,17 @@ namespace NbuExplorer
 						}
 						ms.Seek(0, SeekOrigin.Begin);
 
-						StreamReader sr;
 						if (unicode) sr = new StreamReader(ms, System.Text.Encoding.Unicode);
 						else sr = new StreamReader(ms, true);
 
-						textBoxPreview.Clear();
-
-						System.Text.StringBuilder sb = new System.Text.StringBuilder();
+						sb = new System.Text.StringBuilder();
 						while (!sr.EndOfStream)
 						{
 							sb.AppendLine(sr.ReadLine());
 						}
-						textBoxPreview.Text = sb.ToString();
+						sr.Close();
 
+						textBoxPreview.Text = sb.ToString();
 						textBoxPreview.Visible = true;
 						pictureBoxPreview.Visible = false;
 						break;
