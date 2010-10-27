@@ -1279,12 +1279,18 @@ namespace NbuExplorer
 
 							fs.Seek(size, SeekOrigin.Current);
 							break;
+						case 0x1C: // some number - ???
+						case 0x1E: // some number - same as group number
+							if (s.Length > 0) s += ";";
+							s += StreamUtils.ReadUInt32(fs).ToString();
+							break;
 						default:
 							s += ";" + StreamUtils.ReadString(fs);
 							break;
 					}
 				}
-				addLine(s);
+				if (grName == "") addLine(string.Format("G{0} = {1}", grNum, s));
+				else addLine(s);
 			}
 		}
 
