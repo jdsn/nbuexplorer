@@ -399,22 +399,33 @@ namespace NbuExplorer
 							case ProcessType.GeneralFolders:
 								count2 = StreamUtils.ReadUInt32asInt(fs);
 								count = StreamUtils.ReadUInt32asInt(fs);
-								addLine(string.Format("{0} folders found.", count));
-								for (int i = 0; i < count; i++)
+
+								if (sect.name2 == "Messages" && count == 0)
 								{
-									fs.Seek(4, SeekOrigin.Current);
-
-									long start = StreamUtils.ReadUInt64asLong(fs);
-
-									addLine("");
-									addLine("Folder BEGIN " + numToAddr(start));
-
 									partPos = fs.Position;
-									foldername = null;
-
-									parseFolder(fs, start, sect.name, phNumToName);
-
+									fs.Seek(partStartAddr, SeekOrigin.Begin);
+									parseBinaryMessages(fs);
 									fs.Seek(partPos, SeekOrigin.Begin);
+								}
+								else
+								{
+									addLine(string.Format("{0} folders found.", count));
+									for (int i = 0; i < count; i++)
+									{
+										fs.Seek(4, SeekOrigin.Current);
+
+										long start = StreamUtils.ReadUInt64asLong(fs);
+
+										addLine("");
+										addLine("Folder BEGIN " + numToAddr(start));
+
+										partPos = fs.Position;
+										foldername = null;
+
+										parseFolder(fs, start, sect.name, phNumToName);
+
+										fs.Seek(partPos, SeekOrigin.Begin);
+									}
 								}
 								break;
 							#endregion
@@ -674,6 +685,7 @@ namespace NbuExplorer
 
 		private FileInfoCfMultiPart currentIncompleteMultipartFile = null;
 		private long currentHeaderLengthToSkip = 0;
+		private MemoryStream previousMs = null;
 
 		private void parseCompressedFragment(string rootFolder, FileinfoCf fi)
 		{
@@ -793,8 +805,6 @@ namespace NbuExplorer
 			addLine("");
 		}
 
-		MemoryStream previousMs = null;
-
 		private void parseCompressedFragmentFiles(string rootFolder, FileInfo fi, MemoryStream ms)
 		{
 			try
@@ -878,7 +888,6 @@ namespace NbuExplorer
 			}
 
 		}
-
 
 		private void parseFolder(FileStream fs, long start, string sectName, Dictionary<string, string> phNumToName)
 		{
@@ -1391,6 +1400,175 @@ namespace NbuExplorer
 			}
 		}
 
+		private void parseBinaryMessages(FileStream fs)
+		{
+			long smsBegin = 0;
+			try
+			{
+				fs.Seek(45, SeekOrigin.Current);
+				if (fs.ReadByte() > 0)
+				{
+					fs.ReadByte();
+					StreamUtils.ReadString(fs); // name of custom folder?
+				}
+				fs.ReadByte();
+
+				addLine("binary encoded messages...");
+
+				while (true)
+				{
+					int boxnumber = fs.ReadByte();
+					if (boxnumber == 119)
+					{
+						addLine("\r\nend of binary encoded messages");
+						break;
+					}
+
+					string boxname;
+					switch (boxnumber)
+					{
+						case 2: boxname = "Inbox"; break;
+						case 3: boxname = "Sent"; break;
+						case 4: boxname = "Archive"; break;
+						case 5: boxname = "Templates"; break;
+						default: boxname = string.Format("box{0}", boxnumber); break;
+					}
+
+					int countSms = StreamUtils.ReadUInt16(fs);
+					if (countSms > 0)
+					{
+						List<FileInfo> partFilesTxt = findOrCreateFileInfoList("Messages/" + boxname);
+						List<FileInfo> partFilesBin = findOrCreateFileInfoList("Settings/Messages/" + boxname);
+
+						addLine(string.Format("\r\n{0}, {1} messages found:", boxname, countSms));
+						for (int i = 1; i <= countSms; i++)
+						{
+							smsBegin = fs.Position;
+
+							DateTime dt = DateTime.MinValue;
+							string num = "";
+
+							fs.Seek(6, SeekOrigin.Current);
+							bool ucs2 = (fs.ReadByte() == 8);
+							fs.ReadByte();
+							//addLine(buffToString(StreamUtils.ReadBuff(fs, 8)));
+							//fs.Seek(8, SeekOrigin.Current);
+
+							int test = fs.ReadByte();
+
+							if (test == 7) // time is present
+							{
+								dt = StreamUtilsPdu.ReadDateTime(fs);
+								fs.ReadByte();
+								test = fs.ReadByte();
+								if (test == 7)
+								{
+									// delivery message???
+									fs.Seek(13, SeekOrigin.Current);
+									num = StreamUtilsPdu.ReadPhoneNumber(fs);
+									fs.Seek(5, SeekOrigin.Current);
+									StreamUtilsPdu.ReadPhoneNumber(fs); // SMSC?
+									fs.Seek(12, SeekOrigin.Current);
+									addLine(string.Format("{0:000} [{1}] {2}; Delivery message for number {3}", i, numToAddr(smsBegin), dt, num));
+									partFilesBin.Add(new FileInfo(string.Format("{0:0000} {1}.sms", i, num), smsBegin, fs.Position - smsBegin, dt));
+									continue;
+								}
+								else
+								{
+									//addLine(buffToString(StreamUtils.ReadBuff(fs, 6)));
+									fs.Seek(6, SeekOrigin.Current);
+									num = StreamUtilsPdu.ReadPhoneNumber(fs);
+									//addLine(buffToString(StreamUtils.ReadBuff(fs, 5)));
+									fs.Seek(5, SeekOrigin.Current);
+									StreamUtilsPdu.ReadPhoneNumber(fs); // SMSC?
+								}
+							}
+							else
+							{
+								if (fs.ReadByte() != 0) throw new Exception("00 expected here");
+								test = fs.ReadByte();
+								if (test == 0)
+								{
+									//addLine(buffToString(StreamUtils.ReadBuff(fs, 8)));
+									fs.Seek(8, SeekOrigin.Current);
+								}
+								else if (test == 1)
+								{
+									//addLine(buffToString(StreamUtils.ReadBuff(fs, 15)));
+									fs.Seek(15, SeekOrigin.Current);
+									test = fs.ReadByte();
+									if (test == 2)
+									{
+										//addLine(buffToString(StreamUtils.ReadBuff(fs, 7)));
+										fs.Seek(7, SeekOrigin.Current);
+									}
+									else if (test == 1)
+									{
+										//addLine(buffToString(StreamUtils.ReadBuff(fs, 4)));
+										fs.Seek(4, SeekOrigin.Current);
+										num = StreamUtilsPdu.ReadPhoneNumber(fs);
+										fs.Seek(5, SeekOrigin.Current);
+										StreamUtilsPdu.ReadPhoneNumber(fs); // SMSC?
+									}
+									else throw new Exception("01 or 02 expected here");
+								}
+							}
+
+							//addLine(buffToString(StreamUtils.ReadBuff(fs, 6)));
+							fs.Seek(6, SeekOrigin.Current);
+
+							int len1 = StreamUtils.ReadUInt16(fs);
+							int len2 = StreamUtils.ReadUInt16(fs);
+
+							//addLine(StreamUtils.ReadUInt16(fs).ToString());
+							fs.Seek(2, SeekOrigin.Current);
+
+							byte[] buff = new byte[len2];
+							fs.Read(buff, 0, len2);
+							StreamUtils.Counter += len2;
+
+							string msg;
+							if (buff[0] == 5 && buff[1] == 0 && buff[2] == 3) // multipart sms
+							{
+								if (ucs2)
+								{
+									msg = string.Format("[{0}/{1}]:{2}", buff[5], buff[4], System.Text.Encoding.BigEndianUnicode.GetString(buff, 6, buff.Length - 6));
+								}
+								else
+								{
+									msg = string.Format("[{0}/{1}]:{2}", buff[5], buff[4], StreamUtilsPdu.Decode7bit(buff, len1).Substring(7));
+								}
+							}
+							else
+							{
+								if (ucs2)
+								{
+									msg = System.Text.Encoding.BigEndianUnicode.GetString(buff);
+								}
+								else
+								{
+									msg = StreamUtilsPdu.Decode7bit(buff, len1);
+								}
+							}
+
+							string dateAsString = (dt > DateTime.MinValue) ? dt.ToString() : "";
+							addLine(string.Format("{0:000} [{1}] {2}; {3}; {4}", i, numToAddr(smsBegin), dateAsString, num, msg));
+
+							string filename = string.Format("{0:0000} {1}", i, num).TrimEnd();
+							partFilesBin.Add(new FileInfo(filename + ".sms", smsBegin, fs.Position - smsBegin, dt));
+							byte[] data = System.Text.Encoding.Unicode.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", num, dateAsString, msg));
+							partFilesTxt.Add(new FileInfoMemory(filename + ".txt", data, dt));
+						}
+					}
+				}
+			}
+			catch (Exception exc)
+			{
+				analyzeRequest = true;
+				addLine(string.Format("Error in message starting at [{0}]: {1}", numToAddr(smsBegin), exc.Message));
+			}
+		}
+
 		#region Format functions
 		static string numToName(int i)
 		{
@@ -1419,7 +1597,7 @@ namespace NbuExplorer
 			}
 		}
 
-		/*static string buffToString(byte[] buff)
+		static string buffToString(byte[] buff)
 		{
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
 			for (int i = 0; i < buff.Length; i++)
@@ -1428,7 +1606,7 @@ namespace NbuExplorer
 				sb.Append(buff[i].ToString("X").PadLeft(2, '0'));
 			}
 			return sb.ToString();
-		}*/
+		}
 
 		private static DateTime getMsgTime(Vcard crd)
 		{
