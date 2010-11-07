@@ -1,7 +1,15 @@
 History & Changelog
 ===================
 
-Version 1.18 (current)
+Version 1.19 (current)
+ - added:    parsing of binary SMS from newly discovered section of NBU format!
+ - added:    parsing of base64 encoded photos from vcard contacts
+ - added:    parsing date and time from contact vcard if present (REV)
+ - improved: first file autoselect after folder selection
+ - improved: vcf and vcs text preview (QUOTED-PRINTABLE text decoding)
+ - fixed:    parsing of groups from 6230
+
+Version 1.18
  - fixed:    minor fix in binary "todo" items parsing
  - fixed:    VCARD parser fix - line break in quoted encoding probably can
              contain spaces
