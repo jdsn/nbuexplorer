@@ -703,7 +703,16 @@ namespace NbuExplorer
 			long initCounter = StreamUtils.Counter;
 
 			MemoryStream ms = new MemoryStream();
-			fi.CopyToStream(currentFileName, ms);
+			try
+			{
+				fi.CopyToStream(currentFileName, ms);
+			}
+			catch (Exception exc)
+			{
+				addLine("ERROR decompressing fragment: " + exc.Message);
+				return;
+			}
+
 			ms.Seek(0, SeekOrigin.Begin);
 
 			if (previousMs != null)
