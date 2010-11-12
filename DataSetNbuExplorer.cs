@@ -6,8 +6,13 @@ namespace NbuExplorer
 
 	public partial class DataSetNbuExplorer
 	{
+		static DataSetNbuExplorer()
+		{
+			_defaultInstance = new DataSetNbuExplorer();
+			_defaultInstance.Message.DefaultView.Sort = "time desc";
+		}
 
-		private static DataSetNbuExplorer _defaultInstance = new DataSetNbuExplorer();
+		private static DataSetNbuExplorer _defaultInstance;
 		public static DataSetNbuExplorer DefaultInstance
 		{
 			get { return _defaultInstance; }
