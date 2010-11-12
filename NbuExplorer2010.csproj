@@ -57,8 +57,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AboutBox.cs">
@@ -66,6 +68,15 @@
     </Compile>
     <Compile Include="AboutBox.Designer.cs">
       <DependentUpon>AboutBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataSetNbuExplorer.cs">
+      <DependentUpon>DataSetNbuExplorer.xsd</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataSetNbuExplorer.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DataSetNbuExplorer.xsd</DependentUpon>
     </Compile>
     <Compile Include="ExtractIcon.cs" />
     <Compile Include="QutedTextDecoder.cs">
@@ -177,6 +188,17 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="DataSetNbuExplorer.xsc">
+      <DependentUpon>DataSetNbuExplorer.xsd</DependentUpon>
+    </None>
+    <None Include="DataSetNbuExplorer.xsd">
+      <SubType>Designer</SubType>
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>DataSetNbuExplorer.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="DataSetNbuExplorer.xss">
+      <DependentUpon>DataSetNbuExplorer.xsd</DependentUpon>
+    </None>
     <None Include="Resources\1254336082_view_detailed.ico" />
   </ItemGroup>
   <ItemGroup>

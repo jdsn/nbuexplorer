@@ -30,11 +30,16 @@ namespace NbuExplorer
 	{
 		Dictionary<string, string> attrs = new Dictionary<string, string>();
 		List<string> phoneNumbers = new List<string>();
+		string rawData = "";
+		int msgBodyStart = 0;
+		int msgBodyLength = 0;
+		bool msgFound = false;
 
 		private static Regex rexEnc = new Regex("ENCODING=([^;]+)");
 		private static Regex rexChs = new Regex("CHARSET=([^;]+)");
 		private static Regex rexQuoteLineBreak = new Regex(@"=\r\n[\s]*");
 		private static Regex rexBase64photo = new Regex(@"PHOTO((;ENCODING=BASE64)|(;TYPE=(?<type>.*?))){1,2}:(?<data>.*?((\r\n\r\n)|(=\r\n)))", RegexOptions.Singleline);
+		private static Regex rexMsgBody = new Regex(@"BEGIN:VBODY\r?\nDate:([0-9.: ]+)\r?\n(.*?)\r?\nEND:VBODY\r?\n", RegexOptions.Singleline);
 
 		byte[] photo = null;
 		public byte[] Photo
@@ -46,6 +51,49 @@ namespace NbuExplorer
 		public string PhotoExtension
 		{
 			get { return photoextension; }
+		}
+
+		public string MessageBody
+		{
+			get { return rawData.Substring(msgBodyStart, msgBodyLength); }
+		}
+
+		public DateTime MessageTime
+		{
+			get
+			{
+				DateTime time = GetDateTime("X-NOK-DT");
+				if (time == DateTime.MinValue)
+				{
+					try { time = DateTime.Parse(this["Date"]); }
+					catch { }
+				}
+				return time;
+			}
+		}
+
+		public bool MessageFound
+		{
+			get { return msgFound; }
+		}
+
+		public string MessageBox
+		{
+			get
+			{
+				if (this["X-IRMC-STATUS"].ToUpper() == "DRAFT") return "U";
+				else switch (this["X-MESSAGE-TYPE"].ToUpper())
+					{
+						case "DELIVER": return "I";
+						case "SUBMIT": return "O";
+						default: switch (this["X-IRMC-BOX"].ToUpper())
+							{
+								case "INBOX": return "I";
+								case "SENT": return "O";
+								default: return "U";
+							}
+					}
+			}
 		}
 
 		public string[] Keys
@@ -101,8 +149,22 @@ namespace NbuExplorer
 			}
 		}
 
+		public string RawData
+		{
+			get { return rawData; }
+		}
+
 		public Vcard(string data)
 		{
+			rawData = data;
+			Match msgBodyMatch = rexMsgBody.Match(data);
+			if (msgBodyMatch.Success)
+			{
+				msgFound = true;
+				msgBodyStart = msgBodyMatch.Groups[2].Index;
+				msgBodyLength = msgBodyMatch.Groups[2].Length;
+			}
+
 			Match photoMatch = rexBase64photo.Match(data);
 			if (photoMatch.Success)
 			{

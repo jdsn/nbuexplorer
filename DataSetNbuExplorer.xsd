@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="DataSetNbuExplorer" targetNamespace="http://tempuri.org/DataSetNbuExplorer.xsd" xmlns:mstns="http://tempuri.org/DataSetNbuExplorer.xsd" xmlns="http://tempuri.org/DataSetNbuExplorer.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections />
+        <Tables />
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="DataSetNbuExplorer" msdata:IsDataSet="true" msdata:Locale="" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="DataSetNbuExplorer" msprop:Generator_UserDSName="DataSetNbuExplorer">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="Message" msdata:Locale="" msprop:Generator_TableClassName="MessageDataTable" msprop:Generator_TableVarName="tableMessage" msprop:Generator_TablePropName="Message" msprop:Generator_RowDeletingName="MessageRowDeleting" msprop:Generator_UserTableName="Message" msprop:Generator_RowChangingName="MessageRowChanging" msprop:Generator_RowEvHandlerName="MessageRowChangeEventHandler" msprop:Generator_RowDeletedName="MessageRowDeleted" msprop:Generator_RowEvArgName="MessageRowChangeEvent" msprop:Generator_RowChangedName="MessageRowChanged" msprop:Generator_RowClassName="MessageRow">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="box" msprop:Generator_ColumnVarNameInTable="columnbox" msprop:Generator_ColumnPropNameInRow="box" msprop:Generator_ColumnPropNameInTable="boxColumn" msprop:Generator_UserColumnName="box" type="xs:string" />
+              <xs:element name="time" msprop:Generator_ColumnVarNameInTable="columntime" msprop:Generator_ColumnPropNameInRow="time" msprop:Generator_ColumnPropNameInTable="timeColumn" msprop:Generator_UserColumnName="time" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="number" msprop:nullValue="_empty" msprop:Generator_ColumnPropNameInRow="number" msprop:Generator_ColumnVarNameInTable="columnnumber" msprop:Generator_ColumnPropNameInTable="numberColumn" msprop:Generator_UserColumnName="number" type="xs:string" minOccurs="0" />
+              <xs:element name="name" msprop:nullValue="_empty" msprop:Generator_ColumnPropNameInRow="name" msprop:Generator_ColumnVarNameInTable="columnname" msprop:Generator_ColumnPropNameInTable="nameColumn" msprop:Generator_UserColumnName="name" type="xs:string" minOccurs="0" />
+              <xs:element name="messagetext" msprop:nullValue="_empty" msprop:Generator_ColumnPropNameInRow="messagetext" msprop:Generator_ColumnVarNameInTable="columnmessagetext" msprop:Generator_ColumnPropNameInTable="messagetextColumn" msprop:Generator_UserColumnName="messagetext" type="xs:string" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="PhoneBook" msdata:Locale="" msprop:Generator_TableClassName="PhoneBookDataTable" msprop:Generator_TableVarName="tablePhoneBook" msprop:Generator_TablePropName="PhoneBook" msprop:Generator_RowDeletingName="PhoneBookRowDeleting" msprop:Generator_UserTableName="PhoneBook" msprop:Generator_RowChangingName="PhoneBookRowChanging" msprop:Generator_RowEvHandlerName="PhoneBookRowChangeEventHandler" msprop:Generator_RowDeletedName="PhoneBookRowDeleted" msprop:Generator_RowEvArgName="PhoneBookRowChangeEvent" msprop:Generator_RowChangedName="PhoneBookRowChanged" msprop:Generator_RowClassName="PhoneBookRow">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="number" msprop:Generator_ColumnVarNameInTable="columnnumber" msprop:Generator_ColumnPropNameInRow="number" msprop:Generator_ColumnPropNameInTable="numberColumn" msprop:Generator_UserColumnName="number" type="xs:string" />
+              <xs:element name="name" msprop:Generator_ColumnVarNameInTable="columnname" msprop:Generator_ColumnPropNameInRow="name" msprop:Generator_ColumnPropNameInTable="nameColumn" msprop:Generator_UserColumnName="name" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+    <xs:unique name="Constraint1" msdata:PrimaryKey="true">
+      <xs:selector xpath=".//mstns:PhoneBook" />
+      <xs:field xpath="mstns:number" />
+    </xs:unique>
+  </xs:element>
+</xs:schema>

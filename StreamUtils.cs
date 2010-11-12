@@ -197,8 +197,33 @@ namespace NbuExplorer
 			120,121,122,0x00E4,0x00F6,0x00F1,0x00FC,0x00E0  // xyzäö ü
 		};
 
+		private static byte[] Convert8to7(byte[] raw, int len)
+		{
+			List<byte> result = new List<byte>();
+			byte c;
+			byte c2 = 0;
+			for (int i = 0; i < raw.Length; i++)
+			{
+				int shift = i % 7;
+				c = (byte)(c2 + ((raw[i] & (0x7F >> shift)) << shift));
+				result.Add(c);
+
+				if (result.Count >= len) break;
+
+				shift = 7 - shift;
+				c2 = (byte)((raw[i] & (0x7F << shift)) >> shift);
+				if (shift == 1)
+				{
+					result.Add(c2);
+					c2 = 0;
+				}
+			}
+			return result.ToArray();
+		}
+
 		public static string Decode7bit(byte[] source, int length)
 		{
+			/* - old version using strings
 			Array.Reverse(source);
 			StringBuilder sb = new StringBuilder();
 
@@ -211,6 +236,14 @@ namespace NbuExplorer
 			for (int i = 1; i <= length; i++)
 			{
 				UInt16 c = GSM2Unicode[Convert.ToByte(binary.Substring(binary.Length - i * 7, 7), 2)];
+			*/
+
+			byte[] data = Convert8to7(source, length);
+			StringBuilder sb = new StringBuilder();
+			bool esc = false;
+			for (int i = 0; i < data.Length; i++)
+			{
+				UInt16 c = GSM2Unicode[data[i]];
 				if (c == 27)
 				{
 					esc = true;
@@ -272,8 +305,8 @@ namespace NbuExplorer
 					sb.Append("+");
 					goto case 0x81;
 				case 0xA1:
-					//sb.Append("*");
-					//goto case 0x81;
+				//sb.Append("*");
+				//goto case 0x81;
 				case 0x81:
 					int b;
 					while (len > 0)

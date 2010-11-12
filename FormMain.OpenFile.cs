@@ -39,6 +39,11 @@ namespace NbuExplorer
 			textBoxLog.Clear();
 			StreamUtils.Counter = 0;
 
+			DataSetNbuExplorer.DefaultInstance.Clear();
+			treeViewMsgFilter.Nodes[0].Nodes.Clear();
+			treeViewMsgFilter.Nodes[1].Nodes.Clear();
+			treeViewMsgFilter.Nodes[2].Nodes.Clear();
+
 			treeViewDirs.Nodes.Clear();
 			listViewFiles.Items.Clear();
 			listViewFiles_SelectedIndexChanged(this, EventArgs.Empty);
@@ -171,7 +176,6 @@ namespace NbuExplorer
 					int count;
 
 					List<FileInfo> contactList = null;
-					Dictionary<string, string> phNumToName = new Dictionary<string, string>();
 
 					while (partcount > 0)
 					{
@@ -308,8 +312,7 @@ namespace NbuExplorer
 										name = crd.Name;
 										foreach (string number in crd.PhoneNumbers)
 										{
-											if (phNumToName.ContainsKey(number)) continue;
-											phNumToName.Add(number, name);
+											DataSetNbuExplorer.AddPhonebookEntry(number, name);
 										}
 										time = crd.GetDateTime("REV");
 									}
@@ -422,7 +425,7 @@ namespace NbuExplorer
 										partPos = fs.Position;
 										foldername = null;
 
-										parseFolder(fs, start, sect.name, phNumToName);
+										parseFolder(fs, start, sect.name);
 
 										fs.Seek(partPos, SeekOrigin.Begin);
 									}
@@ -563,7 +566,6 @@ namespace NbuExplorer
 					List<FileInfo> files;
 					string filename;
 					int current;
-					Dictionary<string, string> phNumToName = new Dictionary<string, string>();
 
 					int pr = 0;
 					int pr2 = 0;
@@ -591,12 +593,14 @@ namespace NbuExplorer
 							try
 							{
 								filename = msg.PhoneNumbers[0];
-								filename = phNumToName[msg.PhoneNumbers[0]];
+								filename = DataSetNbuExplorer.FindPhoneBookEntry(filename).name;
 							}
 							catch { }
-							files.Add(new FileInfo(filename + ".vmg", Pattern.Msg.StartIndex, Pattern.Msg.Length, getMsgTime(msg)));
+							files.Add(new FileInfo(filename + ".vmg", Pattern.Msg.StartIndex, Pattern.Msg.Length, msg.MessageTime));
 							StreamUtils.Counter += Pattern.Msg.Length;
 							addLine(numToProgressAndAddr(Pattern.Msg.StartIndex, fs.Length) + "\tmessage: " + filename);
+
+							DataSetNbuExplorer.AddMessageFromVmg(msg);
 						}
 
 						if (Pattern.Msg.Active) continue;
@@ -608,7 +612,7 @@ namespace NbuExplorer
 							DateTime time = contact.GetDateTime("REV");
 							foreach (string number in contact.PhoneNumbers)
 							{
-								if (!phNumToName.ContainsKey(number)) phNumToName.Add(number, name);
+								DataSetNbuExplorer.AddPhonebookEntry(number, name);
 							}
 							files = findOrCreateFileInfoList(NokiaConstants.ptContacts);
 							filename = name;
@@ -656,6 +660,13 @@ namespace NbuExplorer
 
 				addLine("");
 				recursiveRenameDuplicates(treeViewDirs.Nodes);
+
+				#region Prepare message filtering by numbers
+				buildFilterSubNodes(treeViewMsgFilter.Nodes[0], "I");
+				buildFilterSubNodes(treeViewMsgFilter.Nodes[1], "O");
+				buildFilterSubNodes(treeViewMsgFilter.Nodes[2], "U");
+				#endregion
+
 			}
 			catch (Exception exc)
 			{
@@ -889,7 +900,7 @@ namespace NbuExplorer
 
 		}
 
-		private void parseFolder(FileStream fs, long start, string sectName, Dictionary<string, string> phNumToName)
+		private void parseFolder(FileStream fs, long start, string sectName)
 		{
 			int count;
 			List<FileInfo> partFiles;
@@ -963,16 +974,19 @@ namespace NbuExplorer
 							fs.Read(buff, 0, buff.Length);
 
 							Vcard crd = new Vcard(System.Text.Encoding.Unicode.GetString(buff));
-							DateTime time = getMsgTime(crd);
+							DateTime time = crd.MessageTime;
 
 							string name = numToName(j + 1);
 							if (crd.PhoneNumbers.Count > 0)
 							{
 								string num = crd.PhoneNumbers[0];
-								name = name + " " + ((phNumToName.ContainsKey(num)) ? phNumToName[num] : num);
+								var phe = DataSetNbuExplorer.FindPhoneBookEntry(num);
+								name = name + " " + ((phe != null) ? phe.name : num);
 							}
 
 							partFiles.Add(new FileInfo(string.Format("{0}.vmg", name), mstart, len, time));
+
+							DataSetNbuExplorer.AddMessageFromVmg(crd);
 						}
 
 						StreamUtils.Counter += len;
@@ -1413,6 +1427,8 @@ namespace NbuExplorer
 				}
 				fs.ReadByte();
 
+				bool addMsgToDataSet = (DataSetNbuExplorer.DefaultMessageTable.Select().Length == 0);
+
 				addLine("binary encoded messages...");
 
 				while (true)
@@ -1425,10 +1441,11 @@ namespace NbuExplorer
 					}
 
 					string boxname;
+					string boxletter = "U";
 					switch (boxnumber)
 					{
-						case 2: boxname = "Inbox"; break;
-						case 3: boxname = "Sent"; break;
+						case 2: boxname = "Inbox"; boxletter = "I"; break;
+						case 3: boxname = "Sent"; boxletter = "O"; break;
 						case 4: boxname = "Archive"; break;
 						case 5: boxname = "Templates"; break;
 						default: boxname = string.Format("box{0}", boxnumber); break;
@@ -1558,6 +1575,21 @@ namespace NbuExplorer
 							partFilesBin.Add(new FileInfo(filename + ".sms", smsBegin, fs.Position - smsBegin, dt));
 							byte[] data = System.Text.Encoding.Unicode.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", num, dateAsString, msg));
 							partFilesTxt.Add(new FileInfoMemory(filename + ".txt", data, dt));
+
+							if (addMsgToDataSet)
+							{
+								DataSetNbuExplorer.MessageRow row;
+								if (string.IsNullOrEmpty(num))
+								{
+									row = DataSetNbuExplorer.DefaultMessageTable.AddMessageRow(boxletter, dt, null, null, msg);
+								}
+								else
+								{
+									row = DataSetNbuExplorer.DefaultMessageTable.AddMessageRow(boxletter, dt, num, DataSetNbuExplorer.NumToName(num), msg);
+								}
+								if (dt == DateTime.MinValue) row.SettimeNull();
+							}
+
 						}
 					}
 				}
@@ -1608,19 +1640,6 @@ namespace NbuExplorer
 			return sb.ToString();
 		}
 
-		private static DateTime getMsgTime(Vcard crd)
-		{
-			DateTime time = crd.GetDateTime("X-NOK-DT");
-			if (time == DateTime.MinValue)
-			{
-				try
-				{
-					time = DateTime.Parse(crd["Date"]);
-				}
-				catch { }
-			}
-			return time;
-		}
 		#endregion
 	}
 }

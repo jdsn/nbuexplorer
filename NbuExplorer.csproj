@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{5D09ED30-689C-4F25-9912-F90EB63517F1}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -52,8 +52,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AboutBox.cs">
@@ -61,6 +63,13 @@
     </Compile>
     <Compile Include="AboutBox.Designer.cs">
       <DependentUpon>AboutBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataSetNbuExplorer.cs">
+      <DependentUpon>DataSetNbuExplorer.xsd</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataSetNbuExplorer.Designer.cs">
+      <DependentUpon>DataSetNbuExplorer.cs</DependentUpon>
     </Compile>
     <Compile Include="ExtractIcon.cs" />
     <Compile Include="QutedTextDecoder.cs">
@@ -211,6 +220,15 @@
     <None Include="Resources\contacts.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DataSetNbuExplorer.xsc">
+      <DependentUpon>DataSetNbuExplorer.xsd</DependentUpon>
+    </None>
+    <None Include="DataSetNbuExplorer.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="DataSetNbuExplorer.xss">
+      <DependentUpon>DataSetNbuExplorer.xsd</DependentUpon>
+    </None>
     <None Include="Resources\messages.ico" />
   </ItemGroup>
   <ItemGroup>

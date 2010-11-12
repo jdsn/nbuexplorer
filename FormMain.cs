@@ -22,6 +22,7 @@
 *******************************************************************************/
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -39,6 +40,9 @@ namespace NbuExplorer
 		{
 			InitializeComponent();
 
+			dataGridViewMessages.AutoGenerateColumns = false;
+			dataGridViewMessages.DataSource = DataSetNbuExplorer.DefaultMessageView;
+
 			fileSizeFormat = new System.Globalization.NumberFormatInfo();
 			fileSizeFormat.NumberGroupSeparator = " ";
 			fileSizeFormat.NumberDecimalDigits = 0;
@@ -54,7 +58,7 @@ namespace NbuExplorer
 			this.exportSelectedFolderToolStripMenuItem.Image = Properties.Resources.icon_save_all.ToBitmap();
 			this.exportToolStripMenuItem.Image = Properties.Resources.icon_save_all.ToBitmap();
 			this.exportAllToolStripMenuItem.Image = Properties.Resources.icon_save_all.ToBitmap();
-
+			this.tsExportMessages.Image = Properties.Resources.icon_save_all.ToBitmap();
 			exportSelectedFilesToolStripMenuItem1.Font = new Font(exportSelectedFilesToolStripMenuItem1.Font, FontStyle.Bold);
 
 			this.textBoxPreview.Dock = DockStyle.Fill;
@@ -276,7 +280,7 @@ namespace NbuExplorer
 						sr = new StreamReader(ms, true);
 						Vcard vcrd = new Vcard(sr.ReadToEnd());
 						sb = new System.Text.StringBuilder();
-						foreach(string key in vcrd.Keys)
+						foreach (string key in vcrd.Keys)
 						{
 							if (key == "VERSION") continue;
 							sb.AppendFormat("{0}: {1}\r\n", key, vcrd[key]);
@@ -840,6 +844,167 @@ namespace NbuExplorer
 				totalSize += ((FileInfo)it.Tag).FileSize;
 			}
 			statusLabelSelected.Text = string.Format(fileSizeFormat, "Selected: {0} files, {1:N} Bytes", fileCount, totalSize);
+		}
+
+		private void dataGridViewMessages_RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
+		{
+			try
+			{
+				DataGridViewRow row = dataGridViewMessages.Rows[e.RowIndex];
+				DataSetNbuExplorer.MessageRow mr = ((DataRowView)row.DataBoundItem).Row as DataSetNbuExplorer.MessageRow;
+
+				if (mr.box == "O") row.DefaultCellStyle.BackColor = Color.FromArgb(255, 230, 255);
+				else if (mr.box == "I") row.DefaultCellStyle.BackColor = Color.FromArgb(230, 255, 255);
+			}
+			catch { }
+		}
+
+		private void dataGridViewMessages_SelectionChanged(object sender, EventArgs e)
+		{
+			try
+			{
+				DataSetNbuExplorer.MessageRow mr = ((DataRowView)dataGridViewMessages.SelectedRows[0].DataBoundItem).Row as DataSetNbuExplorer.MessageRow;
+				textBoxMessage.Text = mr.messagetext.Replace("\n", "\r\n");
+			}
+			catch
+			{
+				textBoxMessage.Text = "";
+			}
+		}
+
+		private void buildFilterSubNodes(TreeNode tn, string box)
+		{
+			tn.Nodes.Clear();
+			List<string> nums = new List<string>();
+			foreach (DataSetNbuExplorer.MessageRow mr in DataSetNbuExplorer.DefaultMessageTable.Select("box='" + box + "'", "name"))
+			{
+				if (mr.IsnumberNull()) continue;
+				if (!nums.Contains(mr.number))
+				{
+					TreeNode subnode = tn.Nodes.Add(mr.name);
+					subnode.Tag = mr.number;
+					subnode.Checked = tn.Checked;
+					nums.Add(mr.number);
+					int cnt = Convert.ToInt32(DataSetNbuExplorer.DefaultMessageTable.Compute("COUNT(box)", "box='" + box + "' AND number='" + mr.number + "'"));
+					subnode.Text += string.Format(" ({0})", cnt);
+				}
+			}
+		}
+
+		private void treeViewMsgFilter_AfterCheck(object sender, TreeViewEventArgs e)
+		{
+			treeViewMsgFilter.AfterCheck -= new TreeViewEventHandler(treeViewMsgFilter_AfterCheck);
+
+			if (e.Node.Level == 1)
+			{
+				if (e.Node.Checked) e.Node.Parent.Checked = true;
+			}
+			else
+			{
+				bool ch = e.Node.Checked;
+				foreach (TreeNode child in e.Node.Nodes) child.Checked = ch;
+			}
+
+			System.Text.StringBuilder sbFilter = new System.Text.StringBuilder();
+			appendFilter(sbFilter, treeViewMsgFilter.Nodes[0], "I");
+			appendFilter(sbFilter, treeViewMsgFilter.Nodes[1], "O");
+			appendFilter(sbFilter, treeViewMsgFilter.Nodes[2], "U");
+
+			if (sbFilter.Length == 0)
+			{
+				DataSetNbuExplorer.DefaultMessageView.RowFilter = "1=0";
+			}
+			else
+			{
+				DataSetNbuExplorer.DefaultMessageView.RowFilter = sbFilter.ToString();
+			}
+
+			treeViewMsgFilter.AfterCheck += new TreeViewEventHandler(treeViewMsgFilter_AfterCheck);
+		}
+
+		private void appendFilter(System.Text.StringBuilder sbout, TreeNode tn, string box)
+		{
+			if (!tn.Checked) return;
+
+			bool allChecked = true;
+			foreach (TreeNode ch in tn.Nodes)
+			{
+				if (!ch.Checked) allChecked = false;
+			}
+
+			if (sbout.Length > 0) sbout.Append(" OR ");
+			sbout.Append("(box = '" + box + "'");
+			if (allChecked)
+			{
+				sbout.Append(")");
+				return;
+			}
+
+			sbout.Append(" AND number IN(");
+
+			bool first = true;
+			foreach (TreeNode ch in tn.Nodes)
+			{
+				if (ch.Checked)
+				{
+					if (!first) sbout.Append(",");
+					else first = false;
+					sbout.Append("'" + ch.Tag.ToString() + "'");
+				}
+			}
+			sbout.Append("))");
+		}
+
+		private void tsExportMessages_Click(object sender, EventArgs e)
+		{
+			SaveFileDialog sfd = new SaveFileDialog();
+			sfd.Filter = "*.txt|*.txt";
+			if (sfd.ShowDialog() == DialogResult.OK)
+			{
+				StreamWriter sw = null;
+				try
+				{
+					sw = new StreamWriter(sfd.FileName);
+					if (dataGridViewMessages.SelectedRows.Count > 1)
+					{
+						foreach (DataGridViewRow dvr in dataGridViewMessages.SelectedRows)
+						{
+							writeMessage(sw, dvr);
+						}
+					}
+					else
+					{
+						foreach (DataGridViewRow dvr in dataGridViewMessages.Rows)
+						{
+							writeMessage(sw, dvr);
+						}
+					}
+				}
+				catch (Exception exc)
+				{
+					MessageBox.Show(exc.Message, exc.Source, MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+				finally
+				{
+					if (sw != null) sw.Close();
+				}
+			}
+		}
+
+		private static void writeMessage(StreamWriter sw, DataGridViewRow dvr)
+		{
+			DataSetNbuExplorer.MessageRow mr = (DataSetNbuExplorer.MessageRow)((DataRowView)dvr.DataBoundItem).Row;
+			if (!mr.IstimeNull()) sw.Write(mr.time.ToString("G") + " ");
+			switch (mr.box)
+			{
+				case "I": sw.Write("from "); break;
+				case "O": sw.Write("to "); break;
+			}
+			sw.Write(mr.number);
+			if (mr.name != mr.number) sw.Write(" (" + mr.name + ")");
+			sw.WriteLine(":");
+			sw.WriteLine(mr.messagetext.TrimEnd());
+			sw.WriteLine();
 		}
 
 	}

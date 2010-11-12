@@ -30,6 +30,13 @@
 		{
 			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
+			System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Inbox");
+			System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Outbox");
+			System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Others");
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
 			this.textBoxLog = new System.Windows.Forms.TextBox();
 			this.menuStripMain = new System.Windows.Forms.MenuStrip();
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -56,9 +63,9 @@
 			this.imageListFolder = new System.Windows.Forms.ImageList(this.components);
 			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
 			this.listViewFiles = new System.Windows.Forms.ListView();
-			this.colName = new System.Windows.Forms.ColumnHeader();
-			this.colSize = new System.Windows.Forms.ColumnHeader();
-			this.colTime = new System.Windows.Forms.ColumnHeader();
+			this.colName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.colSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.colTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.contextMenuFiles = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.exportSelectedFilesToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
@@ -81,10 +88,22 @@
 			this.tsDetails = new System.Windows.Forms.ToolStripButton();
 			this.pictureBoxPreview = new System.Windows.Forms.PictureBox();
 			this.textBoxPreview = new System.Windows.Forms.TextBox();
+			this.tabPageMessages = new System.Windows.Forms.TabPage();
+			this.splitContainer3 = new System.Windows.Forms.SplitContainer();
+			this.treeViewMsgFilter = new System.Windows.Forms.TreeView();
+			this.splitContainer4 = new System.Windows.Forms.SplitContainer();
+			this.dataGridViewMessages = new System.Windows.Forms.DataGridView();
+			this.colMessageTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this.colMessageNumber = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this.colMessageName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this.colMessageText = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this.textBoxMessage = new System.Windows.Forms.TextBox();
+			this.toolStrip2 = new System.Windows.Forms.ToolStrip();
 			this.tabPageLog = new System.Windows.Forms.TabPage();
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.statusLabelTotal = new System.Windows.Forms.ToolStripStatusLabel();
 			this.statusLabelSelected = new System.Windows.Forms.ToolStripStatusLabel();
+			this.tsExportMessages = new System.Windows.Forms.ToolStripButton();
 			this.menuStripMain.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPageFileContent.SuspendLayout();
@@ -98,6 +117,15 @@
 			this.contextMenuFiles.SuspendLayout();
 			this.toolStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.pictureBoxPreview)).BeginInit();
+			this.tabPageMessages.SuspendLayout();
+			this.splitContainer3.Panel1.SuspendLayout();
+			this.splitContainer3.Panel2.SuspendLayout();
+			this.splitContainer3.SuspendLayout();
+			this.splitContainer4.Panel1.SuspendLayout();
+			this.splitContainer4.Panel2.SuspendLayout();
+			this.splitContainer4.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.dataGridViewMessages)).BeginInit();
+			this.toolStrip2.SuspendLayout();
 			this.tabPageLog.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
 			this.SuspendLayout();
@@ -139,7 +167,7 @@
             this.toolStripMenuItem1,
             this.exitToolStripMenuItem});
 			this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-			this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
+			this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
 			this.fileToolStripMenuItem.Text = "&File";
 			// 
 			// openToolStripMenuItem
@@ -148,20 +176,20 @@
 			this.openToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.openToolStripMenuItem.Name = "openToolStripMenuItem";
 			this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-			this.openToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+			this.openToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
 			this.openToolStripMenuItem.Text = "&Open";
 			this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator2
 			// 
 			this.toolStripSeparator2.Name = "toolStripSeparator2";
-			this.toolStripSeparator2.Size = new System.Drawing.Size(226, 6);
+			this.toolStripSeparator2.Size = new System.Drawing.Size(224, 6);
 			// 
 			// exportSelectedFilesToolStripMenuItem
 			// 
 			this.exportSelectedFilesToolStripMenuItem.Name = "exportSelectedFilesToolStripMenuItem";
 			this.exportSelectedFilesToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-			this.exportSelectedFilesToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+			this.exportSelectedFilesToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
 			this.exportSelectedFilesToolStripMenuItem.Text = "Export &selected file(s)";
 			this.exportSelectedFilesToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedFilesToolStripMenuItem_Click);
 			// 
@@ -170,7 +198,7 @@
 			this.exportSelectedFolderToolStripMenuItem.Enabled = false;
 			this.exportSelectedFolderToolStripMenuItem.Name = "exportSelectedFolderToolStripMenuItem";
 			this.exportSelectedFolderToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
-			this.exportSelectedFolderToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+			this.exportSelectedFolderToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
 			this.exportSelectedFolderToolStripMenuItem.Text = "Export selected folder";
 			this.exportSelectedFolderToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedFolderToolStripMenuItem_Click);
 			// 
@@ -179,32 +207,32 @@
 			this.exportAllToolStripMenuItem.Enabled = false;
 			this.exportAllToolStripMenuItem.Name = "exportAllToolStripMenuItem";
 			this.exportAllToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.E)));
-			this.exportAllToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+			this.exportAllToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
 			this.exportAllToolStripMenuItem.Text = "&Export all";
 			this.exportAllToolStripMenuItem.Click += new System.EventHandler(this.exportAllToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem5
 			// 
 			this.toolStripMenuItem5.Name = "toolStripMenuItem5";
-			this.toolStripMenuItem5.Size = new System.Drawing.Size(226, 6);
+			this.toolStripMenuItem5.Size = new System.Drawing.Size(224, 6);
 			// 
 			// saveParsingLogToolStripMenuItem
 			// 
 			this.saveParsingLogToolStripMenuItem.Enabled = false;
 			this.saveParsingLogToolStripMenuItem.Name = "saveParsingLogToolStripMenuItem";
-			this.saveParsingLogToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+			this.saveParsingLogToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
 			this.saveParsingLogToolStripMenuItem.Text = "Save parsing log";
 			this.saveParsingLogToolStripMenuItem.Click += new System.EventHandler(this.saveParsingLogToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem1
 			// 
 			this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-			this.toolStripMenuItem1.Size = new System.Drawing.Size(226, 6);
+			this.toolStripMenuItem1.Size = new System.Drawing.Size(224, 6);
 			// 
 			// exitToolStripMenuItem
 			// 
 			this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-			this.exitToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+			this.exitToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
 			this.exitToolStripMenuItem.Text = "E&xit";
 			this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
 			// 
@@ -213,19 +241,20 @@
 			this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aboutToolStripMenuItem});
 			this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-			this.helpToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
+			this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
 			this.helpToolStripMenuItem.Text = "&Help";
 			// 
 			// aboutToolStripMenuItem
 			// 
 			this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
 			this.aboutToolStripMenuItem.Text = "&About...";
 			this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
 			// 
 			// tabControl1
 			// 
 			this.tabControl1.Controls.Add(this.tabPageFileContent);
+			this.tabControl1.Controls.Add(this.tabPageMessages);
 			this.tabControl1.Controls.Add(this.tabPageLog);
 			this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tabControl1.Location = new System.Drawing.Point(0, 24);
@@ -285,31 +314,31 @@
             this.expandAllToolStripMenuItem,
             this.collapseAllToolStripMenuItem});
 			this.contextMenuDirs.Name = "contextMenuDirs";
-			this.contextMenuDirs.Size = new System.Drawing.Size(139, 76);
+			this.contextMenuDirs.Size = new System.Drawing.Size(135, 76);
 			// 
 			// exportToolStripMenuItem
 			// 
 			this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-			this.exportToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+			this.exportToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
 			this.exportToolStripMenuItem.Text = "Export";
 			this.exportToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedFolderToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem4
 			// 
 			this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-			this.toolStripMenuItem4.Size = new System.Drawing.Size(135, 6);
+			this.toolStripMenuItem4.Size = new System.Drawing.Size(131, 6);
 			// 
 			// expandAllToolStripMenuItem
 			// 
 			this.expandAllToolStripMenuItem.Name = "expandAllToolStripMenuItem";
-			this.expandAllToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+			this.expandAllToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
 			this.expandAllToolStripMenuItem.Text = "Expand all";
 			this.expandAllToolStripMenuItem.Click += new System.EventHandler(this.expandAllToolStripMenuItem_Click);
 			// 
 			// collapseAllToolStripMenuItem
 			// 
 			this.collapseAllToolStripMenuItem.Name = "collapseAllToolStripMenuItem";
-			this.collapseAllToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+			this.collapseAllToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
 			this.collapseAllToolStripMenuItem.Text = "Collapse all";
 			this.collapseAllToolStripMenuItem.Click += new System.EventHandler(this.collapseAllToolStripMenuItem_Click);
 			// 
@@ -368,10 +397,10 @@
 			this.listViewFiles.TabIndex = 0;
 			this.listViewFiles.UseCompatibleStateImageBehavior = false;
 			this.listViewFiles.View = System.Windows.Forms.View.Details;
-			this.listViewFiles.Resize += new System.EventHandler(this.listViewFiles_Resize);
+			this.listViewFiles.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewFiles_ColumnClick);
 			this.listViewFiles.SelectedIndexChanged += new System.EventHandler(this.listViewFiles_SelectedIndexChanged);
 			this.listViewFiles.DoubleClick += new System.EventHandler(this.listViewFiles_DoubleClick);
-			this.listViewFiles.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewFiles_ColumnClick);
+			this.listViewFiles.Resize += new System.EventHandler(this.listViewFiles_Resize);
 			// 
 			// colName
 			// 
@@ -397,19 +426,19 @@
             this.toolStripMenuItem3,
             this.sortToolStripMenuItem});
 			this.contextMenuFiles.Name = "contextMenuFiles";
-			this.contextMenuFiles.Size = new System.Drawing.Size(191, 54);
+			this.contextMenuFiles.Size = new System.Drawing.Size(186, 54);
 			// 
 			// exportSelectedFilesToolStripMenuItem1
 			// 
 			this.exportSelectedFilesToolStripMenuItem1.Name = "exportSelectedFilesToolStripMenuItem1";
-			this.exportSelectedFilesToolStripMenuItem1.Size = new System.Drawing.Size(190, 22);
+			this.exportSelectedFilesToolStripMenuItem1.Size = new System.Drawing.Size(185, 22);
 			this.exportSelectedFilesToolStripMenuItem1.Text = "Export selected file(s)";
 			this.exportSelectedFilesToolStripMenuItem1.Click += new System.EventHandler(this.exportSelectedFilesToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem3
 			// 
 			this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-			this.toolStripMenuItem3.Size = new System.Drawing.Size(187, 6);
+			this.toolStripMenuItem3.Size = new System.Drawing.Size(182, 6);
 			// 
 			// sortToolStripMenuItem
 			// 
@@ -424,7 +453,7 @@
             this.bySizeDescendingToolStripMenuItem,
             this.byTimeDescendingToolStripMenuItem});
 			this.sortToolStripMenuItem.Name = "sortToolStripMenuItem";
-			this.sortToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+			this.sortToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
 			this.sortToolStripMenuItem.Text = "Sort";
 			this.sortToolStripMenuItem.DropDownOpening += new System.EventHandler(this.sortToolStripMenuItem_DropDownOpening);
 			// 
@@ -579,6 +608,176 @@
 			this.textBoxPreview.TabIndex = 1;
 			this.textBoxPreview.WordWrap = false;
 			// 
+			// tabPageMessages
+			// 
+			this.tabPageMessages.Controls.Add(this.splitContainer3);
+			this.tabPageMessages.Location = new System.Drawing.Point(4, 22);
+			this.tabPageMessages.Name = "tabPageMessages";
+			this.tabPageMessages.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPageMessages.Size = new System.Drawing.Size(559, 328);
+			this.tabPageMessages.TabIndex = 2;
+			this.tabPageMessages.Text = "Messages";
+			this.tabPageMessages.UseVisualStyleBackColor = true;
+			// 
+			// splitContainer3
+			// 
+			this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.splitContainer3.Location = new System.Drawing.Point(3, 3);
+			this.splitContainer3.Name = "splitContainer3";
+			// 
+			// splitContainer3.Panel1
+			// 
+			this.splitContainer3.Panel1.Controls.Add(this.treeViewMsgFilter);
+			// 
+			// splitContainer3.Panel2
+			// 
+			this.splitContainer3.Panel2.Controls.Add(this.splitContainer4);
+			this.splitContainer3.Panel2.Controls.Add(this.toolStrip2);
+			this.splitContainer3.Size = new System.Drawing.Size(553, 322);
+			this.splitContainer3.SplitterDistance = 159;
+			this.splitContainer3.TabIndex = 1;
+			// 
+			// treeViewMsgFilter
+			// 
+			this.treeViewMsgFilter.CheckBoxes = true;
+			this.treeViewMsgFilter.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.treeViewMsgFilter.Location = new System.Drawing.Point(0, 0);
+			this.treeViewMsgFilter.Name = "treeViewMsgFilter";
+			treeNode7.Checked = true;
+			treeNode7.Name = "NodeInbox";
+			treeNode7.Text = "Inbox";
+			treeNode8.Checked = true;
+			treeNode8.Name = "NodeOutbox";
+			treeNode8.Text = "Outbox";
+			treeNode9.Checked = true;
+			treeNode9.Name = "NodeOthers";
+			treeNode9.Text = "Others";
+			this.treeViewMsgFilter.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
+            treeNode7,
+            treeNode8,
+            treeNode9});
+			this.treeViewMsgFilter.Size = new System.Drawing.Size(159, 322);
+			this.treeViewMsgFilter.TabIndex = 0;
+			this.treeViewMsgFilter.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.treeViewMsgFilter_AfterCheck);
+			// 
+			// splitContainer4
+			// 
+			this.splitContainer4.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.splitContainer4.Location = new System.Drawing.Point(0, 25);
+			this.splitContainer4.Name = "splitContainer4";
+			this.splitContainer4.Orientation = System.Windows.Forms.Orientation.Horizontal;
+			// 
+			// splitContainer4.Panel1
+			// 
+			this.splitContainer4.Panel1.Controls.Add(this.dataGridViewMessages);
+			// 
+			// splitContainer4.Panel2
+			// 
+			this.splitContainer4.Panel2.Controls.Add(this.textBoxMessage);
+			this.splitContainer4.Size = new System.Drawing.Size(390, 297);
+			this.splitContainer4.SplitterDistance = 164;
+			this.splitContainer4.TabIndex = 1;
+			// 
+			// dataGridViewMessages
+			// 
+			this.dataGridViewMessages.AllowUserToAddRows = false;
+			this.dataGridViewMessages.AllowUserToDeleteRows = false;
+			this.dataGridViewMessages.AllowUserToOrderColumns = true;
+			this.dataGridViewMessages.AllowUserToResizeRows = false;
+			dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+			this.dataGridViewMessages.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle9;
+			this.dataGridViewMessages.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+			this.dataGridViewMessages.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colMessageTime,
+            this.colMessageNumber,
+            this.colMessageName,
+            this.colMessageText});
+			dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle11.BackColor = System.Drawing.SystemColors.Window;
+			dataGridViewCellStyle11.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			dataGridViewCellStyle11.ForeColor = System.Drawing.SystemColors.ControlText;
+			dataGridViewCellStyle11.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle11.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle11.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+			this.dataGridViewMessages.DefaultCellStyle = dataGridViewCellStyle11;
+			this.dataGridViewMessages.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.dataGridViewMessages.Location = new System.Drawing.Point(0, 0);
+			this.dataGridViewMessages.Name = "dataGridViewMessages";
+			this.dataGridViewMessages.ReadOnly = true;
+			dataGridViewCellStyle12.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle12.BackColor = System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle12.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			dataGridViewCellStyle12.ForeColor = System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle12.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle12.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle12.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+			this.dataGridViewMessages.RowHeadersDefaultCellStyle = dataGridViewCellStyle12;
+			this.dataGridViewMessages.RowHeadersVisible = false;
+			this.dataGridViewMessages.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+			this.dataGridViewMessages.Size = new System.Drawing.Size(390, 164);
+			this.dataGridViewMessages.TabIndex = 0;
+			this.dataGridViewMessages.RowPrePaint += new System.Windows.Forms.DataGridViewRowPrePaintEventHandler(this.dataGridViewMessages_RowPrePaint);
+			this.dataGridViewMessages.SelectionChanged += new System.EventHandler(this.dataGridViewMessages_SelectionChanged);
+			// 
+			// colMessageTime
+			// 
+			this.colMessageTime.DataPropertyName = "time";
+			dataGridViewCellStyle10.Format = "dd.MM.yyyy HH:mm:ss";
+			dataGridViewCellStyle10.NullValue = "Unknown";
+			this.colMessageTime.DefaultCellStyle = dataGridViewCellStyle10;
+			this.colMessageTime.HeaderText = "Time";
+			this.colMessageTime.Name = "colMessageTime";
+			this.colMessageTime.ReadOnly = true;
+			this.colMessageTime.Width = 120;
+			// 
+			// colMessageNumber
+			// 
+			this.colMessageNumber.DataPropertyName = "number";
+			this.colMessageNumber.HeaderText = "Number";
+			this.colMessageNumber.Name = "colMessageNumber";
+			this.colMessageNumber.ReadOnly = true;
+			// 
+			// colMessageName
+			// 
+			this.colMessageName.DataPropertyName = "name";
+			this.colMessageName.HeaderText = "Name";
+			this.colMessageName.Name = "colMessageName";
+			this.colMessageName.ReadOnly = true;
+			// 
+			// colMessageText
+			// 
+			this.colMessageText.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+			this.colMessageText.DataPropertyName = "messageText";
+			this.colMessageText.HeaderText = "Text";
+			this.colMessageText.Name = "colMessageText";
+			this.colMessageText.ReadOnly = true;
+			// 
+			// textBoxMessage
+			// 
+			this.textBoxMessage.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.textBoxMessage.Location = new System.Drawing.Point(0, 0);
+			this.textBoxMessage.Multiline = true;
+			this.textBoxMessage.Name = "textBoxMessage";
+			this.textBoxMessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+			this.textBoxMessage.Size = new System.Drawing.Size(390, 129);
+			this.textBoxMessage.TabIndex = 0;
+			// 
+			// toolStrip2
+			// 
+			this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsExportMessages});
+			this.toolStrip2.Location = new System.Drawing.Point(0, 0);
+			this.toolStrip2.Name = "toolStrip2";
+			this.toolStrip2.Size = new System.Drawing.Size(390, 25);
+			this.toolStrip2.TabIndex = 0;
+			this.toolStrip2.Text = "toolStrip2";
+			// 
 			// tabPageLog
 			// 
 			this.tabPageLog.Controls.Add(this.textBoxLog);
@@ -604,14 +803,24 @@
 			// statusLabelTotal
 			// 
 			this.statusLabelTotal.Name = "statusLabelTotal";
-			this.statusLabelTotal.Size = new System.Drawing.Size(11, 17);
+			this.statusLabelTotal.Size = new System.Drawing.Size(12, 17);
 			this.statusLabelTotal.Text = "-";
 			// 
 			// statusLabelSelected
 			// 
 			this.statusLabelSelected.Name = "statusLabelSelected";
-			this.statusLabelSelected.Size = new System.Drawing.Size(11, 17);
+			this.statusLabelSelected.Size = new System.Drawing.Size(12, 17);
 			this.statusLabelSelected.Text = "-";
+			// 
+			// tsExportMessages
+			// 
+			this.tsExportMessages.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.tsExportMessages.Image = ((System.Drawing.Image)(resources.GetObject("tsExportMessages.Image")));
+			this.tsExportMessages.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.tsExportMessages.Name = "tsExportMessages";
+			this.tsExportMessages.Size = new System.Drawing.Size(23, 22);
+			this.tsExportMessages.Text = "Export messages";
+			this.tsExportMessages.Click += new System.EventHandler(this.tsExportMessages_Click);
 			// 
 			// FormMain
 			// 
@@ -645,6 +854,18 @@
 			this.toolStrip1.ResumeLayout(false);
 			this.toolStrip1.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.pictureBoxPreview)).EndInit();
+			this.tabPageMessages.ResumeLayout(false);
+			this.splitContainer3.Panel1.ResumeLayout(false);
+			this.splitContainer3.Panel2.ResumeLayout(false);
+			this.splitContainer3.Panel2.PerformLayout();
+			this.splitContainer3.ResumeLayout(false);
+			this.splitContainer4.Panel1.ResumeLayout(false);
+			this.splitContainer4.Panel2.ResumeLayout(false);
+			this.splitContainer4.Panel2.PerformLayout();
+			this.splitContainer4.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)(this.dataGridViewMessages)).EndInit();
+			this.toolStrip2.ResumeLayout(false);
+			this.toolStrip2.PerformLayout();
 			this.tabPageLog.ResumeLayout(false);
 			this.tabPageLog.PerformLayout();
 			this.statusStrip1.ResumeLayout(false);
@@ -711,6 +932,18 @@
 		private System.Windows.Forms.StatusStrip statusStrip1;
 		private System.Windows.Forms.ToolStripStatusLabel statusLabelTotal;
 		private System.Windows.Forms.ToolStripStatusLabel statusLabelSelected;
+		private System.Windows.Forms.TabPage tabPageMessages;
+		private System.Windows.Forms.SplitContainer splitContainer3;
+		private System.Windows.Forms.TreeView treeViewMsgFilter;
+		private System.Windows.Forms.SplitContainer splitContainer4;
+		private System.Windows.Forms.DataGridView dataGridViewMessages;
+		private System.Windows.Forms.TextBox textBoxMessage;
+		private System.Windows.Forms.ToolStrip toolStrip2;
+		private System.Windows.Forms.DataGridViewTextBoxColumn colMessageTime;
+		private System.Windows.Forms.DataGridViewTextBoxColumn colMessageNumber;
+		private System.Windows.Forms.DataGridViewTextBoxColumn colMessageName;
+		private System.Windows.Forms.DataGridViewTextBoxColumn colMessageText;
+		private System.Windows.Forms.ToolStripButton tsExportMessages;
 	}
 }
 
