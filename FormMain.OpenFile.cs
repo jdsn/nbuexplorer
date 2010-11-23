@@ -904,6 +904,7 @@ namespace NbuExplorer
 			}
 			catch (Exception exc)
 			{
+				previousMs = null;
 				addLine(string.Format("Parsing ERROR at position {0}: {1}", ms.Position.ToString("X"), exc.Message));
 			}
 
@@ -944,12 +945,14 @@ namespace NbuExplorer
 
 							long fileStart = fs.Position;
 							filename = numToName(j + 1);
+							DateTime fileTime;
 
 							addLine("");
 
 							try
 							{
 								Mms m = new Mms(fs, fileStart + len - 1);
+								fileTime = m.Time;
 
 								addLine(filename + ":");
 								addLine(m.ParseLog.TrimEnd());
@@ -968,9 +971,10 @@ namespace NbuExplorer
 							catch (Exception exc)
 							{
 								addLine(string.Format("Error parsing mms {0}: {1}", filename, exc.Message));
+								fileTime = DateTime.MinValue;
 							}
 
-							partFiles.Add(new FileInfo(string.Format("{0}.mms", filename), fileStart, len));
+							partFiles.Add(new FileInfo(string.Format("{0}.mms", filename), fileStart, len, fileTime));
 
 							fs.Seek(fileStart + len, SeekOrigin.Begin);
 						}

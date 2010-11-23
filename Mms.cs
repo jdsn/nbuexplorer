@@ -57,6 +57,12 @@ namespace NbuExplorer
 			get { return files; }
 		}
 
+		private DateTime time = DateTime.MinValue;
+		public DateTime Time
+		{
+			get { return time; }
+		}
+
 		public Mms(Stream s, long end)
 		{
 			bool stop = false;
@@ -115,8 +121,8 @@ namespace NbuExplorer
 						log.AppendFormat("Expiry = {0}\r\n", expiry);
 						break;
 					case 0x85: // Date
-						DateTime date = ReadDateTime(s);
-						log.AppendFormat("Date = {0}\r\n", date);
+						this.time = ReadDateTime(s);
+						log.AppendFormat("Date = {0}\r\n", this.time);
 						break;
 					case 0x8A: // MessageClass
 						log.AppendFormat("Message class = {0}\r\n", ReadMessageClass(s));
@@ -281,7 +287,7 @@ namespace NbuExplorer
 						filename += ".smil";
 					}
 
-					files.Add(new FileInfo(filename, ctypepos + headlen, datalen));
+					files.Add(new FileInfo(filename, ctypepos + headlen, datalen, this.time));
 
 					log.AppendFormat("Part {0}: headLength = {1}, dataLength = {2}, ctype = {3}, filename = {4}\r\n", i + 1, headlen, datalen, ctype, filename);
 
@@ -363,7 +369,10 @@ namespace NbuExplorer
 			{
 				result = result.AddSeconds(add).ToLocalTime();
 			}
-			catch { }
+			catch
+			{
+				result = DateTime.MinValue;
+			}
 			return result;
 		}
 
