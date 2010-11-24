@@ -662,9 +662,11 @@ namespace NbuExplorer
 				recursiveRenameDuplicates(treeViewDirs.Nodes);
 
 				#region Prepare message filtering by numbers
+				treeViewMsgFilter.AfterCheck -= new TreeViewEventHandler(treeViewMsgFilter_AfterCheck);
 				buildFilterSubNodes(treeViewMsgFilter.Nodes[0], "I");
 				buildFilterSubNodes(treeViewMsgFilter.Nodes[1], "O");
 				buildFilterSubNodes(treeViewMsgFilter.Nodes[2], "U");
+				treeViewMsgFilter_AfterCheck(this, new TreeViewEventArgs(null));
 				#endregion
 
 			}

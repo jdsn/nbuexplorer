@@ -918,14 +918,17 @@ namespace NbuExplorer
 		{
 			treeViewMsgFilter.AfterCheck -= new TreeViewEventHandler(treeViewMsgFilter_AfterCheck);
 
-			if (e.Node.Level == 1)
+			if (e.Node != null)
 			{
-				if (e.Node.Checked) e.Node.Parent.Checked = true;
-			}
-			else
-			{
-				bool ch = e.Node.Checked;
-				foreach (TreeNode child in e.Node.Nodes) child.Checked = ch;
+				if (e.Node.Level == 1)
+				{
+					if (e.Node.Checked) e.Node.Parent.Checked = true;
+				}
+				else
+				{
+					bool ch = e.Node.Checked;
+					foreach (TreeNode child in e.Node.Nodes) child.Checked = ch;
+				}
 			}
 
 			System.Text.StringBuilder sbFilter = new System.Text.StringBuilder();
@@ -942,6 +945,8 @@ namespace NbuExplorer
 				DataSetNbuExplorer.DefaultMessageView.RowFilter = sbFilter.ToString();
 			}
 
+			System.Diagnostics.Debug.WriteLine(DataSetNbuExplorer.DefaultMessageView.RowFilter);
+
 			treeViewMsgFilter.AfterCheck += new TreeViewEventHandler(treeViewMsgFilter_AfterCheck);
 		}
 
@@ -950,10 +955,13 @@ namespace NbuExplorer
 			if (!tn.Checked) return;
 
 			bool allChecked = true;
+			bool noneChecked = (tn.Nodes.Count > 0);
 			foreach (TreeNode ch in tn.Nodes)
 			{
 				if (!ch.Checked) allChecked = false;
+				else noneChecked = false;
 			}
+			if (noneChecked) return;
 
 			if (sbout.Length > 0) sbout.Append(" OR ");
 			sbout.Append("(box = '" + box + "'");
