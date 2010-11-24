@@ -30,13 +30,13 @@
 		{
 			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
-			System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Inbox");
-			System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Outbox");
-			System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Others");
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Inbox");
+			System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Outbox");
+			System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Others");
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
 			this.textBoxLog = new System.Windows.Forms.TextBox();
 			this.menuStripMain = new System.Windows.Forms.MenuStrip();
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -99,11 +99,12 @@
 			this.colMessageText = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.textBoxMessage = new System.Windows.Forms.TextBox();
 			this.toolStrip2 = new System.Windows.Forms.ToolStrip();
+			this.tsExportMessages = new System.Windows.Forms.ToolStripButton();
 			this.tabPageLog = new System.Windows.Forms.TabPage();
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.statusLabelTotal = new System.Windows.Forms.ToolStripStatusLabel();
 			this.statusLabelSelected = new System.Windows.Forms.ToolStripStatusLabel();
-			this.tsExportMessages = new System.Windows.Forms.ToolStripButton();
+			this.toolStripLabelPos = new System.Windows.Forms.ToolStripLabel();
 			this.menuStripMain.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPageFileContent.SuspendLayout();
@@ -643,19 +644,19 @@
 			this.treeViewMsgFilter.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.treeViewMsgFilter.Location = new System.Drawing.Point(0, 0);
 			this.treeViewMsgFilter.Name = "treeViewMsgFilter";
-			treeNode7.Checked = true;
-			treeNode7.Name = "NodeInbox";
-			treeNode7.Text = "Inbox";
-			treeNode8.Checked = true;
-			treeNode8.Name = "NodeOutbox";
-			treeNode8.Text = "Outbox";
-			treeNode9.Checked = true;
-			treeNode9.Name = "NodeOthers";
-			treeNode9.Text = "Others";
+			treeNode1.Checked = true;
+			treeNode1.Name = "NodeInbox";
+			treeNode1.Text = "Inbox";
+			treeNode2.Checked = true;
+			treeNode2.Name = "NodeOutbox";
+			treeNode2.Text = "Outbox";
+			treeNode3.Checked = true;
+			treeNode3.Name = "NodeOthers";
+			treeNode3.Text = "Others";
 			this.treeViewMsgFilter.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode7,
-            treeNode8,
-            treeNode9});
+            treeNode1,
+            treeNode2,
+            treeNode3});
 			this.treeViewMsgFilter.Size = new System.Drawing.Size(159, 322);
 			this.treeViewMsgFilter.TabIndex = 0;
 			this.treeViewMsgFilter.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.treeViewMsgFilter_AfterCheck);
@@ -684,40 +685,40 @@
 			this.dataGridViewMessages.AllowUserToDeleteRows = false;
 			this.dataGridViewMessages.AllowUserToOrderColumns = true;
 			this.dataGridViewMessages.AllowUserToResizeRows = false;
-			dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
-			dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
-			dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-			this.dataGridViewMessages.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle9;
+			dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+			this.dataGridViewMessages.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
 			this.dataGridViewMessages.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.dataGridViewMessages.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colMessageTime,
             this.colMessageNumber,
             this.colMessageName,
             this.colMessageText});
-			dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle11.BackColor = System.Drawing.SystemColors.Window;
-			dataGridViewCellStyle11.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			dataGridViewCellStyle11.ForeColor = System.Drawing.SystemColors.ControlText;
-			dataGridViewCellStyle11.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle11.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle11.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-			this.dataGridViewMessages.DefaultCellStyle = dataGridViewCellStyle11;
+			dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Window;
+			dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.ControlText;
+			dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+			this.dataGridViewMessages.DefaultCellStyle = dataGridViewCellStyle3;
 			this.dataGridViewMessages.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.dataGridViewMessages.Location = new System.Drawing.Point(0, 0);
 			this.dataGridViewMessages.Name = "dataGridViewMessages";
 			this.dataGridViewMessages.ReadOnly = true;
-			dataGridViewCellStyle12.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle12.BackColor = System.Drawing.SystemColors.Control;
-			dataGridViewCellStyle12.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			dataGridViewCellStyle12.ForeColor = System.Drawing.SystemColors.WindowText;
-			dataGridViewCellStyle12.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle12.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle12.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-			this.dataGridViewMessages.RowHeadersDefaultCellStyle = dataGridViewCellStyle12;
+			dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+			this.dataGridViewMessages.RowHeadersDefaultCellStyle = dataGridViewCellStyle4;
 			this.dataGridViewMessages.RowHeadersVisible = false;
 			this.dataGridViewMessages.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.dataGridViewMessages.Size = new System.Drawing.Size(390, 164);
@@ -728,9 +729,9 @@
 			// colMessageTime
 			// 
 			this.colMessageTime.DataPropertyName = "time";
-			dataGridViewCellStyle10.Format = "dd.MM.yyyy HH:mm:ss";
-			dataGridViewCellStyle10.NullValue = "Unknown";
-			this.colMessageTime.DefaultCellStyle = dataGridViewCellStyle10;
+			dataGridViewCellStyle2.Format = "dd.MM.yyyy HH:mm:ss";
+			dataGridViewCellStyle2.NullValue = "Unknown";
+			this.colMessageTime.DefaultCellStyle = dataGridViewCellStyle2;
 			this.colMessageTime.HeaderText = "Time";
 			this.colMessageTime.Name = "colMessageTime";
 			this.colMessageTime.ReadOnly = true;
@@ -771,12 +772,23 @@
 			// toolStrip2
 			// 
 			this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsExportMessages});
+            this.tsExportMessages,
+            this.toolStripLabelPos});
 			this.toolStrip2.Location = new System.Drawing.Point(0, 0);
 			this.toolStrip2.Name = "toolStrip2";
 			this.toolStrip2.Size = new System.Drawing.Size(390, 25);
 			this.toolStrip2.TabIndex = 0;
 			this.toolStrip2.Text = "toolStrip2";
+			// 
+			// tsExportMessages
+			// 
+			this.tsExportMessages.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.tsExportMessages.Image = ((System.Drawing.Image)(resources.GetObject("tsExportMessages.Image")));
+			this.tsExportMessages.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.tsExportMessages.Name = "tsExportMessages";
+			this.tsExportMessages.Size = new System.Drawing.Size(23, 22);
+			this.tsExportMessages.Text = "Export messages";
+			this.tsExportMessages.Click += new System.EventHandler(this.tsExportMessages_Click);
 			// 
 			// tabPageLog
 			// 
@@ -812,15 +824,12 @@
 			this.statusLabelSelected.Size = new System.Drawing.Size(12, 17);
 			this.statusLabelSelected.Text = "-";
 			// 
-			// tsExportMessages
+			// toolStripLabelPos
 			// 
-			this.tsExportMessages.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.tsExportMessages.Image = ((System.Drawing.Image)(resources.GetObject("tsExportMessages.Image")));
-			this.tsExportMessages.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.tsExportMessages.Name = "tsExportMessages";
-			this.tsExportMessages.Size = new System.Drawing.Size(23, 22);
-			this.tsExportMessages.Text = "Export messages";
-			this.tsExportMessages.Click += new System.EventHandler(this.tsExportMessages_Click);
+			this.toolStripLabelPos.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+			this.toolStripLabelPos.Name = "toolStripLabelPos";
+			this.toolStripLabelPos.Size = new System.Drawing.Size(24, 22);
+			this.toolStripLabelPos.Text = "0/0";
 			// 
 			// FormMain
 			// 
@@ -944,6 +953,7 @@
 		private System.Windows.Forms.DataGridViewTextBoxColumn colMessageName;
 		private System.Windows.Forms.DataGridViewTextBoxColumn colMessageText;
 		private System.Windows.Forms.ToolStripButton tsExportMessages;
+		private System.Windows.Forms.ToolStripLabel toolStripLabelPos;
 	}
 }
 

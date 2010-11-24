@@ -1586,7 +1586,7 @@ namespace NbuExplorer
 
 							string filename = string.Format("{0:0000} {1}", i, num).TrimEnd();
 							partFilesBin.Add(new FileInfo(filename + ".sms", smsBegin, fs.Position - smsBegin, dt));
-							byte[] data = System.Text.Encoding.Unicode.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", num, dateAsString, msg));
+							byte[] data = System.Text.Encoding.UTF8.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", num, dateAsString, msg));
 							partFilesTxt.Add(new FileInfoMemory(filename + ".txt", data, dt));
 
 							if (addMsgToDataSet)

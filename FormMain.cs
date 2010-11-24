@@ -40,6 +40,8 @@ namespace NbuExplorer
 		{
 			InitializeComponent();
 
+			textBoxMessage.Font = new System.Drawing.Font(System.Drawing.SystemFonts.DefaultFont.FontFamily, 15);
+
 			dataGridViewMessages.AutoGenerateColumns = false;
 			dataGridViewMessages.DataSource = DataSetNbuExplorer.DefaultMessageView;
 
@@ -861,6 +863,27 @@ namespace NbuExplorer
 
 		private void dataGridViewMessages_SelectionChanged(object sender, EventArgs e)
 		{
+			if (dataGridViewMessages.SelectedRows.Count > 1)
+			{
+				DataGridViewSelectedRowCollection sel = dataGridViewMessages.SelectedRows;
+				int maxindex = int.MinValue;
+				int minindex = int.MaxValue;
+				foreach (DataGridViewRow dgr in sel)
+				{
+					maxindex = Math.Max(maxindex, dgr.Index + 1);
+					minindex = Math.Min(minindex, dgr.Index + 1);
+				}
+				toolStripLabelPos.Text = string.Format("{0}...{1} ({2})/{3}", minindex, maxindex, sel.Count, dataGridViewMessages.Rows.Count);
+			}
+			else if (dataGridViewMessages.SelectedRows.Count == 1)
+			{
+				toolStripLabelPos.Text = string.Format("{0}/{1}", dataGridViewMessages.SelectedRows[0].Index + 1, dataGridViewMessages.Rows.Count);
+			}
+			else
+			{
+				toolStripLabelPos.Text = string.Format("{0}", dataGridViewMessages.Rows.Count);
+			}
+
 			try
 			{
 				DataSetNbuExplorer.MessageRow mr = ((DataRowView)dataGridViewMessages.SelectedRows[0].DataBoundItem).Row as DataSetNbuExplorer.MessageRow;
@@ -957,54 +980,86 @@ namespace NbuExplorer
 
 		private void tsExportMessages_Click(object sender, EventArgs e)
 		{
+			if (dataGridViewMessages.Rows.Count == 0)
+			{
+				MessageBox.Show("No messages to export...", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+				return;
+			}
+
 			SaveFileDialog sfd = new SaveFileDialog();
-			sfd.Filter = "*.txt|*.txt";
+			sfd.Filter = "Plain text file (*.txt)|*.txt|Comma-separated values (*.csv)|*.csv|All messages to XML file (*.xml)|*.xml";
 			if (sfd.ShowDialog() == DialogResult.OK)
 			{
-				StreamWriter sw = null;
-				try
+				if (sfd.FilterIndex == 3) // xml format - all messages
 				{
-					sw = new StreamWriter(sfd.FileName);
-					if (dataGridViewMessages.SelectedRows.Count > 1)
+					DataSetNbuExplorer.DefaultMessageTable.boxColumn.ColumnMapping = MappingType.Attribute;
+					DataSetNbuExplorer.DefaultMessageTable.WriteXml(sfd.FileName);
+				}
+				else
+				{
+					// text formats (txt and csv)
+					StreamWriter sw = null;
+					try
 					{
-						foreach (DataGridViewRow dvr in dataGridViewMessages.SelectedRows)
+						System.Text.Encoding enc = (sfd.FilterIndex == 2) ? System.Text.Encoding.Default : System.Text.Encoding.UTF8;
+						sw = new StreamWriter(sfd.FileName, false, enc);
+						if (dataGridViewMessages.SelectedRows.Count > 1)
 						{
-							writeMessage(sw, dvr);
+							foreach (DataGridViewRow dvr in dataGridViewMessages.SelectedRows)
+							{
+								writeMessageInTextFormat(sw, dvr, sfd.FilterIndex);
+							}
+						}
+						else
+						{
+							foreach (DataGridViewRow dvr in dataGridViewMessages.Rows)
+							{
+								writeMessageInTextFormat(sw, dvr, sfd.FilterIndex);
+							}
 						}
 					}
-					else
+					catch (Exception exc)
 					{
-						foreach (DataGridViewRow dvr in dataGridViewMessages.Rows)
-						{
-							writeMessage(sw, dvr);
-						}
+						MessageBox.Show(exc.Message, exc.Source, MessageBoxButtons.OK, MessageBoxIcon.Error);
 					}
-				}
-				catch (Exception exc)
-				{
-					MessageBox.Show(exc.Message, exc.Source, MessageBoxButtons.OK, MessageBoxIcon.Error);
-				}
-				finally
-				{
-					if (sw != null) sw.Close();
+					finally
+					{
+						if (sw != null) sw.Close();
+					}
 				}
 			}
 		}
 
-		private static void writeMessage(StreamWriter sw, DataGridViewRow dvr)
+		private static void writeMessageInTextFormat(StreamWriter sw, DataGridViewRow dvr, int format)
 		{
 			DataSetNbuExplorer.MessageRow mr = (DataSetNbuExplorer.MessageRow)((DataRowView)dvr.DataBoundItem).Row;
-			if (!mr.IstimeNull()) sw.Write(mr.time.ToString("G") + " ");
+
+			string msgdirection = "";
 			switch (mr.box)
 			{
-				case "I": sw.Write("from "); break;
-				case "O": sw.Write("to "); break;
+				case "I": msgdirection = "from"; break;
+				case "O": msgdirection = "to"; break;
 			}
-			sw.Write(mr.number);
-			if (mr.name != mr.number) sw.Write(" (" + mr.name + ")");
-			sw.WriteLine(":");
-			sw.WriteLine(mr.messagetext.TrimEnd());
-			sw.WriteLine();
+
+			if (format == 2) // filterindex 2 (csv)
+			{
+				sw.WriteLine(string.Format("{0};{1};{2};\"{3}\";\"{4}\"",
+					mr.IstimeNull() ? "" : mr.time.ToString(),
+					msgdirection,
+					mr.number,
+					(mr.name == mr.number) ? "" : mr.name.Replace("\"", "\"\""),
+					mr.messagetext.Replace("\"", "\"\"")
+					));
+			}
+			else
+			{
+				if (!mr.IstimeNull()) sw.Write(mr.time.ToString() + " ");
+				sw.Write(string.Format("{0} {1}", msgdirection, mr.number).TrimStart());
+				if (mr.name != mr.number) sw.Write(" (" + mr.name + ")");
+				if (!mr.IsnumberNull()) sw.WriteLine(":");
+				sw.WriteLine(mr.messagetext.TrimEnd());
+				sw.WriteLine();
+			}
 		}
 
 	}

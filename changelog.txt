@@ -1,7 +1,13 @@
 History & Changelog
 ===================
 
-Version 1.19 (current)
+Version 2.0
+ - added:    "messages" tab for user friendly message browsing
+             and exporting to txt, csv or xml
+ - improved: date and time parsing for incoming MMS messages
+ - fixed:    fixes in parsing of compressed fragments
+
+Version 1.19
  - added:    parsing of binary SMS from newly discovered section of NBU format!
  - added:    parsing of base64 encoded photos from vcard contacts
  - added:    parsing date and time from contact vcard if present (REV)
