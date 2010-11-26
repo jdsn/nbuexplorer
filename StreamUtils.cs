@@ -80,8 +80,7 @@ namespace NbuExplorer
 
 		public static string ReadString(Stream s, int len)
 		{
-			byte[] buff = new byte[len * 2];
-			s.Read(buff, 0, buff.Length);
+			byte[] buff = ReadBuff(s, len * 2);
 			Counter += buff.Length;
 			return Encoding.Unicode.GetString(buff);
 		}
@@ -169,6 +168,7 @@ namespace NbuExplorer
 
 		public static byte[] ReadBuff(Stream s, int length)
 		{
+			if (s.Position + length > s.Length) throw new InvalidOperationException(string.Format("Invalid read attempt behind end of stream, position {0}, bytes required {1}", s.Position, length));
 			byte[] result = new byte[length];
 			s.Read(result, 0, length);
 			return result;
@@ -298,16 +298,17 @@ namespace NbuExplorer
 			StringBuilder sb = new StringBuilder();
 			int len = s.ReadByte();
 			if (len == 0) return "";
-			int type = s.ReadByte();
+			int type = (s.ReadByte() & 0xF0) >> 4;
 			switch (type)
 			{
-				case 0x91:
+				case 0x08: // 1000
+					//sb.Append("*");
+					goto case 0x0A;
+				case 0x09: // 1001
 					sb.Append("+");
-					goto case 0x81;
-				case 0xA1:
-				//sb.Append("*");
-				//goto case 0x81;
-				case 0x81:
+					goto case 0x0A;
+				case 0x0A: // 1010
+				case 0x0B: // 1011
 					int b;
 					while (len > 0)
 					{
@@ -321,7 +322,7 @@ namespace NbuExplorer
 						}
 					}
 					break;
-				case 0xD0:
+				case 0x0D: // 1101
 					int len8 = (len + 1) / 2;
 					int len7 = (len * 4 / 7);
 					byte[] buff = new byte[len8];

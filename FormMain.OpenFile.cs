@@ -260,105 +260,56 @@ namespace NbuExplorer
 							#endregion
 							#region vcards
 							case ProcessType.Vcards:
-								count = StreamUtils.ReadUInt32asInt(fs);
-								partPos = fs.Position;
-								try
+								count = StreamUtils.ReadUInt32asInt(fs); // files
+								count2 = StreamUtils.ReadUInt32asInt(fs); // folders
+
+								if (count2 > 0)
 								{
-									fs.Seek(partStartAddr + 0x30, SeekOrigin.Begin);
+									addLine(count2.ToString() + " folders found");
 
-									partFiles = findOrCreateFileInfoList(sect.name);
+									for (int i = 0; i < count2; i++)
+									{
+										fs.Seek(4, SeekOrigin.Current); //folder id
+										long folderAddr = StreamUtils.ReadUInt64asLong(fs);
 
-									string filenameTemplate;
-									if (sect.name == NokiaConstants.ptContacts)
-									{
-										contactList = partFiles;
-										filenameTemplate = "{0}.vcf";
-										addLine(count.ToString() + " contacts found");
-									}
-									else if (sect.name == NokiaConstants.ptBookmarks)
-									{
-										fs.Seek(8, SeekOrigin.Current);
-										filenameTemplate = "{0}.url";
-										addLine(count.ToString() + " bookmarks found");
-									}
-									else
-									{
-										filenameTemplate = "{0}.vcs";
-										addLine(count.ToString() + " calendar items found");
-									}
-
-									for (int i = 0; i < count; i++)
-									{
-										uint test = StreamUtils.ReadUInt32(fs);
-										if (test < 0x10)
+										partPos = fs.Position;
+										try
 										{
+											fs.Seek(folderAddr + 4, SeekOrigin.Begin);
 											foldername = StreamUtils.ReadString(fs);
-											partFiles = findOrCreateFileInfoList(sect.name + "\\" + foldername);
-											addLine("Folder '" + foldername + "' found");
-											fs.Seek(8, SeekOrigin.Current);
+											addLine(string.Format("\r\nFolder BEGIN {0}, name: '{1}'", numToAddr(folderAddr), foldername));
+											parseFolderVcard(fs, ref contactList, sect.name, sect.name + "\\" + foldername);
 										}
-										fs.Seek(4, SeekOrigin.Current);
-										long start = fs.Position + 4;
-										int vclen = StreamUtils.ReadUInt32asInt(fs);
-										byte[] buff = new byte[vclen];
-										fs.Read(buff, 0, buff.Length);
-										StreamUtils.Counter += buff.Length;
-
-										Vcard crd = new Vcard(System.Text.Encoding.UTF8.GetString(buff));
-
-										string name;
-										DateTime time = DateTime.MinValue;
-
-										if (sect.name == NokiaConstants.ptContacts)
+										catch (Exception exc)
 										{
-											name = crd.Name;
-											foreach (string number in crd.PhoneNumbers)
-											{
-												DataSetNbuExplorer.AddPhonebookEntry(number, name);
-											}
-											time = crd.GetDateTime("REV");
+											addLine(exc.Message);
+											analyzeRequest = true;
 										}
-										else if (sect.name == NokiaConstants.ptBookmarks)
-										{
-											name = crd["TITLE"];
-										}
-										else
-										{
-											partFiles = findOrCreateFileInfoList(sect.name + "\\" + crd["X-EPOCAGENDAENTRYTYPE"]);
-											name = crd["SUMMARY"];
-											time = crd.GetDateTime("DTSTART");
-										}
-
-										if (string.IsNullOrEmpty(name)) name = numToName(i + 1);
-
-										partFiles.Add(new FileInfo(string.Format(filenameTemplate, name), start, vclen, time));
-
-										if (crd.Photo != null)
-										{
-											partFiles.Add(new FileInfoMemory(name + "." + crd.PhotoExtension, crd.Photo, time));
-										}
+										fs.Seek(partPos, SeekOrigin.Begin);
 									}
 								}
-								catch (Exception exc)
+								else
 								{
-									addLine(exc.Message);
-									analyzeRequest = true;
+									partPos = fs.Position;
+									try
+									{
+										fs.Seek(partStartAddr + 0x2C, SeekOrigin.Begin);
+										parseFolderVcard(fs, ref contactList, sect.name, sect.name);
+									}
+									catch (Exception exc)
+									{
+										addLine(exc.Message);
+										analyzeRequest = true;
+									}
+									fs.Seek(partPos, SeekOrigin.Begin);
 								}
-
-								fs.Seek(partPos, SeekOrigin.Begin);
-								count2 = StreamUtils.ReadUInt32asInt(fs);
-								for (int i = 0; i < count2; i++)
-								{
-									fs.Seek(12, SeekOrigin.Current); // poradove cislo adresare + start adresa adresare
-								}
-
 								break;
 							#endregion
 							#region memos
 							case ProcessType.Memos:
 								count = StreamUtils.ReadUInt32asInt(fs);
 								addLine(count.ToString() + " memos found");
-								partPos = fs.Position + 4; // zapamatovani konce pro pokracovani
+								partPos = fs.Position + 4;
 								fs.Seek(partStartAddr + 0x30, SeekOrigin.Begin);
 								partFiles = findOrCreateFileInfoList(sect.name);
 								for (int i = 0; i < count; i++)
@@ -420,7 +371,7 @@ namespace NbuExplorer
 								}
 								else
 								{
-									addLine(string.Format("{0} folders found.", count));
+									addLine(string.Format("{0} folders found", count));
 									for (int i = 0; i < count; i++)
 									{
 										fs.Seek(4, SeekOrigin.Current);
@@ -703,6 +654,8 @@ namespace NbuExplorer
 				MessageBox.Show("Unknown structure type found. Please consider providing this backup to the author of application for analyzing and improving application.", this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
 		}
+
+
 
 		private FileInfoCfMultiPart currentIncompleteMultipartFile = null;
 		private long currentHeaderLengthToSkip = 0;
@@ -1218,6 +1171,88 @@ namespace NbuExplorer
 			}
 		}
 
+		private void parseFolderVcard(FileStream fs, ref List<FileInfo> contactList, string sectName, string rootFolderPath)
+		{
+			int count = StreamUtils.ReadUInt32asInt(fs);
+
+			List<FileInfo> partFiles = findOrCreateFileInfoList(rootFolderPath);
+
+			string filenameTemplate;
+			if (sectName == NokiaConstants.ptContacts)
+			{
+				contactList = partFiles;
+				filenameTemplate = "{0}.vcf";
+				addLine(count.ToString() + " contacts found");
+			}
+			else if (sectName == NokiaConstants.ptBookmarks)
+			{
+				filenameTemplate = "{0}.url";
+				addLine(count.ToString() + " bookmarks found");
+			}
+			else
+			{
+				filenameTemplate = "{0}.vcs";
+				addLine(count.ToString() + " calendar items found");
+			}
+
+			for (int i = 0; i < count; i++)
+			{
+				uint test = StreamUtils.ReadUInt32(fs);
+				if (test == 0x10)
+				{
+					test = StreamUtils.ReadUInt32(fs);
+					if (test > 1)
+					{
+						addLine("test 2 different greater than 0x01:" + test.ToString("X"));
+					}
+				}
+				else
+				{
+					addLine("test 1 different than 0x10:" + test.ToString("X"));
+				}
+
+				int vclen = StreamUtils.ReadUInt32asInt(fs);
+				long start = fs.Position;
+
+				byte[] buff = StreamUtils.ReadBuff(fs, vclen);
+				StreamUtils.Counter += buff.Length;
+
+				Vcard crd = new Vcard(System.Text.Encoding.UTF8.GetString(buff));
+
+				string name;
+				DateTime time = DateTime.MinValue;
+
+				if (sectName == NokiaConstants.ptContacts)
+				{
+					name = crd.Name;
+					foreach (string number in crd.PhoneNumbers)
+					{
+						DataSetNbuExplorer.AddPhonebookEntry(number, name);
+					}
+					time = crd.GetDateTime("REV");
+				}
+				else if (sectName == NokiaConstants.ptBookmarks)
+				{
+					name = crd["TITLE"];
+				}
+				else
+				{
+					partFiles = findOrCreateFileInfoList(rootFolderPath + "\\" + crd["X-EPOCAGENDAENTRYTYPE"]);
+					name = crd["SUMMARY"];
+					time = crd.GetDateTime("DTSTART");
+				}
+
+				if (string.IsNullOrEmpty(name)) name = numToName(i + 1);
+
+				partFiles.Add(new FileInfo(string.Format(filenameTemplate, name), start, vclen, time));
+
+				if (crd.Photo != null)
+				{
+					partFiles.Add(new FileInfoMemory(name + "." + crd.PhotoExtension, crd.Photo, time));
+				}
+			}
+		}
+
 		private void parseContacts(FileStream fs)
 		{
 			int count = StreamUtils.ReadUInt32asInt(fs);
@@ -1563,8 +1598,7 @@ namespace NbuExplorer
 							//addLine(StreamUtils.ReadUInt16(fs).ToString());
 							fs.Seek(2, SeekOrigin.Current);
 
-							byte[] buff = new byte[len2];
-							fs.Read(buff, 0, len2);
+							byte[] buff = StreamUtils.ReadBuff(fs, len2);
 							StreamUtils.Counter += len2;
 
 							string msg;
