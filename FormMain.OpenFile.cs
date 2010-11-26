@@ -262,79 +262,87 @@ namespace NbuExplorer
 							case ProcessType.Vcards:
 								count = StreamUtils.ReadUInt32asInt(fs);
 								partPos = fs.Position;
-								fs.Seek(partStartAddr + 0x30, SeekOrigin.Begin);
-
-								partFiles = findOrCreateFileInfoList(sect.name);
-
-								string filenameTemplate;
-								if (sect.name == NokiaConstants.ptContacts)
+								try
 								{
-									contactList = partFiles;
-									filenameTemplate = "{0}.vcf";
-									addLine(count.ToString() + " contacts found");
-								}
-								else if (sect.name == NokiaConstants.ptBookmarks)
-								{
-									fs.Seek(8, SeekOrigin.Current);
-									filenameTemplate = "{0}.url";
-									addLine(count.ToString() + " bookmarks found");
-								}
-								else
-								{
-									filenameTemplate = "{0}.vcs";
-									addLine(count.ToString() + " calendar items found");
-								}
+									fs.Seek(partStartAddr + 0x30, SeekOrigin.Begin);
 
-								for (int i = 0; i < count; i++)
-								{
-									uint test = StreamUtils.ReadUInt32(fs);
-									if (test < 0x10)
-									{
-										foldername = StreamUtils.ReadString(fs);
-										partFiles = findOrCreateFileInfoList(sect.name + "\\" + foldername);
-										addLine("Folder '" + foldername + "' found");
-										fs.Seek(8, SeekOrigin.Current);
-									}
-									fs.Seek(4, SeekOrigin.Current);
-									long start = fs.Position + 4;
-									int vclen = StreamUtils.ReadUInt32asInt(fs);
-									byte[] buff = new byte[vclen];
-									fs.Read(buff, 0, buff.Length);
-									StreamUtils.Counter += buff.Length;
+									partFiles = findOrCreateFileInfoList(sect.name);
 
-									Vcard crd = new Vcard(System.Text.Encoding.UTF8.GetString(buff));
-
-									string name;
-									DateTime time = DateTime.MinValue;
-
+									string filenameTemplate;
 									if (sect.name == NokiaConstants.ptContacts)
 									{
-										name = crd.Name;
-										foreach (string number in crd.PhoneNumbers)
-										{
-											DataSetNbuExplorer.AddPhonebookEntry(number, name);
-										}
-										time = crd.GetDateTime("REV");
+										contactList = partFiles;
+										filenameTemplate = "{0}.vcf";
+										addLine(count.ToString() + " contacts found");
 									}
 									else if (sect.name == NokiaConstants.ptBookmarks)
 									{
-										name = crd["TITLE"];
+										fs.Seek(8, SeekOrigin.Current);
+										filenameTemplate = "{0}.url";
+										addLine(count.ToString() + " bookmarks found");
 									}
 									else
 									{
-										partFiles = findOrCreateFileInfoList(sect.name + "\\" + crd["X-EPOCAGENDAENTRYTYPE"]);
-										name = crd["SUMMARY"];
-										time = crd.GetDateTime("DTSTART");
+										filenameTemplate = "{0}.vcs";
+										addLine(count.ToString() + " calendar items found");
 									}
 
-									if (string.IsNullOrEmpty(name)) name = numToName(i + 1);
-
-									partFiles.Add(new FileInfo(string.Format(filenameTemplate, name), start, vclen, time));
-
-									if (crd.Photo != null)
+									for (int i = 0; i < count; i++)
 									{
-										partFiles.Add(new FileInfoMemory(name + "." + crd.PhotoExtension, crd.Photo, time));
+										uint test = StreamUtils.ReadUInt32(fs);
+										if (test < 0x10)
+										{
+											foldername = StreamUtils.ReadString(fs);
+											partFiles = findOrCreateFileInfoList(sect.name + "\\" + foldername);
+											addLine("Folder '" + foldername + "' found");
+											fs.Seek(8, SeekOrigin.Current);
+										}
+										fs.Seek(4, SeekOrigin.Current);
+										long start = fs.Position + 4;
+										int vclen = StreamUtils.ReadUInt32asInt(fs);
+										byte[] buff = new byte[vclen];
+										fs.Read(buff, 0, buff.Length);
+										StreamUtils.Counter += buff.Length;
+
+										Vcard crd = new Vcard(System.Text.Encoding.UTF8.GetString(buff));
+
+										string name;
+										DateTime time = DateTime.MinValue;
+
+										if (sect.name == NokiaConstants.ptContacts)
+										{
+											name = crd.Name;
+											foreach (string number in crd.PhoneNumbers)
+											{
+												DataSetNbuExplorer.AddPhonebookEntry(number, name);
+											}
+											time = crd.GetDateTime("REV");
+										}
+										else if (sect.name == NokiaConstants.ptBookmarks)
+										{
+											name = crd["TITLE"];
+										}
+										else
+										{
+											partFiles = findOrCreateFileInfoList(sect.name + "\\" + crd["X-EPOCAGENDAENTRYTYPE"]);
+											name = crd["SUMMARY"];
+											time = crd.GetDateTime("DTSTART");
+										}
+
+										if (string.IsNullOrEmpty(name)) name = numToName(i + 1);
+
+										partFiles.Add(new FileInfo(string.Format(filenameTemplate, name), start, vclen, time));
+
+										if (crd.Photo != null)
+										{
+											partFiles.Add(new FileInfoMemory(name + "." + crd.PhotoExtension, crd.Photo, time));
+										}
 									}
+								}
+								catch (Exception exc)
+								{
+									addLine(exc.Message);
+									analyzeRequest = true;
 								}
 
 								fs.Seek(partPos, SeekOrigin.Begin);
