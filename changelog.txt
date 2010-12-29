@@ -1,6 +1,15 @@
 History & Changelog
 ===================
 
+Version 2.1
+ - fixed:    continue after error during file extraction
+ - fixed:    fixes in parsing of compressed fragments (file coverage increased,
+             out of memory error prevention)
+ - fixed:    continue parsing after parse error in vcard section
+ - fixed:    vcard sections (contacts, calendar, bookmarks) parsing rearranged
+             to support subfolders (N8 calendar issue)
+ - fixed:    binary encoded SMS parsing improved (number format type detection)
+
 Version 2.0
  - added:    "messages" tab for user friendly message browsing
              and exporting to txt, csv or xml

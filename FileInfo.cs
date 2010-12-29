@@ -189,6 +189,12 @@ namespace NbuExplorer
 
 	public class FileInfoCfMultiPart : FileInfo
 	{
+		private bool shortened = false;
+		public bool Shortened
+		{
+			get { return shortened; }
+		}
+
 		private List<FileInfoCfPart> parts = new List<FileInfoCfPart>();
 		public List<FileInfoCfPart> Parts
 		{
@@ -206,6 +212,12 @@ namespace NbuExplorer
 		public override long FileSize
 		{
 			get { return totalLength; }
+		}
+
+		public void Shorten(long cutLength)
+		{
+			shortened = true;
+			totalLength -= cutLength;
 		}
 
 		public long MissingLength

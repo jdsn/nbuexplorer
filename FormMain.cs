@@ -517,7 +517,17 @@ namespace NbuExplorer
 				if (dr == DialogResult.Cancel) return false;
 			}
 
-			writeFile(fi, targetFilename);
+			try
+			{
+				writeFile(fi, targetFilename);
+			}
+			catch (Exception exc)
+			{
+				if (MessageBox.Show(string.Format("Error exporting file '{0}': {1}\r\nContinue?", targetFilename, exc.Message), this.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == System.Windows.Forms.DialogResult.No)
+				{
+					return false;
+				}
+			}
 
 			return true;
 		}
