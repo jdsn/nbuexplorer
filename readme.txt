@@ -21,7 +21,8 @@ Main features
 System requirements
 ===================
 To run this application you need to have installed MS .Net Framework 2.0
-(or newer) runtime. It can be downloaded from official MS download pages:
+(3.0 or 3.5 should be fine too) runtime. It can be downloaded from official
+Microsoft download pages:
 http://www.microsoft.com/downloads/details.aspx?FamilyID=0856eacb-4362-4b0d-8edd-aab15c5e04f5
 
 The application should also run under the Mono runtime. It was successfully
