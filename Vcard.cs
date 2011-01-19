@@ -37,6 +37,7 @@ namespace NbuExplorer
 
 		private static Regex rexEnc = new Regex("ENCODING=([^;]+)");
 		private static Regex rexChs = new Regex("CHARSET=([^;]+)");
+		private static Regex rexQuoteEndSpaceBreak = new Regex(@" +=\r\n[\s]*");
 		private static Regex rexQuoteLineBreak = new Regex(@"=\r\n[\s]*");
 		private static Regex rexBase64photo = new Regex(@"PHOTO((;ENCODING=BASE64)|(;TYPE=(?<type>.*?))){1,2}:(?<data>.*?((\r\n\r\n)|(=\r\n)))", RegexOptions.Singleline);
 		private static Regex rexMsgBody = new Regex(@"BEGIN:VBODY\r?\nDate:([0-9.: ]+)\r?\n(.*?)\r?\nEND:VBODY\r?\n", RegexOptions.Singleline);
@@ -185,7 +186,9 @@ namespace NbuExplorer
 				data = data.Substring(0, photoMatch.Index) + data.Substring(photoMatch.Index + photoMatch.Length);
 			}
 
-			string[] lines = rexQuoteLineBreak.Replace(data, "").Replace("\r\n", "\n").Split('\n');
+			data = rexQuoteEndSpaceBreak.Replace(data, "\r\n");
+			data = rexQuoteLineBreak.Replace(data, "");
+			string[] lines = data.Replace("\r\n", "\n").Split('\n');
 
 			foreach (string line in lines)
 			{
