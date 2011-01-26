@@ -134,6 +134,8 @@ namespace NbuExplorer
 				}
 				else
 				{
+					if (index > 1)
+						s.Seek(1 - index, SeekOrigin.Current);
 					index = 0;
 				}
 			}

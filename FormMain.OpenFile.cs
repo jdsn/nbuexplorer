@@ -403,109 +403,166 @@ namespace NbuExplorer
 				#region arc
 				else if (!bruteForceScan && fileext == ".arc")
 				{
-					List<FileInfo> compFr = findOrCreateFileInfoList("compressed fragments");
-
-					fs.Seek(0x1C, SeekOrigin.Begin);
-					UInt32 test1 = StreamUtils.ReadUInt32(fs);
-					fs.Seek(4, SeekOrigin.Current);
-					UInt32 test2 = StreamUtils.ReadUInt32(fs);
-					bool startsWithFiles =
-						(test1 == 0 && test2 == 0) ||                   // Backup.arc
-						(test1 == 0x1ea367a4 && test2 == 0xb00d58ae) || // UserFiles.arc
-						(test1 == 0x53fb0d19 && test2 == 0xef7ac531);   // Settings.arc
-
-					fs.Seek(0x3C, SeekOrigin.Begin);
-					addLine("Phone model: " + StreamUtils.ReadShortString(fs));
-					addLine("");
-
-					long startAddr = fs.Position;
-					long lenComp;
-					long lenUncomp;
-
-					byte[] seq = new byte[] { 0, 0, 0, 1, 0, 0, 0, 0 };
-					byte[] buff = new byte[8];
-
-					if (startsWithFiles && StreamUtils.SeekTo(seq, fs))
+					UInt32 test0 = StreamUtils.ReadUInt32(fs);
+					if (test0 == 0x101F4667)
 					{
-						string filename = "";
-						string dir = "";
-						long recoveryAddr;
+						List<FileInfo> compFr = findOrCreateFileInfoList("compressed fragments");
 
-						do
+						fs.Seek(0x1C, SeekOrigin.Begin);
+						UInt32 test1 = StreamUtils.ReadUInt32(fs);
+						fs.Seek(4, SeekOrigin.Current);
+						UInt32 test2 = StreamUtils.ReadUInt32(fs);
+						bool startsWithFiles =
+							(test1 == 0 && test2 == 0) ||                   // Backup.arc
+							(test1 == 0x1ea367a4 && test2 == 0xb00d58ae) || // UserFiles.arc
+							(test1 == 0x53fb0d19 && test2 == 0xef7ac531);   // Settings.arc
+
+						fs.Seek(0x3C, SeekOrigin.Begin);
+						addLine("Phone model: " + StreamUtils.ReadShortString(fs));
+						addLine("");
+
+						long startAddr = fs.Position;
+						long lenComp;
+						long lenUncomp;
+
+						byte[] seq = new byte[] { 0, 0, 0, 1, 0, 0, 0, 0 };
+						byte[] buff = new byte[8];
+
+						if (startsWithFiles && StreamUtils.SeekTo(seq, fs))
 						{
-							recoveryAddr = fs.Position;
+							string filename = "";
+							string dir = "";
+							long recoveryAddr;
 
-							fs.Seek(12, SeekOrigin.Current);
-							filename = StreamUtils.ReadStringTo(fs, 0, 0x80);
-							fs.Seek(11, SeekOrigin.Current);
-							lenUncomp = StreamUtils.ReadUInt32(fs);
-							fs.Seek(12, SeekOrigin.Current);
-							lenComp = StreamUtils.ReadUInt64asLong(fs);
-
-							addLine(filename + " - size: " + lenComp + " / " + lenUncomp);
-							try
-							{
-								dir = Path.GetDirectoryName(filename);
-								filename = Path.GetFileName(filename);
-							}
-							catch (Exception exc)
-							{
-								addLine(exc.Message);
-								analyzeRequest = true;
-
-								fs.Seek(recoveryAddr, SeekOrigin.Begin);
-								if (StreamUtils.SeekTo(NokiaConstants.compHead, fs))
-								{
-									fs.Seek(-22, SeekOrigin.Current);
-								}
-								break;
-							}
-
-							List<FileInfo> list = findOrCreateFileInfoList(dir);
-							if (filename.Length > 0 && lenComp > 8)
-							{
-								list.Add(new FileinfoCf(filename, startAddr, lenComp, lenUncomp, DateTime.MinValue));
-							}
-
-							StreamUtils.Counter += lenComp;
-							startAddr += lenComp;
-
-							fs.Seek(1, SeekOrigin.Current);
-							fs.Read(buff, 0, buff.Length);
-						}
-						while (NokiaConstants.CompareByteArr(seq, buff));
-
-						addLine(""); // end of first section
-					}
-
-					seq[3] = 0;
-
-					while (true)
-					{
-						fs.Read(buff, 0, buff.Length);
-						if (NokiaConstants.CompareByteArr(seq, buff))
-						{
-							fs.Seek(4, SeekOrigin.Current);
 							do
 							{
-								lenComp = StreamUtils.ReadUInt32(fs);
+								recoveryAddr = fs.Position;
+
+								fs.Seek(12, SeekOrigin.Current);
+								filename = StreamUtils.ReadStringTo(fs, 0, 0x80);
+								fs.Seek(11, SeekOrigin.Current);
 								lenUncomp = StreamUtils.ReadUInt32(fs);
+								fs.Seek(12, SeekOrigin.Current);
+								lenComp = StreamUtils.ReadUInt64asLong(fs);
 
-								FileinfoCf fi = new FileinfoCf(numToAddr(fs.Position), fs.Position, lenComp, lenUncomp, DateTime.MinValue);
-								compFr.Add(fi);
+								addLine(filename + " - size: " + lenComp + " / " + lenUncomp);
+								try
+								{
+									dir = Path.GetDirectoryName(filename);
+									filename = Path.GetFileName(filename);
+								}
+								catch (Exception exc)
+								{
+									addLine(exc.Message);
+									analyzeRequest = true;
 
-								addLine(fi.Filename + " - compressed fragment");
-								parseCompressedFragment("", fi, lenUncomp);
+									fs.Seek(recoveryAddr, SeekOrigin.Begin);
+									if (StreamUtils.SeekTo(NokiaConstants.compHead, fs))
+									{
+										fs.Seek(-22, SeekOrigin.Current);
+									}
+									break;
+								}
 
-								fs.Seek(lenComp, SeekOrigin.Current);
+								List<FileInfo> list = findOrCreateFileInfoList(dir);
+								if (filename.Length > 0 && lenComp > 8)
+								{
+									list.Add(new FileinfoCf(filename, startAddr, lenComp, lenUncomp, DateTime.MinValue));
+								}
+
+								StreamUtils.Counter += lenComp;
+								startAddr += lenComp;
+
+								fs.Seek(1, SeekOrigin.Current);
+								fs.Read(buff, 0, buff.Length);
 							}
-							while (lenUncomp == 65536);
+							while (NokiaConstants.CompareByteArr(seq, buff));
+
+							addLine(""); // end of first section
 						}
-						else if (StreamUtils.SeekTo(NokiaConstants.compHead, fs))
+
+						seq[3] = 0;
+
+						long lastRecoveryPosition = 0;
+
+						while (true)
 						{
-							fs.Seek(-22, SeekOrigin.Current);
+							fs.Read(buff, 0, buff.Length);
+							if (NokiaConstants.CompareByteArr(seq, buff))
+							{
+								fs.Seek(4, SeekOrigin.Current);
+								do
+								{
+									lenComp = StreamUtils.ReadUInt32(fs);
+									lenUncomp = StreamUtils.ReadUInt32(fs);
+
+									FileinfoCf fi = new FileinfoCf(numToAddr(fs.Position), fs.Position, lenComp, lenUncomp, DateTime.MinValue);
+									compFr.Add(fi);
+
+									addLine(fi.Filename + " - compressed fragment");
+									parseCompressedFragment("", fi, lenUncomp);
+
+									fs.Seek(lenComp, SeekOrigin.Current);
+								}
+								while (lenUncomp == 65536);
+							}
+							else
+							{
+								if (StreamUtils.SeekTo(NokiaConstants.compHead, fs))
+								{
+									if (lastRecoveryPosition != fs.Position)
+									{
+										lastRecoveryPosition = fs.Position;
+										fs.Seek(-22, SeekOrigin.Current);
+									}
+								}
+								else break;
+							}
 						}
-						else break;
+					}
+					else
+					{
+						byte[] pathStartSequence = new byte[] { 0x00, 0x5c, 0x00, 0x53, 0x00 };
+
+						if (StreamUtils.SeekTo(pathStartSequence, fs))
+						{
+							fs.Seek(-9, SeekOrigin.Current);
+							while (true)
+							{
+								try
+								{
+									int len = fs.ReadByte() / 2;
+
+									string filename = StreamUtils.ReadString(fs, len);
+									string dir = Path.GetDirectoryName(filename);
+
+									fs.Seek(10, SeekOrigin.Current); // ?? datetime?
+									UInt32 lenUncomp = StreamUtils.ReadUInt32(fs);
+									UInt32 lenComp = StreamUtils.ReadUInt32(fs);
+									StreamUtils.Counter += lenComp;
+
+									addLine(filename + " - size: " + lenComp + " / " + lenUncomp);
+									filename = Path.GetFileName(filename);
+
+									List<FileInfo> list = findOrCreateFileInfoList(dir);
+									list.Add(new FileinfoCf(filename, fs.Position, lenComp, lenUncomp, DateTime.MinValue));
+
+									fs.Seek(lenComp, SeekOrigin.Current);
+								}
+								catch
+								{
+									if (StreamUtils.SeekTo(pathStartSequence, fs))
+									{
+										fs.Seek(-9, SeekOrigin.Current);
+									}
+									else
+									{
+										break;
+									}
+								}
+							}
+						}
+
 					}
 
 
