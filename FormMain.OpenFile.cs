@@ -1550,6 +1550,11 @@ namespace NbuExplorer
 						case 0x306:
 							fs.Seek(15, SeekOrigin.Current);
 							break;
+						case 0:
+							fs.ReadByte(); // skip one byte
+							k = c3; // break inner cycle
+							j -= 1; // decrease outer cycle counter and retry
+							break;
 						default:
 							addLine("Unknown calendar field: " + x);
 							k = c3; // break inner cycle
@@ -1564,7 +1569,10 @@ namespace NbuExplorer
 					fs.Seek(4, SeekOrigin.Current);
 				}
 
-				addLine(s);
+				if (!string.IsNullOrEmpty(s))
+				{
+					addLine(string.Format("{0:000}: {1}", j + 1, s));
+				}
 			}
 		}
 
