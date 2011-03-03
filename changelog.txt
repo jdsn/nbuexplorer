@@ -1,6 +1,11 @@
 History & Changelog
 ===================
 
+Version 2.2
+ - fixed:    vcard parser improved
+ - fixed:    minor binary calendar parsinf fix
+ - improved: older phone models ARC format support added
+
 Version 2.1
  - fixed:    continue after error during file extraction
  - fixed:    fixes in parsing of compressed fragments (file coverage increased,

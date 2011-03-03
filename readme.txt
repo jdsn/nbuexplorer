@@ -85,5 +85,6 @@ Contact
 ===================
 Project homepage: http://sourceforge.net/projects/nbuexplorer
 SVN repository: https://nbuexplorer.svn.sourceforge.net/svnroot/nbuexplorer
+NbuExplorer at facebook: http://www.facebook.com/pages/NbuExplorer/175569482486926
 Donation page: http://sourceforge.net/donate/index.php?group_id=281139
 Author: Petr Vilem, petrusek@seznam.cz
