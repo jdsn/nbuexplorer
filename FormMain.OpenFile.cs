@@ -175,7 +175,7 @@ namespace NbuExplorer
 					long partPos, partStartAddr;//, partLength;
 					int count;
 
-					List<FileInfo> contactList = null;
+					List<FileInfo> contactList = new List<FileInfo>();
 
 					while (partcount > 0)
 					{
@@ -278,7 +278,7 @@ namespace NbuExplorer
 											fs.Seek(folderAddr + 4, SeekOrigin.Begin);
 											foldername = StreamUtils.ReadString(fs);
 											addLine(string.Format("\r\nFolder BEGIN {0}, name: '{1}'", numToAddr(folderAddr), foldername));
-											parseFolderVcard(fs, ref contactList, sect.name, sect.name + "\\" + foldername);
+											parseFolderVcard(fs, contactList, sect.name, sect.name + "\\" + foldername);
 										}
 										catch (Exception exc)
 										{
@@ -294,7 +294,7 @@ namespace NbuExplorer
 									try
 									{
 										fs.Seek(partStartAddr + 0x2C, SeekOrigin.Begin);
-										parseFolderVcard(fs, ref contactList, sect.name, sect.name);
+										parseFolderVcard(fs, contactList, sect.name, sect.name);
 									}
 									catch (Exception exc)
 									{
@@ -1267,7 +1267,7 @@ namespace NbuExplorer
 			}
 		}
 
-		private void parseFolderVcard(FileStream fs, ref List<FileInfo> contactList, string sectName, string rootFolderPath)
+		private void parseFolderVcard(FileStream fs, List<FileInfo> contactList, string sectName, string rootFolderPath)
 		{
 			int count = StreamUtils.ReadUInt32asInt(fs);
 
@@ -1276,7 +1276,6 @@ namespace NbuExplorer
 			string filenameTemplate;
 			if (sectName == NokiaConstants.ptContacts)
 			{
-				contactList = partFiles;
 				filenameTemplate = "{0}.vcf";
 				addLine(count.ToString() + " contacts found");
 			}
@@ -1340,7 +1339,12 @@ namespace NbuExplorer
 
 				if (string.IsNullOrEmpty(name)) name = numToName(i + 1);
 
-				partFiles.Add(new FileInfo(string.Format(filenameTemplate, name), start, vclen, time));
+				FileInfo fi = new FileInfo(string.Format(filenameTemplate, name), start, vclen, time);
+				partFiles.Add(fi);
+				if (sectName == NokiaConstants.ptContacts)
+				{
+					contactList.Add(fi);
+				}
 
 				if (crd.Photo != null)
 				{
