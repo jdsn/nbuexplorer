@@ -535,6 +535,7 @@ namespace NbuExplorer
 
 									string filename = StreamUtils.ReadString(fs, len);
 									string dir = Path.GetDirectoryName(filename);
+									bool canBeMessage = ExpectMessage(dir);
 
 									fs.Seek(10, SeekOrigin.Current); // ?? datetime?
 									UInt32 lenUncomp = StreamUtils.ReadUInt32(fs);
@@ -545,7 +546,10 @@ namespace NbuExplorer
 									filename = Path.GetFileName(filename);
 
 									List<FileInfo> list = findOrCreateFileInfoList(dir);
-									list.Add(new FileinfoCf(filename, fs.Position, lenComp, lenUncomp, DateTime.MinValue));
+
+									FileinfoCf fic = new FileinfoCf(filename, fs.Position, lenComp, lenUncomp, DateTime.MinValue);
+									if (canBeMessage) parseSymbianMessage(fic);
+									list.Add(fic);
 
 									fs.Seek(lenComp, SeekOrigin.Current);
 								}
@@ -711,7 +715,18 @@ namespace NbuExplorer
 			}
 		}
 
-
+		private static bool ExpectMessage(string dir)
+		{
+			if (dir.Contains("Mail"))
+			{
+				string[] tmp = dir.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+				return (tmp.Length > 4 
+					&& tmp[tmp.Length - 3].StartsWith("Mail")
+					//&& tmp[tmp.Length - 2] == "00001001_S"
+					);
+			}
+			return false;
+		}
 
 		private FileInfoCfMultiPart currentIncompleteMultipartFile = null;
 		private long currentHeaderLengthToSkip = 0;
@@ -794,6 +809,10 @@ namespace NbuExplorer
 					{
 						addLine(string.Format("multipart file '{0}' complete.", currentIncompleteMultipartFile.Filename));
 						currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.RawSize, fi.FileTime, 0, missingLength));
+						if (currentIncompleteMultipartFile.CanBeMessage)
+						{
+							parseSymbianMessage(currentIncompleteMultipartFile);
+						}
 						currentIncompleteMultipartFile.Finish();
 					}
 					currentIncompleteMultipartFile = null;
@@ -939,18 +958,23 @@ namespace NbuExplorer
 
 					addLine(fname);
 
-					compFr2 = findOrCreateFileInfoList(rootFolder + "\\" + Path.GetDirectoryName(fname));
+					string dir = Path.GetDirectoryName(fname);
+					bool canBeMessage = ExpectMessage(dir);
+
+					compFr2 = findOrCreateFileInfoList(rootFolder + "\\" + dir);
 					fname = Path.GetFileName(fname).Trim();
 					if (fname.Length > 0)
 					{
 						if (ms.Length >= ms.Position + fsize)
 						{
-							compFr2.Add(new FileInfoCfPart(fname, fi.Start, fi.RawSize, DateTime.MinValue, ms.Position, fsize));
+							FileInfoCfPart ficp = new FileInfoCfPart(fname, fi.Start, fi.RawSize, DateTime.MinValue, ms.Position, fsize);
+							if (canBeMessage) parseSymbianMessage(ficp);
+							compFr2.Add(ficp);
 							StreamUtils.Counter += fsize;
 						}
 						else
 						{
-							currentIncompleteMultipartFile = new FileInfoCfMultiPart(fname, DateTime.MinValue, fsize, compFr2);
+							currentIncompleteMultipartFile = new FileInfoCfMultiPart(fname, DateTime.MinValue, fsize, compFr2, canBeMessage);
 							currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.RawSize, DateTime.MinValue, ms.Position, ms.Length - ms.Position));
 							StreamUtils.Counter += (ms.Length - ms.Position);
 							addLine("incomplete file, continue on next fragment...");
@@ -966,6 +990,28 @@ namespace NbuExplorer
 				addLine(string.Format("Parsing ERROR at position {0}: {1}", ms.Position.ToString("X"), exc.Message));
 			}
 
+		}
+
+		private void parseSymbianMessage(FileInfo fi)
+		{
+			long cnt = StreamUtils.Counter;
+			try
+			{
+				MemoryStream ms = new MemoryStream();
+				fi.CopyToStream(currentFileName, ms);
+				ms.Seek(0, SeekOrigin.Begin);
+				SymbianMessage sm = new SymbianMessage(ms);
+				fi.FileTime = sm.MessageTime;
+				DataSetNbuExplorer.AddMessageFromSymbianMessage(sm);
+			}
+			catch (Exception ex)
+			{
+				addLine(ex.Message);
+			}
+			finally
+			{
+				StreamUtils.Counter = cnt;
+			}
 		}
 
 		private void parseFolder(FileStream fs, long start, string sectName)
@@ -1258,7 +1304,11 @@ namespace NbuExplorer
 
 							fs.Seek(12, SeekOrigin.Current);
 							long len = StreamUtils.ReadUInt32(fs);
-							partFiles.Add(new FileInfo(filename, fs.Position + 2, len));
+
+							FileInfo fi = new FileInfo(filename, fs.Position + 2, len);
+							if (ExpectMessage(foldername)) parseSymbianMessage(fi);
+							partFiles.Add(fi);
+
 							fs.Seek(len + 2, SeekOrigin.Current);
 							StreamUtils.Counter += len;
 						}
@@ -1794,7 +1844,7 @@ namespace NbuExplorer
 			}
 		}
 
-		static string buffToString(byte[] buff)
+		public static string buffToString(byte[] buff)
 		{
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
 			for (int i = 0; i < buff.Length; i++)

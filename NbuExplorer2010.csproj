@@ -12,7 +12,6 @@
     <AssemblyName>NbuExplorer</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <NoWin32Manifest>true</NoWin32Manifest>
     <ApplicationIcon>Resources\1254343123_phone.ico</ApplicationIcon>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -56,6 +55,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
+  <PropertyGroup />
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -89,6 +89,7 @@
     <Compile Include="Mms.cs" />
     <Compile Include="NokiaConstants.cs" />
     <Compile Include="Pattern.cs" />
+    <Compile Include="SymbianMessage.cs" />
     <Compile Include="UnicodeExpander.cs" />
     <Compile Include="Vcard.cs" />
     <Compile Include="FileInfo.cs" />

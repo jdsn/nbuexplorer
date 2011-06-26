@@ -255,18 +255,18 @@ namespace NbuExplorer
 					{
 						textBoxPreview.Visible = true;
 						pictureBoxPreview.Visible = false;
-						if (StreamUtils.SeekTo(UnicodeExpander.msgBodyStartSeq, ms))
-						{
-							string body = UnicodeExpander.Expand(ms);
 
-							textBoxPreview.Text = body;
-							return;
-						}
-						else
+						try
 						{
-							textBoxPreview.Text = "Unknown format";
-							return;
+							SymbianMessage sm = new SymbianMessage(ms);
+							textBoxPreview.Text = sm.ToString();
 						}
+						catch (Exception exc)
+						{
+							textBoxPreview.Text = exc.Message;
+						}
+
+						return;
 					}
 				}
 				catch { }

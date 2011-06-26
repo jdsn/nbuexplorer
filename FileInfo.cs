@@ -62,7 +62,11 @@ namespace NbuExplorer
 		public long RawSize { get { return length; } }
 
 		protected DateTime fileTime;
-		public DateTime FileTime { get { return fileTime; } }
+		public DateTime FileTime
+		{
+			get { return fileTime; }
+			set { fileTime = value; }
+		}
 
 		protected bool compressed;
 		public bool Compressed { get { return compressed; } }
@@ -195,6 +199,12 @@ namespace NbuExplorer
 			get { return shortened; }
 		}
 
+		private bool canBeMessage = false;
+		public bool CanBeMessage
+		{
+			get { return canBeMessage; }
+		}
+
 		private List<FileInfoCfPart> parts = new List<FileInfoCfPart>();
 		public List<FileInfoCfPart> Parts
 		{
@@ -233,11 +243,12 @@ namespace NbuExplorer
 			}
 		}
 
-		public FileInfoCfMultiPart(string filename, DateTime fileTime, long totalLength, List<FileInfo> parentList)
+		public FileInfoCfMultiPart(string filename, DateTime fileTime, long totalLength, List<FileInfo> parentList, bool canBeMessage)
 			: base(filename, 0, 0, fileTime, true)
 		{
 			this.totalLength = totalLength;
 			this.parentList = parentList;
+			this.canBeMessage = canBeMessage;
 		}
 
 		public override void CopyToStream(string sourceNbuFile, Stream fstgt)

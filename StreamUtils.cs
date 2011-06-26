@@ -87,9 +87,15 @@ namespace NbuExplorer
 
 		public static string ReadShortString(Stream s)
 		{
-			byte[] buff = new byte[s.ReadByte()];
+			Counter += 1;
+			return ReadShortString(s, s.ReadByte());
+		}
+
+		public static string ReadShortString(Stream s, int len)
+		{
+			byte[] buff = new byte[len];
 			s.Read(buff, 0, buff.Length);
-			Counter += 1 + buff.Length;
+			Counter += buff.Length;
 			return Encoding.ASCII.GetString(buff);
 		}
 
@@ -118,6 +124,26 @@ namespace NbuExplorer
 			UInt16 year = BitConverter.ToUInt16(buff, 0);
 			DateTime dt = new DateTime((int)year, (int)buff[2], (int)buff[3], (int)buff[4], (int)buff[5], (int)buff[6]);
 			return dt;
+		}
+
+		public static DateTime ReadNokiaDateTime3(Stream s)
+		{
+			UInt64 sec = StreamUtils.ReadUInt64(s) / 1000000;
+			try
+			{
+				DateTime dt = DateTime.MinValue.AddSeconds(sec).AddDays(-378);
+				return dt;
+			}
+			catch(Exception ex)
+			{
+				throw new ApplicationException("Invalid datetime value", ex);
+			}
+		}
+
+		public static string ReadPhoneNumber(Stream s)
+		{
+			int len = s.ReadByte() / 4;
+			return ReadShortString(s, len);
 		}
 
 		public static bool SeekTo(byte[] sequence, Stream s)
