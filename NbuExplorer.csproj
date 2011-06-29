@@ -28,7 +28,6 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
@@ -81,6 +80,7 @@
     <Compile Include="Mms.cs" />
     <Compile Include="NokiaConstants.cs" />
     <Compile Include="Pattern.cs" />
+    <Compile Include="SymbianMessage.cs" />
     <Compile Include="UnicodeExpander.cs" />
     <Compile Include="Vcard.cs" />
     <Compile Include="FileInfo.cs" />

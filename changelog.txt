@@ -1,6 +1,11 @@
 History & Changelog
 ===================
 
+Version 2.3
+ - fixed:    group parsing
+ - added:    experimental (not perfect, but somehow working) parsing of messages
+             from symbian message storage
+
 Version 2.2
  - fixed:    vcard parser improved
  - fixed:    minor binary calendar parsinf fix

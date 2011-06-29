@@ -88,6 +88,23 @@ namespace NbuExplorer
 			0xFF60		// Halfwidth katakana
 		};
 
+		public static string ReadShortString(Stream s)
+		{
+			int len = s.ReadByte();
+			if (len == 0) return "";
+			else if ((len & 3) > 0)
+			{
+				throw new FormatException("Invalid string length");
+			}
+			len = len << 2;
+			string result = Expand(s, len);
+			if (result.Contains("\x0"))
+			{
+				throw new FormatException("Invalid character in string");
+			}
+			return result;
+		}
+
 		public static string Expand(Stream s)
 		{
 			int len = ReadInt(s);

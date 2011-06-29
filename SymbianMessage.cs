@@ -89,20 +89,14 @@ namespace NbuExplorer
 			{
 				messageText = UnicodeExpander.Expand(ms);
 
-				test = ms.ReadByte();
-				if (test == 0x0F || test == -1)
-				{
-					// email - nothing more to be found
-					return;
-				}
-				else if (test != 0x20)
-				{
-					// unexpected
-				}
-
 				try
 				{
-					ms.Seek(6, SeekOrigin.Current);
+					test = StreamUtils.ReadUInt16(ms);
+					if (test != 0x2920) throw new ApplicationException("Not sms");
+					test = StreamUtils.ReadUInt16(ms);
+					if (test != 0x1834) throw new ApplicationException("Not sms");
+
+					ms.Seek(3, SeekOrigin.Current);
 					//parseLog.AppendLine(FormMain.buffToString(StreamUtils.ReadBuff(ms, 6)));
 
 					int dirByte = ms.ReadByte();
@@ -139,15 +133,23 @@ namespace NbuExplorer
 						ms.Seek(20, SeekOrigin.Current);
 						messageTime = StreamUtils.ReadNokiaDateTime3(ms);
 						phoneNumber = StreamUtils.ReadPhoneNumber(ms);
+
+						if (StreamUtils.SeekTo(new byte[] { 0x02, 0x03, 0xC2, 0x01 }, ms))
+						{
+							ms.Seek(9, SeekOrigin.Current);
+							StreamUtils.ReadNokiaDateTime3(ms);
+							ms.Seek(2, SeekOrigin.Current);
+							smscNumber = StreamUtils.ReadPhoneNumber(ms);
+						}
 					}
 					else if (dirByte == 3 || dirByte == 4)
 					{
-						direction = MessageDirection.Incoming;
 						ms.Seek(2, SeekOrigin.Current);
 
 						test = ms.ReadByte();
 						if (test == 0)
 						{
+							direction = MessageDirection.Incoming;
 							ms.Seek(20, SeekOrigin.Current);
 							messageTime = StreamUtils.ReadNokiaDateTime3(ms);
 							ms.Seek(2, SeekOrigin.Current);
@@ -158,10 +160,10 @@ namespace NbuExplorer
 						}
 						else if (test == 1)
 						{
+							direction = MessageDirection.Outgoing;
 							ms.Seek(25, SeekOrigin.Current);
 							phoneNumber = StreamUtils.ReadPhoneNumber(ms);
-							int len = ms.ReadByte() / 4;
-							name = UnicodeExpander.Expand(ms, len);
+							name = UnicodeExpander.ReadShortString(ms);
 
 							test = ms.ReadByte();
 							if (test == 1)
@@ -170,8 +172,8 @@ namespace NbuExplorer
 							}
 
 							ms.Seek(21, SeekOrigin.Current);
+							// TODO: check these values
 							messageTime = StreamUtils.ReadNokiaDateTime3(ms);
-							return;
 						}
 						else
 						{
