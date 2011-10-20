@@ -79,8 +79,29 @@ namespace NbuExplorer
 			Application.DoEvents();
 		}
 
+		private bool dirExists(string path)
+		{
+			string[] pth = path.Split('\\', '/');
+			TreeNodeCollection cc = treeViewDirs.Nodes;
+			int i;
+			for (i = 0; i < pth.Length; i++)
+			{
+				if (pth[i].Length == 0) continue;
+				foreach (TreeNode tn in cc)
+				{
+					if (tn.Text.ToLower() == pth[i].ToLower())
+					{
+						cc = tn.Nodes;
+						break;
+					}
+				}
+			}
+			return (i == pth.Length);
+		}
+
 		private TreeNode findOrCreateDirNode(string path)
 		{
+			if (String.IsNullOrEmpty(path)) path = "_root_";
 			string[] pth = path.Split('\\', '/');
 			TreeNodeCollection cc = treeViewDirs.Nodes;
 			TreeNode cn = null;
@@ -132,7 +153,7 @@ namespace NbuExplorer
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog ofd = new OpenFileDialog();
-			ofd.Filter = "Nokia backup files|*.nbu;*.nfb;*.nfc;*.arc|All files (bruteforce scan)|*.*";
+			ofd.Filter = "Nokia backup files|*.nbu;*.nfb;*.nfc;*.arc;*.nbf;*.zip|All files (bruteforce scan)|*.*";
 #if DEBUG
 			ofd.Multiselect = true;
 			if (ofd.ShowDialog() == DialogResult.OK)

@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace NbuExplorer
 {
@@ -60,6 +61,7 @@ namespace NbuExplorer
 			try
 			{
 				fs = File.OpenRead(currentFileName);
+				long nbufilesize = fs.Length;
 
 				string fileext = Path.GetExtension(currentFileName).ToLower();
 
@@ -576,6 +578,37 @@ namespace NbuExplorer
 					}
 				}
 				#endregion
+				#region nbf & zip
+				else if (!bruteForceScan && (fileext == ".nbf" || fileext == ".zip"))
+				{
+					ZipInputStream zi = new ZipInputStream(fs);
+					ZipEntry ze;
+					int index = 0;
+
+					while ((ze = zi.GetNextEntry()) != null)
+					{
+						addLine(ze.Name);
+						StreamUtils.Counter += ze.CompressedSize;
+						if (ze.IsDirectory)
+						{
+							findOrCreateDirNode(ze.Name);
+						}
+						else
+						{
+							if (ze.Size == 0 && dirExists(ze.Name))
+							{
+								addLine("^ redundant directory ignored");
+							}
+							else
+							{
+								string dir = Path.GetDirectoryName(ze.Name);
+								findOrCreateFileInfoList(dir).Add(new FileInfoZip(ze, index));
+							}
+						}
+						index++;
+					}
+				}
+				#endregion
 				#region bruteforce
 				else
 				{
@@ -675,7 +708,7 @@ namespace NbuExplorer
 				#endregion
 
 				addLine("");
-				addLine(string.Format("Done, file coverage: {0:0.##}%", 100 * (float)StreamUtils.Counter / fs.Length));
+				addLine(string.Format("Done, file coverage: {0:0.##}%", 100 * (float)StreamUtils.Counter / nbufilesize));
 
 				addLine("");
 				recursiveRenameDuplicates(treeViewDirs.Nodes);

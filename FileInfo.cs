@@ -76,6 +76,10 @@ namespace NbuExplorer
 			get { return (fileTime > DateTime.MinValue); }
 		}
 
+		protected FileInfo()
+		{
+		}
+
 		public FileInfo(string filename, long start, long length)
 			: this(filename, start, length, DateTime.MinValue, false)
 		{
@@ -101,32 +105,11 @@ namespace NbuExplorer
 			try
 			{
 				fssrc.Seek(this.Start, SeekOrigin.Begin);
-
-				byte[] buff = new byte[1024];
-				long rest = this.length;
-
 				if (compressed)
 				{
 					fstgt = new ComponentAce.Compression.Libs.zlib.ZOutputStream(fstgt);
 				}
-
-				while (true)
-				{
-					if (fssrc.Read(buff, 0, buff.Length) == 0)
-					{
-						throw new EndOfStreamException();
-					}
-					if (rest > buff.Length)
-					{
-						fstgt.Write(buff, 0, buff.Length);
-						rest -= buff.Length;
-					}
-					else
-					{
-						fstgt.Write(buff, 0, (int)rest);
-						break;
-					}
-				}
+				StreamUtils.CopyFromStreamToStream(fssrc, fstgt, this.length);
 			}
 			finally
 			{

@@ -80,6 +80,7 @@
       <DependentUpon>DataSetNbuExplorer.xsd</DependentUpon>
     </Compile>
     <Compile Include="ExtractIcon.cs" />
+    <Compile Include="FileInfoZip.cs" />
     <Compile Include="QutedTextDecoder.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -89,6 +90,47 @@
     <Compile Include="Mms.cs" />
     <Compile Include="NokiaConstants.cs" />
     <Compile Include="Pattern.cs" />
+    <Compile Include="sharpziplib\Checksums\Adler32.cs" />
+    <Compile Include="sharpziplib\Checksums\CRC32.cs" />
+    <Compile Include="sharpziplib\Checksums\IChecksum.cs" />
+    <Compile Include="sharpziplib\Checksums\StrangeCRC.cs" />
+    <Compile Include="sharpziplib\Core\FileSystemScanner.cs" />
+    <Compile Include="sharpziplib\Core\INameTransform.cs" />
+    <Compile Include="sharpziplib\Core\IScanFilter.cs" />
+    <Compile Include="sharpziplib\Core\NameFilter.cs" />
+    <Compile Include="sharpziplib\Core\PathFilter.cs" />
+    <Compile Include="sharpziplib\Core\StreamUtils.cs" />
+    <Compile Include="sharpziplib\Core\WindowsPathUtils.cs" />
+    <Compile Include="sharpziplib\Encryption\PkzipClassic.cs" />
+    <Compile Include="sharpziplib\Encryption\ZipAESStream.cs" />
+    <Compile Include="sharpziplib\Encryption\ZipAESTransform.cs" />
+    <Compile Include="sharpziplib\SharpZipBaseException.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Deflater.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\DeflaterConstants.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\DeflaterEngine.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\DeflaterHuffman.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\DeflaterPending.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Inflater.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\InflaterDynHeader.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\InflaterHuffmanTree.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\PendingBuffer.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Streams\DeflaterOutputStream.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Streams\InflaterInputStream.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Streams\OutputWindow.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Streams\StreamManipulator.cs" />
+    <Compile Include="sharpziplib\Zip\FastZip.cs" />
+    <Compile Include="sharpziplib\Zip\IEntryFactory.cs" />
+    <Compile Include="sharpziplib\Zip\WindowsNameTransform.cs" />
+    <Compile Include="sharpziplib\Zip\ZipConstants.cs" />
+    <Compile Include="sharpziplib\Zip\ZipEntry.cs" />
+    <Compile Include="sharpziplib\Zip\ZipEntryFactory.cs" />
+    <Compile Include="sharpziplib\Zip\ZipException.cs" />
+    <Compile Include="sharpziplib\Zip\ZipExtraData.cs" />
+    <Compile Include="sharpziplib\Zip\ZipFile.cs" />
+    <Compile Include="sharpziplib\Zip\ZipHelperStream.cs" />
+    <Compile Include="sharpziplib\Zip\ZipInputStream.cs" />
+    <Compile Include="sharpziplib\Zip\ZipNameTransform.cs" />
+    <Compile Include="sharpziplib\Zip\ZipOutputStream.cs" />
     <Compile Include="SymbianMessage.cs" />
     <Compile Include="UnicodeExpander.cs" />
     <Compile Include="Vcard.cs" />

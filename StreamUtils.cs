@@ -202,6 +202,29 @@ namespace NbuExplorer
 			return result;
 		}
 
+		public static void CopyFromStreamToStream(Stream src, Stream dst, long bytesCount)
+		{
+			byte[] buff = new byte[1024];
+			long rest = bytesCount;
+			while (true)
+			{
+				if (src.Read(buff, 0, buff.Length) == 0)
+				{
+					throw new EndOfStreamException();
+				}
+				if (rest > buff.Length)
+				{
+					dst.Write(buff, 0, buff.Length);
+					rest -= buff.Length;
+				}
+				else
+				{
+					dst.Write(buff, 0, (int)rest);
+					break;
+				}
+			}
+		}
+
 	}
 
 	public static class StreamUtilsPdu
