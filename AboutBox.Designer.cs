@@ -36,6 +36,7 @@ namespace NbuExplorer
 			this.okButton = new System.Windows.Forms.Button();
 			this.linkLabelHome = new System.Windows.Forms.LinkLabel();
 			this.linkLabelDonate = new System.Windows.Forms.LinkLabel();
+			this.linkLabelEmail = new System.Windows.Forms.LinkLabel();
 			this.tableLayoutPanel.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.logoPictureBox)).BeginInit();
 			this.SuspendLayout();
@@ -49,22 +50,25 @@ namespace NbuExplorer
 			this.tableLayoutPanel.Controls.Add(this.labelProductName, 1, 0);
 			this.tableLayoutPanel.Controls.Add(this.labelVersion, 1, 1);
 			this.tableLayoutPanel.Controls.Add(this.labelCopyright, 1, 2);
-			this.tableLayoutPanel.Controls.Add(this.textBoxDescription, 1, 5);
-			this.tableLayoutPanel.Controls.Add(this.okButton, 1, 6);
-			this.tableLayoutPanel.Controls.Add(this.linkLabelHome, 1, 3);
-			this.tableLayoutPanel.Controls.Add(this.linkLabelDonate, 1, 4);
+			this.tableLayoutPanel.Controls.Add(this.textBoxDescription, 1, 6);
+			this.tableLayoutPanel.Controls.Add(this.okButton, 1, 7);
+			this.tableLayoutPanel.Controls.Add(this.linkLabelHome, 1, 4);
+			this.tableLayoutPanel.Controls.Add(this.linkLabelDonate, 1, 5);
+			this.tableLayoutPanel.Controls.Add(this.linkLabelEmail, 1, 3);
 			this.tableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tableLayoutPanel.Location = new System.Drawing.Point(9, 9);
 			this.tableLayoutPanel.Name = "tableLayoutPanel";
-			this.tableLayoutPanel.RowCount = 7;
-			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
-			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
+			this.tableLayoutPanel.RowCount = 8;
+			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25.00062F));
+			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25.00063F));
+			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25.00063F));
+			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 24.99812F));
 			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
 			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
 			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 64F));
 			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
-			this.tableLayoutPanel.Size = new System.Drawing.Size(309, 192);
+			this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+			this.tableLayoutPanel.Size = new System.Drawing.Size(309, 217);
 			this.tableLayoutPanel.TabIndex = 0;
 			// 
 			// logoPictureBox
@@ -72,8 +76,8 @@ namespace NbuExplorer
 			this.logoPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.logoPictureBox.Location = new System.Drawing.Point(3, 3);
 			this.logoPictureBox.Name = "logoPictureBox";
-			this.tableLayoutPanel.SetRowSpan(this.logoPictureBox, 7);
-			this.logoPictureBox.Size = new System.Drawing.Size(52, 186);
+			this.tableLayoutPanel.SetRowSpan(this.logoPictureBox, 8);
+			this.logoPictureBox.Size = new System.Drawing.Size(52, 211);
 			this.logoPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
 			this.logoPictureBox.TabIndex = 12;
 			this.logoPictureBox.TabStop = false;
@@ -93,7 +97,7 @@ namespace NbuExplorer
 			// labelVersion
 			// 
 			this.labelVersion.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelVersion.Location = new System.Drawing.Point(64, 19);
+			this.labelVersion.Location = new System.Drawing.Point(64, 21);
 			this.labelVersion.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
 			this.labelVersion.MaximumSize = new System.Drawing.Size(0, 17);
 			this.labelVersion.Name = "labelVersion";
@@ -105,7 +109,7 @@ namespace NbuExplorer
 			// labelCopyright
 			// 
 			this.labelCopyright.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelCopyright.Location = new System.Drawing.Point(64, 39);
+			this.labelCopyright.Location = new System.Drawing.Point(64, 42);
 			this.labelCopyright.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
 			this.labelCopyright.MaximumSize = new System.Drawing.Size(0, 17);
 			this.labelCopyright.Name = "labelCopyright";
@@ -117,7 +121,7 @@ namespace NbuExplorer
 			// textBoxDescription
 			// 
 			this.textBoxDescription.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.textBoxDescription.Location = new System.Drawing.Point(64, 102);
+			this.textBoxDescription.Location = new System.Drawing.Point(64, 127);
 			this.textBoxDescription.Margin = new System.Windows.Forms.Padding(6, 3, 3, 3);
 			this.textBoxDescription.Multiline = true;
 			this.textBoxDescription.Name = "textBoxDescription";
@@ -132,7 +136,7 @@ namespace NbuExplorer
 			// 
 			this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.okButton.Location = new System.Drawing.Point(231, 167);
+			this.okButton.Location = new System.Drawing.Point(231, 192);
 			this.okButton.Name = "okButton";
 			this.okButton.Size = new System.Drawing.Size(75, 22);
 			this.okButton.TabIndex = 6;
@@ -142,7 +146,7 @@ namespace NbuExplorer
 			// 
 			this.linkLabelHome.AutoSize = true;
 			this.linkLabelHome.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.linkLabelHome.Location = new System.Drawing.Point(61, 59);
+			this.linkLabelHome.Location = new System.Drawing.Point(61, 84);
 			this.linkLabelHome.Name = "linkLabelHome";
 			this.linkLabelHome.Size = new System.Drawing.Size(245, 20);
 			this.linkLabelHome.TabIndex = 3;
@@ -154,7 +158,7 @@ namespace NbuExplorer
 			// 
 			this.linkLabelDonate.AutoSize = true;
 			this.linkLabelDonate.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.linkLabelDonate.Location = new System.Drawing.Point(61, 79);
+			this.linkLabelDonate.Location = new System.Drawing.Point(61, 104);
 			this.linkLabelDonate.Name = "linkLabelDonate";
 			this.linkLabelDonate.Size = new System.Drawing.Size(245, 20);
 			this.linkLabelDonate.TabIndex = 4;
@@ -163,13 +167,28 @@ namespace NbuExplorer
 			this.linkLabelDonate.Text = "Donate";
 			this.linkLabelDonate.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
 			// 
+			// linkLabelEmail
+			// 
+			this.linkLabelEmail.AutoSize = true;
+			this.linkLabelEmail.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.linkLabelEmail.LinkArea = new System.Windows.Forms.LinkArea(6, 50);
+			this.linkLabelEmail.Location = new System.Drawing.Point(61, 63);
+			this.linkLabelEmail.Name = "linkLabelEmail";
+			this.linkLabelEmail.Size = new System.Drawing.Size(245, 21);
+			this.linkLabelEmail.TabIndex = 13;
+			this.linkLabelEmail.TabStop = true;
+			this.linkLabelEmail.Tag = "mailto:petrusek@seznam.cz?subject=NbuExplorer";
+			this.linkLabelEmail.Text = "Email petrusek@seznam.cz";
+			this.linkLabelEmail.UseCompatibleTextRendering = true;
+			this.linkLabelEmail.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
+			// 
 			// AboutBox
 			// 
 			this.AcceptButton = this.okButton;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.okButton;
-			this.ClientSize = new System.Drawing.Size(327, 210);
+			this.ClientSize = new System.Drawing.Size(327, 235);
 			this.Controls.Add(this.tableLayoutPanel);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.MaximizeBox = false;
@@ -198,5 +217,6 @@ namespace NbuExplorer
 		public System.Windows.Forms.PictureBox logoPictureBox;
 		private System.Windows.Forms.LinkLabel linkLabelHome;
 		private System.Windows.Forms.LinkLabel linkLabelDonate;
+		private System.Windows.Forms.LinkLabel linkLabelEmail;
 	}
 }

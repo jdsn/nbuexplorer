@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("NbuExplorer")]
-[assembly: AssemblyDescription("Nokia nbu, nfb, nfc and arc backup file parser, extractor and viewer\r\nSVN rev. [$WCRANGE$$WCMODS?M:$]\r\nC. [$WCDATE=%y/%m/%d %H:%M$] B. [$WCNOW=%y/%m/%d %H:%M$]")]
+[assembly: AssemblyDescription("Nokia nbu, nbf, nfb, nfc and arc backup file parser, extractor and viewer\r\nSVN rev. [$WCRANGE$$WCMODS?M:$]\r\nC. [$WCDATE=%y/%m/%d %H:%M$] B. [$WCNOW=%y/%m/%d %H:%M$]")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("NbuExplorer")]

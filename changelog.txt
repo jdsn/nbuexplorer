@@ -1,6 +1,17 @@
 History & Changelog
 ===================
 
+Version 2.4
+ - added:    new backup format (nbf) support. Actually nbf is nothing more than
+             plain zip archive, so as a side effect, support for zip files has
+             been added too. You can use NbuExplorer as "unzip with preview"
+             tool now if you like
+ - added:    new message format decoding (storage which is typically under
+             "predefmessages" system folder). This format decoding is used
+             for preview purposes but also for load of Messages tab content
+             during nbf backup format parsing
+ - added:    author email link added to About application dialog
+
 Version 2.3
  - fixed:    group parsing
  - added:    experimental (not perfect, but somehow working) parsing of messages

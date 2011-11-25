@@ -1,12 +1,10 @@
 NbuExplorer
 ===================
 
-Nokia NBU, NFB and NFC backup file (produced by Nokia Content Copier) and ARC
-backup file (created by symbian phones as backup to memory card) parser,
-extractor and viewer. It can help you check the contents of a backup or extract
-files from it. It is non-destructive as it accesses backup files in a read-only
-mode. Nevertheless, it is provided with NO WARRANTY (according to GNU GPL
-license).
+NbuExplorer is Nokia NBU, NBF, NFB, NFC and ARC backup file parser, extractor
+and viewer. It can help you check the contents of a backup or extract files
+from it. It is non-destructive as it accesses backup files in a read-only mode.
+Nevertheless, it is provided with NO WARRANTY (according to GNU GPL license).
 The main goal of this application is to enable Nokia phone and Nokia software
 (PC Suite and Ovi Suite) users to access their data stored in backup files
 in as much comfortable way as possible. This application IS NOT an official
@@ -14,7 +12,7 @@ Nokia product and can be used only at your own risk.
 
 Main features
 ===================
-- View content of nbu, nfb, nfc and arc backup files
+- View content of nbu, nbf, nfb, nfc and arc backup files
 - Extract individual files from backup files
 - Brute force scan for vcard phone data in any file
 
@@ -85,6 +83,6 @@ Contact
 ===================
 Project homepage: http://sourceforge.net/projects/nbuexplorer
 SVN repository: https://nbuexplorer.svn.sourceforge.net/svnroot/nbuexplorer
-NbuExplorer at facebook: http://www.facebook.com/pages/NbuExplorer/175569482486926
+NbuExplorer at facebook: http://www.facebook.com/nbuexplorer
 Donation page: http://sourceforge.net/donate/index.php?group_id=281139
 Author: Petr Vilem, petrusek@seznam.cz
