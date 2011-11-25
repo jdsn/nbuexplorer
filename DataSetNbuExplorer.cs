@@ -66,21 +66,40 @@ namespace NbuExplorer
 			if (row.time == DateTime.MinValue) row.SettimeNull();
 		}
 
+		public static bool FindExistingMessage(string number, string text)
+		{
+			DataSetNbuExplorer.MessageRow[] dupl = (DataSetNbuExplorer.MessageRow[])_defaultInstance.Message.Select("number = '" + number.Replace("'", "''") + "'");
+			foreach (DataSetNbuExplorer.MessageRow mr in dupl)
+			{
+				if (mr.messagetext == text) return true;
+			}
+			return false;
+		}
+
 		public static void AddMessageFromSymbianMessage(SymbianMessage sm)
 		{
 			if (sm.MessageText.Length == 0) return;
 
-			DataSetNbuExplorer.MessageRow[] dupl = (DataSetNbuExplorer.MessageRow[])_defaultInstance.Message.Select("number = '" + sm.PhoneNumber.Replace("'", "''") + "'");
-			foreach (DataSetNbuExplorer.MessageRow mr in dupl)
-			{
-				if (mr.messagetext == sm.MessageText) return;
-			}
+			if (FindExistingMessage(sm.PhoneNumber, sm.MessageText)) return;
 
 			MessageRow row = _defaultInstance.Message.AddMessageRow(sm.DirectionBox,
 				sm.MessageTime,
 				sm.PhoneNumber,
 				string.IsNullOrEmpty(sm.Name) ? NumToName(sm.PhoneNumber) : sm.Name,
 				sm.MessageText);
+			if (row.time == DateTime.MinValue) row.SettimeNull();
+		}
+
+		public static void AddMessageFromBinMessage(BinMessage msg)
+		{
+			if (string.IsNullOrEmpty(msg.Text)) return;
+			if (FindExistingMessage(msg.Number, msg.Text)) return;
+
+			MessageRow row = _defaultInstance.Message.AddMessageRow(msg.BoxLetter,
+				msg.Time,
+				msg.Number,
+				NumToName(msg.Number),
+				msg.Text);
 			if (row.time == DateTime.MinValue) row.SettimeNull();
 		}
 

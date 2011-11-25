@@ -270,13 +270,13 @@ namespace NbuExplorer
 				fi.CopyToStream(currentFileName, ms);
 				ms.Seek(0, SeekOrigin.Begin);
 
+				textBoxPreview.Visible = true;
+				pictureBoxPreview.Visible = false;
+
 				try
 				{
 					if (treeViewDirs.SelectedNode.Parent.Parent.Text.StartsWith("Mail"))
 					{
-						textBoxPreview.Visible = true;
-						pictureBoxPreview.Visible = false;
-
 						try
 						{
 							SymbianMessage sm = new SymbianMessage(ms);
@@ -286,11 +286,24 @@ namespace NbuExplorer
 						{
 							textBoxPreview.Text = exc.Message;
 						}
-
 						return;
 					}
 				}
 				catch { }
+
+				if (BinMessage.MsgFileNameRegex.IsMatch(fi.Filename))
+				{
+					try
+					{
+						BinMessage m = new BinMessage(ms);
+						textBoxPreview.Text = m.ToString();
+					}
+					catch (Exception exc)
+					{
+						textBoxPreview.Text = exc.Message;
+					}
+					return;
+				}
 
 				System.Text.StringBuilder sb;
 				StreamReader sr;
@@ -324,8 +337,6 @@ namespace NbuExplorer
 						sr.Close();
 
 						textBoxPreview.Text = sb.ToString();
-						textBoxPreview.Visible = true;
-						pictureBoxPreview.Visible = false;
 						break;
 					case ".vmg":
 					case ".url":
@@ -365,8 +376,6 @@ namespace NbuExplorer
 						sr.Close();
 
 						textBoxPreview.Text = sb.ToString();
-						textBoxPreview.Visible = true;
-						pictureBoxPreview.Visible = false;
 						break;
 					default:
 						Image img = Image.FromStream(ms);

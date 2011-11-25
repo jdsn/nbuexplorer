@@ -602,7 +602,35 @@ namespace NbuExplorer
 							else
 							{
 								string dir = Path.GetDirectoryName(ze.Name);
-								findOrCreateFileInfoList(dir).Add(new FileInfoZip(ze, index));
+								FileInfoZip item = new FileInfoZip(ze, index);
+								findOrCreateFileInfoList(dir).Add(item);
+
+								if (BinMessage.MsgFileNameRegex.IsMatch(item.Filename))
+								{
+									long CntBackup = StreamUtils.Counter;
+									try
+									{
+										using (MemoryStream ms = new MemoryStream())
+										{
+											StreamUtils.CopyFromStreamToStream(zi, ms, ze.Size);
+											BinMessage msg = new BinMessage(ms);
+											if (msg.Mms == null)
+											{
+												addLine(msg.ToString());
+												DataSetNbuExplorer.AddMessageFromBinMessage(msg);
+											}
+											else
+											{
+												addLine(msg.Mms.ParseLog);
+											}
+										}
+									}
+									catch (Exception ex)
+									{
+										addLine(ex.Message);
+									}
+									StreamUtils.Counter = CntBackup;
+								}
 							}
 						}
 						index++;
@@ -753,7 +781,7 @@ namespace NbuExplorer
 			if (dir.Contains("Mail"))
 			{
 				string[] tmp = dir.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
-				return (tmp.Length > 4 
+				return (tmp.Length > 4
 					&& tmp[tmp.Length - 3].StartsWith("Mail")
 					//&& tmp[tmp.Length - 2] == "00001001_S"
 					);
@@ -1792,29 +1820,7 @@ namespace NbuExplorer
 							byte[] buff = StreamUtils.ReadBuff(fs, len2);
 							StreamUtils.Counter += len2;
 
-							string msg;
-							if (buff[0] == 5 && buff[1] == 0 && buff[2] == 3) // multipart sms
-							{
-								if (ucs2)
-								{
-									msg = string.Format("[{0}/{1}]:{2}", buff[5], buff[4], System.Text.Encoding.BigEndianUnicode.GetString(buff, 6, buff.Length - 6));
-								}
-								else
-								{
-									msg = string.Format("[{0}/{1}]:{2}", buff[5], buff[4], StreamUtilsPdu.Decode7bit(buff, len1).Substring(7));
-								}
-							}
-							else
-							{
-								if (ucs2)
-								{
-									msg = System.Text.Encoding.BigEndianUnicode.GetString(buff);
-								}
-								else
-								{
-									msg = StreamUtilsPdu.Decode7bit(buff, len1);
-								}
-							}
+							string msg = StreamUtilsPdu.DecodeMessageText(ucs2, len1, buff);
 
 							string dateAsString = (dt > DateTime.MinValue) ? dt.ToString() : "";
 							addLine(string.Format("{0:000} [{1}] {2}; {3}; {4}", i, numToAddr(smsBegin), dateAsString, num, msg));

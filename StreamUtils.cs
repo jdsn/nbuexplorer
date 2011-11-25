@@ -134,7 +134,7 @@ namespace NbuExplorer
 				DateTime dt = DateTime.MinValue.AddSeconds(sec).AddDays(-378);
 				return dt;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				throw new ApplicationException("Invalid datetime value", ex);
 			}
@@ -325,6 +325,34 @@ namespace NbuExplorer
 			return sb.ToString();
 		}
 
+		public static string DecodeMessageText(bool ucs2, int len1, byte[] buff)
+		{
+			string msg;
+			if (buff.Length > 2 && buff[0] == 5 && buff[1] == 0 && buff[2] == 3) // multipart sms
+			{
+				if (ucs2)
+				{
+					msg = string.Format("[{0}/{1}]:{2}", buff[5], buff[4], System.Text.Encoding.BigEndianUnicode.GetString(buff, 6, buff.Length - 6));
+				}
+				else
+				{
+					msg = string.Format("[{0}/{1}]:{2}", buff[5], buff[4], StreamUtilsPdu.Decode7bit(buff, len1).Substring(7));
+				}
+			}
+			else
+			{
+				if (ucs2)
+				{
+					msg = System.Text.Encoding.BigEndianUnicode.GetString(buff);
+				}
+				else
+				{
+					msg = StreamUtilsPdu.Decode7bit(buff, len1);
+				}
+			}
+			return msg;
+		}
+
 		private static byte ReadInvertDecimalByte(Stream s)
 		{
 			int b = s.ReadByte();
@@ -360,6 +388,7 @@ namespace NbuExplorer
 					goto case 0x0A;
 				case 0x0A: // 1010
 				case 0x0B: // 1011
+				case 0x0E: // 1110
 					int b;
 					while (len > 0)
 					{
