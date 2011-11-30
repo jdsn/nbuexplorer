@@ -35,7 +35,7 @@ namespace NbuExplorer
 			return sb.ToString();
 		}
 
-		public BinMessage(Stream s)
+		public BinMessage(Stream s, string filename)
 		{
 			StringBuilder sb = new StringBuilder();
 			int test, len, len7;
@@ -126,6 +126,17 @@ namespace NbuExplorer
 					break;
 				default:
 					throw new ApplicationException("Unknown message type");
+			}
+
+			if (filename.Length == 55 || filename.Length == 63)
+			{
+				try
+				{
+					string tmp = filename.Substring(8, 8);
+					Int64 sec = Int64.Parse(tmp, System.Globalization.NumberStyles.HexNumber);
+					Time = new DateTime(1980, 1, 1).AddSeconds(sec);
+				}
+				catch { }
 			}
 		}
 

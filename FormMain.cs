@@ -295,7 +295,7 @@ namespace NbuExplorer
 				{
 					try
 					{
-						BinMessage m = new BinMessage(ms);
+						BinMessage m = new BinMessage(ms, fi.Filename);
 						textBoxPreview.Text = m.ToString();
 					}
 					catch (Exception exc)

@@ -613,7 +613,7 @@ namespace NbuExplorer
 										using (MemoryStream ms = new MemoryStream())
 										{
 											StreamUtils.CopyFromStreamToStream(zi, ms, ze.Size);
-											BinMessage msg = new BinMessage(ms);
+											BinMessage msg = new BinMessage(ms, item.Filename);
 											if (msg.Mms == null)
 											{
 												addLine(msg.ToString());
