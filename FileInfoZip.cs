@@ -5,11 +5,13 @@ namespace NbuExplorer
 {
 	public class FileInfoZip : FileInfo
 	{
+		private long offset;
 		private long fileSize;
 		private int itemIndex;
 
-		public FileInfoZip(ZipEntry ze, int itemIndex)
+		public FileInfoZip(ZipEntry ze, int itemIndex, long offset)
 		{
+			this.offset = offset;
 			this.itemIndex = itemIndex;
 			this.Filename = Path.GetFileName(ze.Name);
 			this.FileTime = ze.DateTime;
@@ -25,6 +27,7 @@ namespace NbuExplorer
 		{
 			using (FileStream fs = File.OpenRead(sourceNbuFile))
 			{
+				fs.Seek(offset, SeekOrigin.Begin);
 				ZipInputStream zs = new ZipInputStream(fs);
 				ZipEntry ze;
 				int index = 0;

@@ -364,15 +364,35 @@ namespace NbuExplorer
 								count2 = StreamUtils.ReadUInt32asInt(fs);
 								count = StreamUtils.ReadUInt32asInt(fs);
 
-								if (sect.name2 == "Messages" && count == 0)
+								partPos = fs.Position;
+								string zipTest = null;
+
+								long tmpCnt = StreamUtils.Counter;
+								try
 								{
-									partPos = fs.Position;
+									fs.Seek(partStartAddr + 73, SeekOrigin.Begin);
+									zipTest = StreamUtils.ReadString(fs);
+								}
+								catch { }
+								StreamUtils.Counter = tmpCnt;
+
+								if (zipTest == "application/vnd.nokia-backup")
+								{
+									long zipOffset = fs.Position;
+									ZipInputStream zi = new ZipInputStream(fs);
+									zi.IsStreamOwner = false;
+									parseZip(zi, zipOffset, sect.name);
+									fs.Seek(partPos, SeekOrigin.Begin);
+								}
+								else if (sect.name2 == "Messages" && count == 0)
+								{
 									fs.Seek(partStartAddr, SeekOrigin.Begin);
 									parseBinaryMessages(fs);
 									fs.Seek(partPos, SeekOrigin.Begin);
 								}
 								else
 								{
+									fs.Seek(partPos, SeekOrigin.Begin);
 									addLine(string.Format("{0} folders found", count));
 									for (int i = 0; i < count; i++)
 									{
@@ -393,9 +413,7 @@ namespace NbuExplorer
 								break;
 							#endregion
 							case ProcessType.Sbackup:
-								analyzeRequest = true;
-								fs.Seek(8, SeekOrigin.Current); // just skip
-								break;
+								goto case ProcessType.GeneralFolders;
 						}
 
 						partcount--;
@@ -582,59 +600,7 @@ namespace NbuExplorer
 				else if (!bruteForceScan && (fileext == ".nbf" || fileext == ".zip"))
 				{
 					ZipInputStream zi = new ZipInputStream(fs);
-					ZipEntry ze;
-					int index = 0;
-
-					while ((ze = zi.GetNextEntry()) != null)
-					{
-						addLine(ze.Name);
-						StreamUtils.Counter += ze.CompressedSize;
-						if (ze.IsDirectory)
-						{
-							findOrCreateDirNode(ze.Name);
-						}
-						else
-						{
-							if (ze.Size == 0 && dirExists(ze.Name))
-							{
-								addLine("^ redundant directory ignored");
-							}
-							else
-							{
-								string dir = Path.GetDirectoryName(ze.Name);
-								FileInfoZip item = new FileInfoZip(ze, index);
-								findOrCreateFileInfoList(dir).Add(item);
-
-								if (BinMessage.MsgFileNameRegex.IsMatch(item.Filename))
-								{
-									long CntBackup = StreamUtils.Counter;
-									try
-									{
-										using (MemoryStream ms = new MemoryStream())
-										{
-											StreamUtils.CopyFromStreamToStream(zi, ms, ze.Size);
-											BinMessage msg = new BinMessage(ms, item.Filename);
-											if (msg.Mms == null)
-											{
-												addLine(msg.ToString());
-												DataSetNbuExplorer.AddMessageFromBinMessage(msg);
-											}
-											else
-											{
-												addLine(msg.Mms.ParseLog);
-											}
-										}
-									}
-									catch (Exception ex)
-									{
-										addLine(ex.Message);
-									}
-									StreamUtils.Counter = CntBackup;
-								}
-							}
-						}
-						index++;
-					}
+					parseZip(zi, 0, "");
 				}
 				#endregion
 				#region bruteforce
@@ -773,6 +739,63 @@ namespace NbuExplorer
 			if (analyzeRequest)
 			{
 				MessageBox.Show("Unknown structure type found. Please consider providing this backup to the author of application for analyzing and improving application.", this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+			}
+		}
+
+		private void parseZip(ZipInputStream zi, long offset, string baseFolder)
+		{
+			ZipEntry ze;
+			int index = 0;
+			while ((ze = zi.GetNextEntry()) != null)
+			{
+				addLine(ze.Name);
+				StreamUtils.Counter += ze.CompressedSize;
+				if (ze.IsDirectory)
+				{
+					findOrCreateDirNode(ze.Name);
+				}
+				else
+				{
+					if (ze.Size == 0 && dirExists(ze.Name))
+					{
+						addLine("^ redundant directory ignored");
+					}
+					else
+					{
+						string dir = Path.GetDirectoryName(baseFolder + "\\" + ze.Name);
+						FileInfoZip item = new FileInfoZip(ze, index, offset);
+						findOrCreateFileInfoList(dir).Add(item);
+
+						if (BinMessage.MsgFileNameRegex.IsMatch(item.Filename))
+						{
+							long CntBackup = StreamUtils.Counter;
+							try
+							{
+								using (MemoryStream ms = new MemoryStream())
+								{
+									StreamUtils.CopyFromStreamToStream(zi, ms, ze.Size);
+									BinMessage msg = new BinMessage(ms, item.Filename);
+									if (msg.Mms == null)
+									{
+										addLine(msg.ToString());
+										DataSetNbuExplorer.AddMessageFromBinMessage(msg);
+									}
+									else
+									{
+										addLine(msg.Mms.ParseLog);
+									}
+								}
+							}
+							catch (Exception ex)
+							{
+								addLine(ex.Message);
+							}
+							StreamUtils.Counter = CntBackup;
+						}
+					}
+				}
+				index++;
+
 			}
 		}
 
