@@ -6,6 +6,8 @@ namespace NbuExplorer
 
 	public partial class DataSetNbuExplorer
 	{
+		private static System.Text.RegularExpressions.Regex newLineRex = new System.Text.RegularExpressions.Regex("[\r\n]+");
+
 		static DataSetNbuExplorer()
 		{
 			_defaultInstance = new DataSetNbuExplorer();
@@ -68,10 +70,13 @@ namespace NbuExplorer
 
 		public static bool FindExistingMessage(string number, string text)
 		{
+			// normalize newlines for comparison
+			text = newLineRex.Replace(text, "\n");
+
 			DataSetNbuExplorer.MessageRow[] dupl = (DataSetNbuExplorer.MessageRow[])_defaultInstance.Message.Select("number = '" + number.Replace("'", "''") + "'");
 			foreach (DataSetNbuExplorer.MessageRow mr in dupl)
 			{
-				if (mr.messagetext == text) return true;
+				if (newLineRex.Replace(mr.messagetext, "\n") == text) return true;
 			}
 			return false;
 		}

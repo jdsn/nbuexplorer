@@ -1,6 +1,11 @@
 History & Changelog
 ===================
 
+Version 2.5
+ - added:    new folder structure type (using zip compression) parsing,
+             this structure can be found in backups from new models
+ - fixed:    time of sent messages from "predefmessages" storage
+
 Version 2.4
  - added:    new backup format (nbf) support. Actually nbf is nothing more than
              plain zip archive, so as a side effect, support for zip files has

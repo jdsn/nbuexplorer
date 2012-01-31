@@ -381,7 +381,7 @@ namespace NbuExplorer
 									long zipOffset = fs.Position;
 									ZipInputStream zi = new ZipInputStream(fs);
 									zi.IsStreamOwner = false;
-									parseZip(zi, zipOffset, sect.name);
+									parseFolderZip(zi, zipOffset, sect.name);
 									fs.Seek(partPos, SeekOrigin.Begin);
 								}
 								else if (sect.name2 == "Messages" && count == 0)
@@ -600,7 +600,7 @@ namespace NbuExplorer
 				else if (!bruteForceScan && (fileext == ".nbf" || fileext == ".zip"))
 				{
 					ZipInputStream zi = new ZipInputStream(fs);
-					parseZip(zi, 0, "");
+					parseFolderZip(zi, 0, "");
 				}
 				#endregion
 				#region bruteforce
@@ -742,7 +742,7 @@ namespace NbuExplorer
 			}
 		}
 
-		private void parseZip(ZipInputStream zi, long offset, string baseFolder)
+		private void parseFolderZip(ZipInputStream zi, long start, string sectName)
 		{
 			ZipEntry ze;
 			int index = 0;
@@ -762,8 +762,8 @@ namespace NbuExplorer
 					}
 					else
 					{
-						string dir = Path.GetDirectoryName(baseFolder + "\\" + ze.Name);
-						FileInfoZip item = new FileInfoZip(ze, index, offset);
+						string dir = Path.GetDirectoryName(sectName + "\\" + ze.Name);
+						FileInfoZip item = new FileInfoZip(ze, index, start);
 						findOrCreateFileInfoList(dir).Add(item);
 
 						if (BinMessage.MsgFileNameRegex.IsMatch(item.Filename))
