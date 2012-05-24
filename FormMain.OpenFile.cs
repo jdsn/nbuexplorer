@@ -603,6 +603,16 @@ namespace NbuExplorer
 					parseFolderZip(zi, 0, "");
 				}
 				#endregion
+				#region mms
+				else if (!bruteForceScan && (fileext == ".mms"))
+				{
+					Mms m = new Mms(fs, fs.Length);
+					addLine(m.ParseLog);
+					var list = findOrCreateFileInfoList(m.Subject);
+					list.AddRange(m.Files);
+					StreamUtils.Counter = fs.Position;
+				}
+				#endregion
 				#region bruteforce
 				else
 				{
@@ -792,10 +802,33 @@ namespace NbuExplorer
 							}
 							StreamUtils.Counter = CntBackup;
 						}
+						else if (item.Filename.ToLower().EndsWith(".vcf"))
+						{
+							try
+							{
+								byte[] buff = new byte[item.FileSize];
+								zi.Read(buff, 0, buff.Length);
+								Vcard crd = new Vcard(System.Text.Encoding.UTF8.GetString(buff));
+								string name = crd.Name;
+								foreach (string number in crd.PhoneNumbers)
+								{
+									DataSetNbuExplorer.AddPhonebookEntry(number, name);
+								}
+
+								if (crd.Photo != null)
+								{
+									string filename = Path.ChangeExtension(item.Filename, "." + crd.PhotoExtension);
+									findOrCreateFileInfoList(dir).Add(new FileInfoMemory(filename, crd.Photo, item.FileTime));
+								}
+							}
+							catch (Exception ex)
+							{
+								addLine(ex.Message);
+							}
+						}
 					}
 				}
 				index++;
-
 			}
 		}
 

@@ -26,6 +26,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using System.Collections.Specialized;
 
 namespace NbuExplorer
 {
@@ -153,7 +154,7 @@ namespace NbuExplorer
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog ofd = new OpenFileDialog();
-			ofd.Filter = "Nokia backup files|*.nbu;*.nfb;*.nfc;*.arc;*.nbf;*.zip|All files (bruteforce scan)|*.*";
+			ofd.Filter = "Nokia backup files|*.nbu;*.nfb;*.nfc;*.arc;*.nbf;*.mms;*.zip|All files (bruteforce scan)|*.*";
 #if DEBUG
 			ofd.Multiselect = true;
 			if (ofd.ShowDialog() == DialogResult.OK)
@@ -1107,6 +1108,37 @@ namespace NbuExplorer
 				if (!mr.IsnumberNull()) sw.WriteLine(":");
 				sw.WriteLine(mr.messagetext.TrimEnd());
 				sw.WriteLine();
+			}
+		}
+
+		private void listViewFiles_MouseDown(object sender, MouseEventArgs e)
+		{
+			if (e.Button == System.Windows.Forms.MouseButtons.Left)
+			{
+				ListViewItem li = listViewFiles.GetItemAt(e.X, e.Y);
+				if (li != null)
+				{
+					FileInfo fi = (FileInfo)li.Tag;
+
+					DataObject dataObject = new DataObject();
+					DragFile.DragFileInfo filesInfo = new DragFile.DragFileInfo()
+					{
+						FileName = fi.SafeFilename,
+						FileSize = fi.FileSize,
+						WriteTime = fi.FileTimeIsValid ? fi.FileTime : DateTime.Now
+					};
+
+					using (MemoryStream infoStream = DragFile.GetFileDescriptor(filesInfo),
+										contentStream = new MemoryStream())
+					{
+						fi.CopyToStream(currentFileName, contentStream);
+
+						dataObject.SetData(DragFile.CFSTR_FILEDESCRIPTORW, infoStream);
+						dataObject.SetData(DragFile.CFSTR_FILECONTENTS, contentStream);
+						dataObject.SetData(DragFile.CFSTR_PERFORMEDDROPEFFECT, null);
+						DoDragDrop(dataObject, DragDropEffects.Copy);
+					}
+				}
 			}
 		}
 

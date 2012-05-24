@@ -1,6 +1,12 @@
 History & Changelog
 ===================
 
+Version 2.6
+ - added:    extract files by drag & drop (for example on desktop)
+ - added:    applying found phonebook entries on messages found in nbf backups
+ - added:    extracted *.mms files can be opened individually
+ - fixed:    fixes in mms parsing
+
 Version 2.5
  - added:    new folder structure type (using zip compression) parsing,
              this structure can be found in backups from new models

@@ -71,6 +71,7 @@
     <Compile Include="DataSetNbuExplorer.Designer.cs">
       <DependentUpon>DataSetNbuExplorer.cs</DependentUpon>
     </Compile>
+    <Compile Include="DragFile.cs" />
     <Compile Include="ExtractIcon.cs" />
     <Compile Include="FileInfoZip.cs" />
     <Compile Include="QutedTextDecoder.cs">

@@ -39,6 +39,8 @@ namespace NbuExplorer
 {
 	public class Mms
 	{
+		private const UInt64 u64overflowTest = UInt64.MaxValue << 7;
+
 		private StringBuilder log = new StringBuilder();
 		public string ParseLog
 		{
@@ -175,7 +177,16 @@ namespace NbuExplorer
 							switch (testParam)
 							{
 								case 0x89:
-									log.AppendFormat("Start = {0}\r\n", ReadTextString(s));
+									testParam = s.ReadByte();
+									if (testParam < 128)
+									{
+										log.AppendFormat("Start = {0}\r\n", ReadTextString(s));
+									}
+									else
+									{
+										testParam = testParam & 0x7F;
+										log.AppendFormat("Start = {0}\r\n", testParam.ToString("X"));
+									}
 									break;
 								case 0x8A:
 									testParam = s.ReadByte();
@@ -448,6 +459,12 @@ namespace NbuExplorer
 			do
 			{
 				i = (UInt64)s.ReadByte();
+
+				if (result > u64overflowTest)
+				{
+					throw new OverflowException("Error reading UINT64 value (overflow)");
+				}
+
 				// Shift the current value 7 steps
 				result = result << 7;
 				// Remove the first bit of the byte and add it to the current value

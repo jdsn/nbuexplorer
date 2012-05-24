@@ -121,8 +121,12 @@ namespace NbuExplorer
 				case 0x0C:
 					BoxLetter = "U";
 					s.Seek(-1, SeekOrigin.Current);
-					this.Mms = new Mms(s, s.Length);
-					Text = this.Mms.ParseLog;
+					try
+					{
+						this.Mms = new Mms(s, s.Length);
+						Text = this.Mms.ParseLog;
+					}
+					catch { }
 					break;
 				default:
 					throw new ApplicationException("Unknown message type");

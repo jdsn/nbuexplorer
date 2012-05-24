@@ -100,11 +100,11 @@
 			this.textBoxMessage = new System.Windows.Forms.TextBox();
 			this.toolStrip2 = new System.Windows.Forms.ToolStrip();
 			this.tsExportMessages = new System.Windows.Forms.ToolStripButton();
+			this.toolStripLabelPos = new System.Windows.Forms.ToolStripLabel();
 			this.tabPageLog = new System.Windows.Forms.TabPage();
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.statusLabelTotal = new System.Windows.Forms.ToolStripStatusLabel();
 			this.statusLabelSelected = new System.Windows.Forms.ToolStripStatusLabel();
-			this.toolStripLabelPos = new System.Windows.Forms.ToolStripLabel();
 			this.menuStripMain.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPageFileContent.SuspendLayout();
@@ -401,6 +401,7 @@
 			this.listViewFiles.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewFiles_ColumnClick);
 			this.listViewFiles.SelectedIndexChanged += new System.EventHandler(this.listViewFiles_SelectedIndexChanged);
 			this.listViewFiles.DoubleClick += new System.EventHandler(this.listViewFiles_DoubleClick);
+			this.listViewFiles.MouseDown += new System.Windows.Forms.MouseEventHandler(this.listViewFiles_MouseDown);
 			this.listViewFiles.Resize += new System.EventHandler(this.listViewFiles_Resize);
 			// 
 			// colName
@@ -790,6 +791,13 @@
 			this.tsExportMessages.Text = "Export messages";
 			this.tsExportMessages.Click += new System.EventHandler(this.tsExportMessages_Click);
 			// 
+			// toolStripLabelPos
+			// 
+			this.toolStripLabelPos.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+			this.toolStripLabelPos.Name = "toolStripLabelPos";
+			this.toolStripLabelPos.Size = new System.Drawing.Size(24, 22);
+			this.toolStripLabelPos.Text = "0/0";
+			// 
 			// tabPageLog
 			// 
 			this.tabPageLog.Controls.Add(this.textBoxLog);
@@ -823,13 +831,6 @@
 			this.statusLabelSelected.Name = "statusLabelSelected";
 			this.statusLabelSelected.Size = new System.Drawing.Size(12, 17);
 			this.statusLabelSelected.Text = "-";
-			// 
-			// toolStripLabelPos
-			// 
-			this.toolStripLabelPos.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-			this.toolStripLabelPos.Name = "toolStripLabelPos";
-			this.toolStripLabelPos.Size = new System.Drawing.Size(24, 22);
-			this.toolStripLabelPos.Text = "0/0";
 			// 
 			// FormMain
 			// 
