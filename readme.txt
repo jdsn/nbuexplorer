@@ -27,6 +27,26 @@ The application should also run under the Mono runtime. It was successfully
 tested on Ubuntu 9.10 after installing the winforms2.0 extension (can be done
 with the following command: "sudo apt-get install libmono-winforms2.0-cil").
 
+dbshell integration
+===================
+dbshell is third party application which can be used by NbuExplorer to parse
+contacts from symbian contact database (usually located under Private\100012a5
+folder as file with name DBS_100065FF_Contacts.cdb). In order to enable this
+functionality you will need to get your copy of dbshell (version 1.3):
+https://sites.google.com/site/garawaa/
+http://symbian.site11.com/
+Unzip content of dbshell.zip to the same directory where you have NbuExplorer.exe
+so relative path between exes will be the same as in following example:
+
+C:\Programs\NbuExplorer\NbuExplorer.exe
+C:\Programs\NbuExplorer\dbshell\dbshell.exe
+
+That's it! Once NbuExplorer detects symbian contact database in backup, it
+will automatically attempt to parse it using dbshell. Result should be available
+in form of vcf files under Contacts section in subfolder named after source
+contact database file. Raw data extracted from database should be visible in
+parsing log.
+
 Usage
 ===================
 Open

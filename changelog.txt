@@ -1,6 +1,10 @@
 History & Changelog
 ===================
 
+Vesrion 3.0
+ - added:    dbshell integration for parsing contacts from symbian contact database
+ - fixed:    parsing robustness fixes
+
 Version 2.6
  - added:    extract files by drag & drop (for example on desktop)
  - added:    applying found phonebook entries on messages found in nbf backups

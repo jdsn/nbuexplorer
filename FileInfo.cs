@@ -182,22 +182,22 @@ namespace NbuExplorer
 			get { return shortened; }
 		}
 
-		private bool canBeMessage = false;
-		public bool CanBeMessage
+		private string root;
+		public string Root
 		{
-			get { return canBeMessage; }
+			get { return root; }
+		}
+
+		private string dir;
+		public string Dir
+		{
+			get { return dir; }
 		}
 
 		private List<FileInfoCfPart> parts = new List<FileInfoCfPart>();
 		public List<FileInfoCfPart> Parts
 		{
 			get { return parts; }
-		}
-
-		private List<FileInfo> parentList = null;
-		public void Finish()
-		{
-			parentList.Add(this);
 		}
 
 		protected long totalLength;
@@ -226,12 +226,12 @@ namespace NbuExplorer
 			}
 		}
 
-		public FileInfoCfMultiPart(string filename, DateTime fileTime, long totalLength, List<FileInfo> parentList, bool canBeMessage)
+		public FileInfoCfMultiPart(string filename, DateTime fileTime, long totalLength, string root, string dir)
 			: base(filename, 0, 0, fileTime, true)
 		{
 			this.totalLength = totalLength;
-			this.parentList = parentList;
-			this.canBeMessage = canBeMessage;
+			this.root = root;
+			this.dir = dir;
 		}
 
 		public override void CopyToStream(string sourceNbuFile, Stream fstgt)
