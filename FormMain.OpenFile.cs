@@ -854,9 +854,109 @@ namespace NbuExplorer
 			{
 				parseSymbianContactDatabase(fi);
 			}
-			else if (ExpectMessage(dir))
+			else if (fi.Filename.ToLower().EndsWith("notepad.dat"))
+			{
+				parseSymbianNotes(fi);
+			}
+			else if (fi.Filename.ToLower() == "logdbu.dat")
+			{
+				parseSymbianLog(fi);
+			}
+			else if (parseMsgSymbianToolStripMenuItem.Checked && ExpectMessage(dir))
 			{
 				parseSymbianMessage(fi);
+			}
+		}
+
+		private void parseSymbianLog(FileInfo fi)
+		{
+			if (!DbShell.Ready)
+			{
+				dbShellRequest = true;
+				return;
+			}
+
+			try
+			{
+				addLine("\r\nParsing log from " + fi.Filename + ":\r\n");
+
+				var tempFile = PrepareDbshellTempFile(fi);
+
+				var tables = DbShell.DumpTables(tempFile, "event");
+
+				var sb = new System.Text.StringBuilder();
+
+				foreach (var row in tables["event"].Select())
+				{
+					if (!"-1".Equals(row[1]))
+						continue;
+
+					DateTime rev = DbShell.ParseDateTime((string)row[0]);
+
+					sb.Append(rev);
+					if ("2".Equals(row[8]))
+						sb.Append(" to ");
+					else
+						sb.Append(" from ");
+
+					sb.Append(row[12]);
+					sb.Append(": ");
+					sb.Append(row[11]);
+					sb.AppendLine();
+				}
+
+				if (sb.Length > 0)
+				{
+					var node = findOrCreateFileInfoList("Messages\\" + fi.Filename);
+					FileInfoMemory fi2 = new FileInfoMemory("log.txt",
+						System.Text.Encoding.UTF8.GetBytes(sb.ToString()),
+						DateTime.MinValue);
+					node.Add(fi2);
+				}
+			}
+			catch (Exception exc)
+			{
+				addLine(string.Format("Error parsing log: {0}", exc.Message));
+			}
+		}
+
+		private void parseSymbianNotes(FileInfo fi)
+		{
+			if (!DbShell.Ready)
+			{
+				dbShellRequest = true;
+				return;
+			}
+
+			try
+			{
+				addLine("\r\nParsing notes from " + fi.Filename + ":\r\n");
+
+				var tempFile = PrepareDbshellTempFile(fi);
+
+				var tables = DbShell.DumpTables(tempFile, "table1");
+
+				int cnt = 1;
+				foreach (var row in tables["table1"].Select())
+				{
+					try
+					{
+						DateTime rev = DbShell.ParseDateTime((string)row[0]);
+						var node = findOrCreateFileInfoList("Memo\\" + fi.Filename);
+						FileInfoMemory fi2 = new FileInfoMemory(string.Format("{0:0000}.txt", cnt++),
+							System.Text.Encoding.UTF8.GetBytes((string)row[1]),
+							rev);
+						node.Add(fi2);
+					}
+					catch (Exception ex)
+					{
+						addLine(ex.Message);
+					}
+				}
+			}
+			catch (Exception exc)
+			{
+				addLine(string.Format("Error parsing notes: {0}", exc.Message));
 			}
 		}
 
@@ -872,21 +972,9 @@ namespace NbuExplorer
 			{
 				addLine("\r\nParsing contacts from " + fi.Filename + ":\r\n");
 
-				DbShell.PrepareWorkDir();
-				var tempFile = Path.Combine(DbShell.workDir, DbShell.workFile);
-				var fs = File.Create(tempFile);
-				fi.CopyToStream(currentFileName, fs);
-				fs.Close();
+				var tempFile = PrepareDbshellTempFile(fi);
 
 				var tables = DbShell.DumpTables(tempFile, "identitytable", "phone", "emailtable", "contacts");
-
-				foreach (KeyValuePair<string, string> pair in tables)
-				{
-					if (string.IsNullOrEmpty(pair.Value))
-						continue;
-					addLine(pair.Key + ":");
-					addLine(pair.Value.Replace((char)0, '*'));
-				}
 
 				var phonebook = CdbContactParser.ParseTableDumps(tables);
 
@@ -907,6 +995,16 @@ namespace NbuExplorer
 			{
 				addLine(string.Format("Error parsing contacts from cdb file: {0}", exc.Message));
 			}
+		}
+
+		private string PrepareDbshellTempFile(FileInfo fi)
+		{
+			DbShell.PrepareWorkDir();
+			var tempFile = Path.Combine(DbShell.workDir, DbShell.workFile);
+			var fs = File.Create(tempFile);
+			fi.CopyToStream(currentFileName, fs);
+			fs.Close();
+			return tempFile;
 		}
 
 		private static bool ExpectMessage(string dir)
@@ -1182,12 +1280,12 @@ namespace NbuExplorer
 			long cnt = StreamUtils.Counter;
 			try
 			{
-				MemoryStream ms = new MemoryStream();
-				fi.CopyToStream(currentFileName, ms);
-				ms.Seek(0, SeekOrigin.Begin);
-				SymbianMessage sm = new SymbianMessage(ms);
-				fi.FileTime = sm.MessageTime;
-				DataSetNbuExplorer.AddMessageFromSymbianMessage(sm);
+				using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
+				{
+					SymbianMessage sm = new SymbianMessage(ms);
+					fi.FileTime = sm.MessageTime;
+					DataSetNbuExplorer.AddMessageFromSymbianMessage(sm);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -1293,7 +1391,10 @@ namespace NbuExplorer
 
 							partFiles.Add(new FileInfo(string.Format("{0}.vmg", name), mstart, len, time));
 
-							DataSetNbuExplorer.AddMessageFromVmg(crd);
+							if (parseMsgVMGToolStripMenuItem.Checked)
+							{
+								DataSetNbuExplorer.AddMessageFromVmg(crd);
+							}
 						}
 
 						StreamUtils.Counter += len;
@@ -1492,11 +1593,36 @@ namespace NbuExplorer
 
 							fs.Seek(12, SeekOrigin.Current);
 							long len = StreamUtils.ReadUInt32(fs);
+							fs.Seek(2, SeekOrigin.Current);
 
-							FileInfo fi = new FileInfo(filename, fs.Position + 2, len);
+							FileInfo fi = new FileInfo(filename, fs.Position, len);
 							addSymbianFile(sectName, foldername, fi);
 
-							fs.Seek(len + 2, SeekOrigin.Current);
+							if (parseMsgPredefToolStripMenuItem.Checked && BinMessage.MsgFileNameRegex.IsMatch(filename))
+							{
+								try
+								{
+									using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
+									{
+										BinMessage msg = new BinMessage(ms, filename);
+										if (msg.Mms == null)
+										{
+											addLine(msg.ToString());
+											DataSetNbuExplorer.AddMessageFromBinMessage(msg);
+										}
+										else
+										{
+											addLine(msg.Mms.ParseLog);
+										}
+									}
+								}
+								catch (Exception ex)
+								{
+									addLine(ex.Message);
+								}
+							}
+
+							fs.Seek(len, SeekOrigin.Current);
 							StreamUtils.Counter += len;
 						}
 					}
@@ -1819,29 +1945,26 @@ namespace NbuExplorer
 
 		private void parseBinaryMessages(FileStream fs)
 		{
+			bool addMsgToDataSet = (DataSetNbuExplorer.DefaultMessageTable.Select().Length == 0);
 			long smsBegin = 0;
 			try
 			{
-				fs.Seek(45, SeekOrigin.Current);
-				if (fs.ReadByte() > 0)
-				{
-					fs.ReadByte();
-					StreamUtils.ReadString(fs); // name of custom folder?
-				}
-				fs.ReadByte();
-
-				bool addMsgToDataSet = (DataSetNbuExplorer.DefaultMessageTable.Select().Length == 0);
-
 				addLine("binary encoded messages...");
 
-				while (true)
+				fs.Seek(45, SeekOrigin.Current);
+
+				int count = fs.ReadByte();
+				if (count > 0)
+				{
+					fs.ReadByte();
+					addLine("Custom folder name: " + StreamUtils.ReadString(fs));
+				}
+
+				count = fs.ReadByte();
+
+				for (int i = 1; i <= count; i++)
 				{
 					int boxnumber = fs.ReadByte();
-					if (boxnumber == 119)
-					{
-						addLine("\r\nend of binary encoded messages");
-						break;
-					}
 
 					string boxname;
 					string boxletter = "U";
@@ -1861,7 +1984,7 @@ namespace NbuExplorer
 						List<FileInfo> partFilesBin = findOrCreateFileInfoList("Settings/Messages/" + boxname);
 
 						addLine(string.Format("\r\n{0}, {1} messages found:", boxname, countSms));
-						for (int i = 1; i <= countSms; i++)
+						for (int j = 1; j <= countSms; j++)
 						{
 							smsBegin = fs.Position;
 
@@ -1871,8 +1994,6 @@ namespace NbuExplorer
 							fs.Seek(6, SeekOrigin.Current);
 							bool ucs2 = (fs.ReadByte() == 8);
 							fs.ReadByte();
-							//addLine(buffToString(StreamUtils.ReadBuff(fs, 8)));
-							//fs.Seek(8, SeekOrigin.Current);
 
 							int test = fs.ReadByte();
 
@@ -1889,8 +2010,8 @@ namespace NbuExplorer
 									fs.Seek(5, SeekOrigin.Current);
 									StreamUtilsPdu.ReadPhoneNumber(fs); // SMSC?
 									fs.Seek(12, SeekOrigin.Current);
-									addLine(string.Format("{0:000} [{1}] {2}; Delivery message for number {3}", i, numToAddr(smsBegin), dt, num));
-									partFilesBin.Add(new FileInfo(string.Format("{0:0000} {1}.sms", i, num), smsBegin, fs.Position - smsBegin, dt));
+									addLine(string.Format("{0:000} [{1}] {2}; Delivery message for number {3}", j, numToAddr(smsBegin), dt, num));
+									partFilesBin.Add(new FileInfo(string.Format("{0:0000} {1}.sms", j, num), smsBegin, fs.Position - smsBegin, dt));
 									continue;
 								}
 								else
@@ -1905,32 +2026,27 @@ namespace NbuExplorer
 							}
 							else
 							{
-								if (fs.ReadByte() != 0) throw new Exception("00 expected here");
+								if (fs.ReadByte() != 0)
+									throw new Exception("00 expected here");
+
 								test = fs.ReadByte();
-								if (test == 0)
+								if (test == 1)
 								{
-									//addLine(buffToString(StreamUtils.ReadBuff(fs, 8)));
-									fs.Seek(8, SeekOrigin.Current);
+									dt = StreamUtils.ReadNokiaDateTime2(fs).ToLocalTime();
+									fs.Seek(7, SeekOrigin.Current);
 								}
-								else if (test == 1)
+
+								test = fs.ReadByte();
+								if (test == 1)
 								{
-									//addLine(buffToString(StreamUtils.ReadBuff(fs, 15)));
-									fs.Seek(15, SeekOrigin.Current);
-									test = fs.ReadByte();
-									if (test == 2)
-									{
-										//addLine(buffToString(StreamUtils.ReadBuff(fs, 7)));
-										fs.Seek(7, SeekOrigin.Current);
-									}
-									else if (test == 1)
-									{
-										//addLine(buffToString(StreamUtils.ReadBuff(fs, 4)));
-										fs.Seek(4, SeekOrigin.Current);
-										num = StreamUtilsPdu.ReadPhoneNumber(fs);
-										fs.Seek(5, SeekOrigin.Current);
-										StreamUtilsPdu.ReadPhoneNumber(fs); // SMSC?
-									}
-									else throw new Exception("01 or 02 expected here");
+									fs.Seek(4, SeekOrigin.Current);
+									num = StreamUtilsPdu.ReadPhoneNumber(fs);
+									fs.Seek(5, SeekOrigin.Current);
+									StreamUtilsPdu.ReadPhoneNumber(fs); // SMSC?
+								}
+								else
+								{
+									fs.Seek(7, SeekOrigin.Current);
 								}
 							}
 
@@ -1949,9 +2065,9 @@ namespace NbuExplorer
 							string msg = StreamUtilsPdu.DecodeMessageText(ucs2, len1, buff);
 
 							string dateAsString = (dt > DateTime.MinValue) ? dt.ToString() : "";
-							addLine(string.Format("{0:000} [{1}] {2}; {3}; {4}", i, numToAddr(smsBegin), dateAsString, num, msg));
+							addLine(string.Format("{0:000} [{1}] {2}; {3}; {4}", j, numToAddr(smsBegin), dateAsString, num, msg));
 
-							string filename = string.Format("{0:0000} {1}", i, num).TrimEnd();
+							string filename = string.Format("{0:0000} {1}", j, num).TrimEnd();
 							partFilesBin.Add(new FileInfo(filename + ".sms", smsBegin, fs.Position - smsBegin, dt));
 							byte[] data = System.Text.Encoding.UTF8.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", num, dateAsString, msg));
 							partFilesTxt.Add(new FileInfoMemory(filename + ".txt", data, dt));

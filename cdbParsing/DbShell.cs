@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -67,7 +68,7 @@ namespace NbuExplorer.cdbParsing
 			}
 		}
 
-		public static Dictionary<string, string> DumpTables(string cdbFilePath, params string[] tableNames)
+		public static Dictionary<string, DataTable> DumpTables(string cdbFilePath, params string[] tableNames)
 		{
 			if (!File.Exists(pathDbShell))
 			{
@@ -78,7 +79,7 @@ namespace NbuExplorer.cdbParsing
 
 			try
 			{
-				Dictionary<string, string> result = new Dictionary<string, string>();
+				Dictionary<string, DataTable> result = new Dictionary<string, DataTable>();
 
 				PrepareWorkDir();
 
@@ -108,15 +109,80 @@ namespace NbuExplorer.cdbParsing
 
 				foreach (string tableName in tableNames)
 				{
+					DataTable tbl = new DataTable(tableName);
+
 					try
 					{
 						using (var fs = File.OpenRead(tableName))
-						using (var sr = new StreamReader(fs, Encoding.Unicode))
 						{
-							result[tableName] = sr.ReadToEnd();
+							int b1, b2;
+							List<byte> cell = new List<byte>();
+							List<string> row = new List<string>();
+
+							while (true)
+							{
+								b1 = fs.ReadByte();
+								b2 = fs.ReadByte();
+
+								if (b1 == -1 || b2 == -1)
+									break;
+
+								if (b1 == 0x7C && b2 == 0) // | cell separator
+								{
+									AddCell(cell, row);
+								}
+								else if (b1 == 0x0D && b2 == 0) // CR
+								{
+									b1 = fs.ReadByte();
+									b2 = fs.ReadByte();
+									if (b1 == 0x0A && b2 == 0) // LF
+									{
+										AddCell(cell, row);
+
+										if (tbl.Columns.Count == 0)
+										{
+											foreach (var s in row)
+												tbl.Columns.Add();
+										}
+
+										if (tbl.Columns.Count == row.Count)
+										{
+											tbl.Rows.Add(row.ToArray());
+										}
+										else
+										{
+											// invalid cell count in row
+										}
+										row.Clear();
+									}
+									else
+									{
+										cell.Add(0x0D);
+										cell.Add(0x00);
+										fs.Seek(-2, SeekOrigin.Current);
+									}
+								}
+								else if (b1 == 0x29 && b2 == 0x20)
+								{
+									cell.Add(0x0D);
+									cell.Add(0x00);
+									cell.Add(0x0A);
+									cell.Add(0x00);
+								}
+								else
+								{
+									cell.Add((byte)b1);
+									cell.Add((byte)b2);
+								}
+							}
 						}
 					}
 					catch { }
+
+					if (tbl.Rows.Count > 0)
+					{
+						result[tableName] = tbl;
+					}
 				}
 
 				return result;
@@ -130,6 +196,23 @@ namespace NbuExplorer.cdbParsing
 				/*try { Directory.Delete(workDir, true); }
 				catch { }*/
 			}
+		}
+
+		private static void AddCell(List<byte> cell, List<string> row)
+		{
+			row.Add(Encoding.Unicode.GetString(cell.ToArray()));
+			cell.Clear();
+		}
+
+		public static DateTime ParseDateTime(string dateTime)
+		{
+			DateTime result = DateTime.MinValue;
+			DateTime.TryParseExact(dateTime,
+					"dd/MM/yyyy h:mm:ss tt",
+					System.Globalization.CultureInfo.InvariantCulture,
+					System.Globalization.DateTimeStyles.None,
+					out result);
+			return result;
 		}
 
 	}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 
 namespace NbuExplorer.cdbParsing
 {
@@ -7,7 +8,6 @@ namespace NbuExplorer.cdbParsing
 	{
 		private static readonly List<string> ignoredContactTypes = new List<string> { "268440331", "268455921", "268440330" };
 		private static readonly List<string> ignoredSearchableItems = new List<string> { "private", "public" };
-		private static readonly string[] lineSeparator = new[] { "\r\n" };
 
 		private static string Reverse(string s)
 		{
@@ -16,46 +16,40 @@ namespace NbuExplorer.cdbParsing
 			return new string(arr);
 		}
 
-		public static Dictionary<string, Contact> ParseTableDumps(Dictionary<string, string> tables)
+		public static Dictionary<string, Contact> ParseTableDumps(Dictionary<string, DataTable> tables)
 		{
-			string[] arr;
-
 			Dictionary<string, Contact> phonebook = new Dictionary<string, Contact>();
-			foreach (string line in tables["identitytable"]
-				.Split(lineSeparator, StringSplitOptions.RemoveEmptyEntries))
+			foreach (var arr in tables["identitytable"].Select())
 			{
 				// identitytable:
 				//Parent_CMID|CM_FirstName|CM_LastName|CM_CompanyName|
 				//CM_Type|CM_Attributes|CM_HintField|CM_ExtHintField|
 				//CM_FirstNmPrn|CM_LastNmPrn|CM_CompanyNmPrn
-				arr = line.Split('|');
 
-				if (ignoredContactTypes.Contains(arr[4]))
+				if (ignoredContactTypes.Contains((string)arr[4]))
 					continue;
 
-				string id = arr[0];
+				string id = (string)arr[0];
 				Contact c = new Contact
 				{
-					FirstName = arr[1],
-					LastName = arr[2],
-					Company = arr[3],
+					FirstName = (string)arr[1],
+					LastName = (string)arr[2],
+					Company = (string)arr[3],
 				};
 				phonebook[id] = c;
 			}
 
-			foreach (string line in tables["phone"]
-				.Split(lineSeparator, StringSplitOptions.RemoveEmptyEntries))
+			foreach (var arr in tables["phone"].Select())
 			{
 				// phone:
 				//CM_Id|CM_PhoneMatching|CM_ExtendedPhoneMatching
-				arr = line.Split('|');
-				string id = arr[0];
+				string id = (string)arr[0];
 				if (!phonebook.ContainsKey(id))
 					continue;
 
 				Contact cont = phonebook[id];
 
-				string number = Reverse(arr[2].PadLeft(8, '0')) + Reverse(arr[1].PadLeft(7, '0'));
+				string number = Reverse(((string)arr[2]).PadLeft(8, '0')) + Reverse(((string)arr[1]).PadLeft(7, '0'));
 				number = number.TrimStart('0');
 
 				if (number.Length == 0)
@@ -69,39 +63,34 @@ namespace NbuExplorer.cdbParsing
 				}
 			}
 
-			foreach (string line in tables["emailtable"]
-				.Split(lineSeparator, StringSplitOptions.RemoveEmptyEntries))
+			if (tables.ContainsKey("emailtable"))
 			{
-				// emailtable:
-				//EMail_FieldID|EmailParent_CMID|EMailAddress
-				arr = line.Split('|');
-				string id = arr[1];
-				if (!phonebook.ContainsKey(id))
-					continue;
-				phonebook[id].Emails.Add(arr[2]);
+				foreach (var arr in tables["emailtable"].Select())
+				{
+					// emailtable:
+					//EMail_FieldID|EmailParent_CMID|EMailAddress
+					string id = (string)arr[1];
+					if (!phonebook.ContainsKey(id))
+						continue;
+					phonebook[id].Emails.Add((string)arr[2]);
+				}
 			}
 
-			foreach (string line in tables["contacts"]
-				.Split(lineSeparator, StringSplitOptions.RemoveEmptyEntries))
+			foreach (var arr in tables["contacts"].Select())
 			{
 				// contacts:
 				//CM_Id|CM_Type|CM_PrefTemplateRefId|CM_UIDString|
 				//CM_Last_modified|CM_ContactCreationDate|CM_Attributes|
 				//CM_ReplicationCount|CM_Header|CM_TextBlob|CM_SearchableText
-				arr = line.Split('|');
-				if (arr.Length == 6)
+
+				//if (arr.Length == 6)
 				{
-					DateTime rev = DateTime.MinValue;
-					DateTime.TryParseExact(arr[0],
-							"dd/MM/yyyy h:mm:ss tt",
-							System.Globalization.CultureInfo.InvariantCulture,
-							System.Globalization.DateTimeStyles.None,
-							out rev);
+					DateTime rev = DbShell.ParseDateTime((string)arr[0]);
 
 					List<string> items = new List<string>();
 					List<string> itemsPending = new List<string>();
 					int test;
-					foreach (string s in arr[5].Split('\x00'))
+					foreach (string s in ((string)arr[5]).Split('\x00'))
 					{
 						var ltrim = s.Trim();
 						if (string.IsNullOrEmpty(ltrim))

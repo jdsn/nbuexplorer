@@ -731,21 +731,15 @@ namespace NbuExplorer
 		{
 			if (f1.FileSize != f2.FileSize) return false;
 
-			MemoryStream ms1 = new MemoryStream();
-			f1.CopyToStream(currentFileName, ms1);
-			ms1.Seek(0, SeekOrigin.Begin);
-
-			MemoryStream ms2 = new MemoryStream();
-			f2.CopyToStream(currentFileName, ms2);
-			ms2.Seek(0, SeekOrigin.Begin);
-
-			while (ms1.Position < ms1.Length)
+			using (MemoryStream ms1 = f1.GetAsMemoryStream(currentFileName))
+			using (MemoryStream ms2 = f2.GetAsMemoryStream(currentFileName))
 			{
-				if (ms1.ReadByte() != ms2.ReadByte())
+				while (ms1.Position < ms1.Length)
 				{
-					ms1.Dispose();
-					ms2.Dispose();
-					return false;
+					if (ms1.ReadByte() != ms2.ReadByte())
+					{
+						return false;
+					}
 				}
 			}
 

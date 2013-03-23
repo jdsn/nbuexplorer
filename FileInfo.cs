@@ -116,6 +116,14 @@ namespace NbuExplorer
 				fssrc.Close();
 			}
 		}
+
+		public MemoryStream GetAsMemoryStream(string sourceNbuFile)
+		{
+			MemoryStream result = new MemoryStream();
+			CopyToStream(sourceNbuFile, result);
+			result.Seek(0, SeekOrigin.Begin);
+			return result;
+		}
 	}
 
 	public class FileinfoCf : FileInfo
