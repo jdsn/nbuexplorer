@@ -621,6 +621,50 @@ namespace NbuExplorer
 					StreamUtils.Counter = fs.Position;
 				}
 				#endregion
+				#region cdb
+				else if (!bruteForceScan && (fileext == ".cdb"))
+				{
+					addLine("Parsing contacts from " + nbufilename + ":\r\n");
+
+					if (DbShell.Ready)
+					{
+						try
+						{
+							DbShell.PrepareWorkDir();
+
+							var tables = DbShell.DumpTables(nbufilename, "identitytable", "phone", "emailtable", "contacts");
+
+							var phonebook = CdbContactParser.ParseTableDumps(tables);
+
+							string dir = Path.GetFileNameWithoutExtension(nbufilename);
+
+							if (phonebook.Count > 0)
+							{
+								var node = findOrCreateFileInfoList(dir);
+								foreach (KeyValuePair<string, Contact> pair in phonebook)
+								{
+									FileInfoMemory vcf = new FileInfoMemory(pair.Value.DisplayName + ".vcf",
+										System.Text.Encoding.UTF8.GetBytes(pair.Value.ToVcard()),
+										pair.Value.RevDate);
+									node.Add(vcf);
+								}
+
+							}
+							addLine(string.Format("{0} contacts found\r\n", phonebook.Count));
+
+							StreamUtils.Counter = fs.Length;
+						}
+						catch (Exception exc)
+						{
+							addLine(string.Format("Error parsing contacts from cdb file: {0}", exc.Message));
+						}
+					}
+					else
+					{
+						dbShellRequest = true;
+					}
+				}
+				#endregion
 				#region bruteforce
 				else
 				{
@@ -1433,6 +1477,7 @@ namespace NbuExplorer
 							break;
 							#endregion
 						case 0x0010: // S40 settings
+						case 0x0305: // predefvisualradio
 						case 0x0308: // Menu settings
 						case 0x0309: // User notes
 						case 0x030A: // Playlists

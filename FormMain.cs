@@ -154,7 +154,7 @@ namespace NbuExplorer
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			OpenFileDialog ofd = new OpenFileDialog();
-			ofd.Filter = "Nokia backup files|*.nbu;*.nfb;*.nfc;*.arc;*.nbf;*.mms;*.zip|All files (bruteforce scan)|*.*";
+			ofd.Filter = "Nokia backup files|*.nbu;*.nfb;*.nfc;*.arc;*.nbf;*.mms;*.zip;*.cdb|All files (bruteforce scan)|*.*";
 #if DEBUG
 			ofd.Multiselect = true;
 			if (ofd.ShowDialog() == DialogResult.OK)
