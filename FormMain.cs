@@ -24,9 +24,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using System.Collections.Specialized;
+using System.Xml;
 
 namespace NbuExplorer
 {
@@ -1030,46 +1031,89 @@ namespace NbuExplorer
 			}
 
 			SaveFileDialog sfd = new SaveFileDialog();
-			sfd.Filter = "Plain text file (*.txt)|*.txt|Comma-separated values (*.csv)|*.csv|All messages to XML file (*.xml)|*.xml";
+			sfd.Filter = "Plain text file (*.txt)|*.txt|Comma-separated values (*.csv)|*.csv|Android 'SMS Backup & Restore' XML format|*.xml|All messages to XML file (*.xml)|*.xml";
 			if (sfd.ShowDialog() == DialogResult.OK)
 			{
-				if (sfd.FilterIndex == 3) // xml format - all messages
+				try
 				{
-					DataSetNbuExplorer.DefaultMessageTable.boxColumn.ColumnMapping = MappingType.Attribute;
-					DataSetNbuExplorer.DefaultMessageTable.WriteXml(sfd.FileName);
-				}
-				else
-				{
-					// text formats (txt and csv)
-					StreamWriter sw = null;
-					try
+					if (sfd.FilterIndex == 4) // xml format - all messages
 					{
+						DataSetNbuExplorer.DefaultMessageTable.boxColumn.ColumnMapping = MappingType.Attribute;
+						DataSetNbuExplorer.DefaultMessageTable.WriteXml(sfd.FileName);
+					}
+					else if (sfd.FilterIndex == 3) // 'SMS Backup & Restore' xml format
+					{
+						string fileName = sfd.FileName;
+						var rows = dataGridViewMessages.Rows;
+						ExportForAndroid(fileName, rows);
+					}
+					else
+					{
+						// text formats (txt and csv)
+						StreamWriter sw = null;
 						System.Text.Encoding enc = (sfd.FilterIndex == 2) ? System.Text.Encoding.Default : System.Text.Encoding.UTF8;
-						sw = new StreamWriter(sfd.FileName, false, enc);
-						if (dataGridViewMessages.SelectedRows.Count > 1)
+						using (sw = new StreamWriter(sfd.FileName, false, enc))
 						{
-							foreach (DataGridViewRow dvr in dataGridViewMessages.SelectedRows)
+							if (dataGridViewMessages.SelectedRows.Count > 1)
 							{
-								writeMessageInTextFormat(sw, dvr, sfd.FilterIndex);
+								foreach (DataGridViewRow dvr in dataGridViewMessages.SelectedRows)
+								{
+									writeMessageInTextFormat(sw, dvr, sfd.FilterIndex);
+								}
 							}
-						}
-						else
-						{
-							foreach (DataGridViewRow dvr in dataGridViewMessages.Rows)
+							else
 							{
-								writeMessageInTextFormat(sw, dvr, sfd.FilterIndex);
+								foreach (DataGridViewRow dvr in dataGridViewMessages.Rows)
+								{
+									writeMessageInTextFormat(sw, dvr, sfd.FilterIndex);
+								}
 							}
+							sw.Close();
 						}
-					}
-					catch (Exception exc)
-					{
-						MessageBox.Show(exc.Message, exc.Source, MessageBoxButtons.OK, MessageBoxIcon.Error);
-					}
-					finally
-					{
-						if (sw != null) sw.Close();
 					}
 				}
+				catch (Exception exc)
+				{
+					MessageBox.Show(exc.Message, exc.Source, MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+			}
+		}
+
+		private static void ExportForAndroid(string fileName, DataGridViewRowCollection rows)
+		{
+			var culture = CultureInfo.GetCultureInfo("en-US");
+			XmlWriterSettings sett = new XmlWriterSettings
+			{
+				IndentChars = "  ",
+				Indent = true
+			};
+			using (XmlWriter xw = XmlWriter.Create(fileName, sett))
+			{
+				xw.WriteProcessingInstruction("xml", "version='1.0' encoding='UTF-8' standalone='yes' ");
+				xw.WriteProcessingInstruction("xml-stylesheet", "type=\"text/xsl\" href=\"sms.xsl\"");
+				xw.WriteStartElement("smses");
+				xw.WriteAttributeString("count", rows.Count.ToString());
+				foreach (DataGridViewRow dvr in rows)
+				{
+					DataSetNbuExplorer.MessageRow mr = (DataSetNbuExplorer.MessageRow)((DataRowView)dvr.DataBoundItem).Row;
+					xw.WriteStartElement("sms");
+					xw.WriteAttributeString("protocol", "0");
+					xw.WriteAttributeString("address", mr.number);
+					xw.WriteAttributeString("date", mr.SbrTime.ToString());
+					xw.WriteAttributeString("type", mr.SbrType.ToString());
+					xw.WriteAttributeString("subject", "null");
+					xw.WriteAttributeString("body", mr.messagetext);
+					xw.WriteAttributeString("toa", "null");
+					xw.WriteAttributeString("sc_toa", "null");
+					xw.WriteAttributeString("service_center", "null");
+					xw.WriteAttributeString("read", "1");
+					xw.WriteAttributeString("status", "-1");
+					xw.WriteAttributeString("locked", "0");
+					xw.WriteAttributeString("readable_date", mr.time.ToString("MMM d, yyyy h:mm:ss tt", culture));
+					xw.WriteAttributeString("contact_name", mr.name);
+					xw.WriteEndElement();
+				}
+				xw.Close();
 			}
 		}
 

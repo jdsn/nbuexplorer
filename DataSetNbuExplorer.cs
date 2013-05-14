@@ -108,5 +108,33 @@ namespace NbuExplorer
 			if (row.time == DateTime.MinValue) row.SettimeNull();
 		}
 
+		partial class MessageRow
+		{
+			public long SbrTime
+			{
+				get
+				{
+					return (time.ToUniversalTime().Ticks - 621355968000000000) / 10000;
+				}
+			}
+
+			public int SbrType
+			{
+				get
+				{
+					switch (box)
+					{
+						case "I":
+							return 1;
+						case "O":
+							return 2;
+						default:
+							return 3;
+					}
+				}
+			}
+		}
+
+
 	}
 }
