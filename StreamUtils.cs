@@ -95,6 +95,11 @@ namespace NbuExplorer
 		{
 			byte[] buff = new byte[len];
 			s.Read(buff, 0, buff.Length);
+			for (int i = 0; i < len; i++)
+			{
+				if (buff[i] < 32 && buff[i] != 10 && buff[i] != 13)
+					buff[i] = (byte)'?';
+			}
 			Counter += buff.Length;
 			return Encoding.ASCII.GetString(buff);
 		}

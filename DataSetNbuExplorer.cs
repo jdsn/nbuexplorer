@@ -114,6 +114,9 @@ namespace NbuExplorer
 			{
 				get
 				{
+					if (IstimeNull())
+						return 0;
+
 					return (time.ToUniversalTime().Ticks - 621355968000000000) / 10000;
 				}
 			}

@@ -1098,7 +1098,7 @@ namespace NbuExplorer
 					DataSetNbuExplorer.MessageRow mr = (DataSetNbuExplorer.MessageRow)((DataRowView)dvr.DataBoundItem).Row;
 					xw.WriteStartElement("sms");
 					xw.WriteAttributeString("protocol", "0");
-					xw.WriteAttributeString("address", mr.number);
+					xw.WriteAttributeString("address", string.IsNullOrEmpty(mr.number) ? "unknown" : mr.number);
 					xw.WriteAttributeString("date", mr.SbrTime.ToString());
 					xw.WriteAttributeString("type", mr.SbrType.ToString());
 					xw.WriteAttributeString("subject", "null");
@@ -1109,7 +1109,7 @@ namespace NbuExplorer
 					xw.WriteAttributeString("read", "1");
 					xw.WriteAttributeString("status", "-1");
 					xw.WriteAttributeString("locked", "0");
-					xw.WriteAttributeString("readable_date", mr.time.ToString("MMM d, yyyy h:mm:ss tt", culture));
+					xw.WriteAttributeString("readable_date", mr.IstimeNull() ? "" : mr.time.ToString("MMM d, yyyy h:mm:ss tt", culture));
 					xw.WriteAttributeString("contact_name", mr.name);
 					xw.WriteEndElement();
 				}
