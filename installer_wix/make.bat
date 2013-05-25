@@ -1,0 +1,2 @@
+"%WIX%\bin\candle" NbuExplorer.wxs -o output\NbuExplorer.wixobj
+"%WIX%\bin\light" -sice:ICE09 -sice:ICE32 -sice:ICE61 -ext WixUIExtension -cultures:en-us output\NbuExplorer.wixobj -o output\NbuExplorer.msi
