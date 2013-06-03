@@ -258,6 +258,9 @@
     <None Include="DataSetNbuExplorer.xss">
       <DependentUpon>DataSetNbuExplorer.xsd</DependentUpon>
     </None>
+    <None Include="license.rtf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\1254336082_view_detailed.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -301,9 +304,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="changelog.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="license.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="readme.txt">

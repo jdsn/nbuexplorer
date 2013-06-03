@@ -2,9 +2,11 @@
 #define MyAppPublisher "Petr Vilem"
 #define MyAppURL "http://sourceforge.net/projects/nbuexplorer"
 #define MyAppExeName "NbuExplorer.exe"
+#define LicenseFile "..\bin\Release\license.rtf"
+#define DbShellDir "..\bin\Release\dbshell"
 
 #dim Version[4]
-#expr ParseVersion("..\bin\Release\NbuExplorer.exe", Version[0], Version[1], Version[2], Version[3])
+#expr ParseVersion("..\bin\Release\" + MyAppExeName, Version[0], Version[1], Version[2], Version[3])
 #define MyAppVersionFull Str(Version[0]) + "." + Str(Version[1]) + "." + Str(Version[2]) + "." + Str(Version[3])
 #define MyAppVersion Str(Version[0]) + "." + Str(Version[1])
 #define MyAppVersionFile Str(Version[0]) + "_" + Str(Version[1])
@@ -24,7 +26,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
-LicenseFile=..\bin\Release\license.txt
+LicenseFile={#LicenseFile}
 OutputDir=.\output
 OutputBaseFilename={#MyAppName}_{#MyAppVersionFile}_Setup
 Compression=lzma
@@ -47,11 +49,13 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Name: "associateFiles"; Description: "Associate with Nokia backup files (*.nbu, *.nbf, *.nfb, *.nfc)"; Flags: unchecked
 
 [Files]
-Source: "..\bin\Release\NbuExplorer.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main
+Source: "..\bin\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion; Components: main
 Source: "..\bin\Release\changelog.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: main
-Source: "..\bin\Release\license.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: main
+Source: "{#LicenseFile}"; DestDir: "{app}"; Flags: ignoreversion; Components: main
 Source: "..\bin\Release\readme.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: main
-Source: "..\bin\Release\dbshell\*"; DestDir: "{app}\dbshell"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: dbshell
+#if DirExists(DbShellDir)
+Source: "{#DbShellDir}\*"; DestDir: "{app}\dbshell"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: dbshell
+#endif
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -224,4 +228,13 @@ begin
       UnInstallOldVersion();
     end;
   end;
+end;
+
+/////////////////////////////////////////////////////////////////////
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+#if DirExists(DbShellDir)
+#else
+  if (PageID=wpSelectComponents) then Result := true;
+#endif
 end;

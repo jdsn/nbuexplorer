@@ -31,8 +31,11 @@ dbshell integration
 ===================
 dbshell is third party application which can be used by NbuExplorer to parse
 contacts from symbian contact database (usually located under Private\100012a5
-folder as file with name DBS_100065FF_Contacts.cdb). In order to enable this
-functionality you will need to get your copy of dbshell (version 1.3):
+folder as file with name DBS_100065FF_Contacts.cdb), memo notes including timestamp
+(from notepad.dat) and message headers (from logdbu.dat file).
+
+In order to enable this functionality you will need to get your copy
+of dbshell (version 1.3):
 https://sites.google.com/site/garawaa/
 http://symbian.site11.com/
 Unzip content of dbshell.zip to the same directory where you have NbuExplorer.exe
@@ -42,10 +45,7 @@ C:\Programs\NbuExplorer\NbuExplorer.exe
 C:\Programs\NbuExplorer\dbshell\dbshell.exe
 
 That's it! Once NbuExplorer detects symbian contact database in backup, it
-will automatically attempt to parse it using dbshell. Result should be available
-in form of vcf files under Contacts section in subfolder named after source
-contact database file. Raw data extracted from database should be visible in
-parsing log.
+will automatically attempt to parse it using dbshell.
 
 Usage
 ===================
@@ -75,9 +75,35 @@ and are allowed to change the file name. When you select more files or a whole
 directory, you are prompted to select a target directory. An overwrite dialog
 may appear when some "existing file collision" occurs.
 
+Browse messages
+-------------------
+Second tab of the application main form called "Messages" can be used to
+browse messages. The tree with checkboxes on the left side server to filter
+messages by sender/recipient.
+"Export messages" toolbar button allows you to export messages in one of following
+formats:
+- Plain text file (*.txt)
+- Comma-separated values (*.csv) - can be open in Excel or similar application
+- Android 'SMS Backup & Restore' XML format - this format can be used to transfer
+messages to Android phones using application called "SMS Backup & Restore".
+For more details refer to http://android.riteshsahu.com/apps/sms-backup-restore
+- All messages to XML file (*.xml) - can be used for further processing
+Export to most of these formats respects current filtering and ordering of
+messages.
+
+Preferences
+-------------------
+In preferences you can choose which sections of backup file will be used to read
+messages which are shown on Messages tab. Backups usually contain same messages
+in multiple sections (and multiple formats). Because of this you may see
+duplicities in decoded messages (typically multipart messages which are merged
+in one backup section, but hold as separated parts in another section).
+If you want to filter these duplicates out, you can disable unwanted source
+types individually.
+
 File parsing log
 -------------------
-The secondary tab of the application main form called "File parsing log" can be
+The last tab of the application main form called "File parsing log" can be
 used to check details about the backup file parsing process. Hexadecimal numbers
 appearing in the log are usually start addresses (from beginning of file)
 of blocks that were detected in the backup file.
@@ -89,7 +115,7 @@ Bruteforce scanning
 -------------------
 Important data like contacts, messages and calendar items are stored in nbu 
 backups in the format of vcards, which can be typically identified by starting
-and ending text sequence (BEGIN:VCARD...END:VCARD). Therefore, it  is possible
+and ending text sequence (BEGIN:VCARD...END:VCARD). Therefore, it is possible
 to search for such data in any file without understanding its internal
 structure. This method can be used for corrupted backups or backups on which
 the standard method fails. It is also suitable for different (than nbu) file
@@ -102,7 +128,7 @@ than nbu, nfb or nfc. For nbu files, it will be used when option "All files
 Contact
 ===================
 Project homepage: http://sourceforge.net/projects/nbuexplorer
-SVN repository: https://nbuexplorer.svn.sourceforge.net/svnroot/nbuexplorer
+SVN repository: http://svn.code.sf.net/p/nbuexplorer/code/trunk/
 NbuExplorer at facebook: http://www.facebook.com/nbuexplorer
-Donation page: http://sourceforge.net/donate/index.php?group_id=281139
+Donation page: http://sourceforge.net/p/nbuexplorer/donate
 Author: Petr Vilem, petrusek@seznam.cz

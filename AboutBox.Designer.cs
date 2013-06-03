@@ -163,7 +163,7 @@ namespace NbuExplorer
 			this.linkLabelDonate.Size = new System.Drawing.Size(245, 20);
 			this.linkLabelDonate.TabIndex = 4;
 			this.linkLabelDonate.TabStop = true;
-			this.linkLabelDonate.Tag = "http://sourceforge.net/donate/index.php?group_id=281139";
+			this.linkLabelDonate.Tag = "http://sourceforge.net/p/nbuexplorer/donate";
 			this.linkLabelDonate.Text = "Donate";
 			this.linkLabelDonate.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel_LinkClicked);
 			// 

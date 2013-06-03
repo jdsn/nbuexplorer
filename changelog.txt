@@ -1,8 +1,11 @@
 History & Changelog
 ===================
 
-Vesrion 3.0
- - added:    dbshell integration for parsing contacts from symbian contact database
+Version 3.0
+ - added:    dbshell integration for parsing contacts and other info from symbian databases
+ - added:    preferences allowing selection of message sources (VMG, predefmessages,
+             symbian message storage)
+ - improved: advanced options for installer
  - fixed:    parsing robustness fixes
 
 Version 2.6
@@ -10,6 +13,7 @@ Version 2.6
  - added:    applying found phonebook entries on messages found in nbf backups
  - added:    extracted *.mms files can be opened individually
  - fixed:    fixes in mms parsing
+ - added:    first version distibuted with installer (later)
 
 Version 2.5
  - added:    new folder structure type (using zip compression) parsing,
