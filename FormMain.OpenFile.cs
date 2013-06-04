@@ -1990,7 +1990,7 @@ namespace NbuExplorer
 
 		private void parseBinaryMessages(FileStream fs)
 		{
-			bool addMsgToDataSet = (DataSetNbuExplorer.DefaultMessageTable.Select().Length == 0);
+			bool addMsgToDataSet = (DataSetNbuExplorer.DefaultMessageTable.Select().Length == 0) && parseMsgBinToolStripMenuItem.Checked;
 			long smsBegin = 0;
 			try
 			{

@@ -75,127 +75,118 @@ namespace NbuExplorer.cdbParsing
 				throw new FileNotFoundException("DbShell executable not found", pathDbShell);
 			}
 
-			string originalWorkDir = Directory.GetCurrentDirectory();
+			Dictionary<string, DataTable> result = new Dictionary<string, DataTable>();
 
+			PrepareWorkDir();
+
+			string target = Path.Combine(workDir, workFile);
+			if (string.Compare(cdbFilePath, target, true) != 0)
+			{
+				File.Copy(cdbFilePath, target, true);
+			}
+
+			var pi = new ProcessStartInfo(pathDbShell);
+			pi.WindowStyle = ProcessWindowStyle.Minimized;
+			pi.WorkingDirectory = workDir;
+			pi.Arguments = workFile;
+
+			var proc = Process.Start(pi);
 			try
 			{
-				Dictionary<string, DataTable> result = new Dictionary<string, DataTable>();
-
-				PrepareWorkDir();
-
-				string target = Path.Combine(workDir, workFile);
-				if (string.Compare(cdbFilePath, target, true) != 0)
-				{
-					File.Copy(cdbFilePath, target, true);
-				}
-				Directory.SetCurrentDirectory(workDir);
-				var proc = Process.Start(pathDbShell, workFile);
-				try
-				{
-					DateTime dtstart = DateTime.Now;
-					Thread.Sleep(1000);
-					System.Diagnostics.Debug.WriteLine(DateTime.Now - dtstart);
-					foreach (string tableName in tableNames)
-					{
-						SendKeys(proc.MainWindowHandle, string.Format("export {0} {0}\n", tableName));
-					}
-					Thread.Sleep(2000);
-					System.Diagnostics.Debug.WriteLine(DateTime.Now - dtstart);
-				}
-				finally
-				{
-					proc.Kill();
-				}
-
+				DateTime dtstart = DateTime.Now;
+				Thread.Sleep(1000);
+				System.Diagnostics.Debug.WriteLine(DateTime.Now - dtstart);
 				foreach (string tableName in tableNames)
 				{
-					DataTable tbl = new DataTable(tableName);
-
-					try
-					{
-						using (var fs = File.OpenRead(tableName))
-						{
-							int b1, b2;
-							List<byte> cell = new List<byte>();
-							List<string> row = new List<string>();
-
-							while (true)
-							{
-								b1 = fs.ReadByte();
-								b2 = fs.ReadByte();
-
-								if (b1 == -1 || b2 == -1)
-									break;
-
-								if (b1 == 0x7C && b2 == 0) // | cell separator
-								{
-									AddCell(cell, row);
-								}
-								else if (b1 == 0x0D && b2 == 0) // CR
-								{
-									b1 = fs.ReadByte();
-									b2 = fs.ReadByte();
-									if (b1 == 0x0A && b2 == 0) // LF
-									{
-										AddCell(cell, row);
-
-										if (tbl.Columns.Count == 0)
-										{
-											foreach (var s in row)
-												tbl.Columns.Add();
-										}
-
-										if (tbl.Columns.Count == row.Count)
-										{
-											tbl.Rows.Add(row.ToArray());
-										}
-										else
-										{
-											// invalid cell count in row
-										}
-										row.Clear();
-									}
-									else
-									{
-										cell.Add(0x0D);
-										cell.Add(0x00);
-										fs.Seek(-2, SeekOrigin.Current);
-									}
-								}
-								else if (b1 == 0x29 && b2 == 0x20)
-								{
-									cell.Add(0x0D);
-									cell.Add(0x00);
-									cell.Add(0x0A);
-									cell.Add(0x00);
-								}
-								else
-								{
-									cell.Add((byte)b1);
-									cell.Add((byte)b2);
-								}
-							}
-						}
-					}
-					catch { }
-
-					if (tbl.Rows.Count > 0)
-					{
-						result[tableName] = tbl;
-					}
+					SendKeys(proc.MainWindowHandle, string.Format("export {0} {0}\n", tableName));
 				}
-
-				return result;
+				Thread.Sleep(2000);
+				System.Diagnostics.Debug.WriteLine(DateTime.Now - dtstart);
 			}
 			finally
 			{
-				if (Directory.Exists(originalWorkDir))
-				{
-					Directory.SetCurrentDirectory(originalWorkDir);
-				}
-				/*try { Directory.Delete(workDir, true); }
-				catch { }*/
+				proc.Kill();
 			}
+
+			foreach (string tableName in tableNames)
+			{
+				DataTable tbl = new DataTable(tableName);
+
+				try
+				{
+					using (var fs = File.OpenRead(Path.Combine(workDir, tableName)))
+					{
+						int b1, b2;
+						List<byte> cell = new List<byte>();
+						List<string> row = new List<string>();
+
+						while (true)
+						{
+							b1 = fs.ReadByte();
+							b2 = fs.ReadByte();
+
+							if (b1 == -1 || b2 == -1)
+								break;
+
+							if (b1 == 0x7C && b2 == 0) // | cell separator
+							{
+								AddCell(cell, row);
+							}
+							else if (b1 == 0x0D && b2 == 0) // CR
+							{
+								b1 = fs.ReadByte();
+								b2 = fs.ReadByte();
+								if (b1 == 0x0A && b2 == 0) // LF
+								{
+									AddCell(cell, row);
+
+									if (tbl.Columns.Count == 0)
+									{
+										foreach (var s in row)
+											tbl.Columns.Add();
+									}
+
+									if (tbl.Columns.Count == row.Count)
+									{
+										tbl.Rows.Add(row.ToArray());
+									}
+									else
+									{
+										// invalid cell count in row
+									}
+									row.Clear();
+								}
+								else
+								{
+									cell.Add(0x0D);
+									cell.Add(0x00);
+									fs.Seek(-2, SeekOrigin.Current);
+								}
+							}
+							else if (b1 == 0x29 && b2 == 0x20)
+							{
+								cell.Add(0x0D);
+								cell.Add(0x00);
+								cell.Add(0x0A);
+								cell.Add(0x00);
+							}
+							else
+							{
+								cell.Add((byte)b1);
+								cell.Add((byte)b2);
+							}
+						}
+					}
+				}
+				catch { }
+
+				if (tbl.Rows.Count > 0)
+				{
+					result[tableName] = tbl;
+				}
+			}
+
+			return result;
 		}
 
 		private static void AddCell(List<byte> cell, List<string> row)

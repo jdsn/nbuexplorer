@@ -9,7 +9,7 @@ namespace NbuExplorer
 	{
 		private static byte[] UnicodeZero = new byte[] { 0, 0 };
 
-		public static readonly Regex MsgFileNameRegex = new Regex("[0-9A-F]{55,80}");
+		public static readonly Regex MsgFileNameRegex = new Regex("[0-9A-F]{47,80}");
 
 		public string BoxLetter { get; private set; }
 

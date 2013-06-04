@@ -50,6 +50,10 @@
 			this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
 			this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.preferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.messageSourcesToUseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.parseMsgVMGToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.parseMsgPredefToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.parseMsgSymbianToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -106,10 +110,7 @@
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.statusLabelTotal = new System.Windows.Forms.ToolStripStatusLabel();
 			this.statusLabelSelected = new System.Windows.Forms.ToolStripStatusLabel();
-			this.messageSourcesToUseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.parseMsgSymbianToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.parseMsgVMGToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.parseMsgPredefToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.parseMsgBinToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStripMain.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPageFileContent.SuspendLayout();
@@ -250,6 +251,44 @@
 			this.preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
 			this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(80, 20);
 			this.preferencesToolStripMenuItem.Text = "Preferences";
+			// 
+			// messageSourcesToUseToolStripMenuItem
+			// 
+			this.messageSourcesToUseToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.parseMsgVMGToolStripMenuItem,
+            this.parseMsgPredefToolStripMenuItem,
+            this.parseMsgSymbianToolStripMenuItem,
+            this.parseMsgBinToolStripMenuItem});
+			this.messageSourcesToUseToolStripMenuItem.Name = "messageSourcesToUseToolStripMenuItem";
+			this.messageSourcesToUseToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+			this.messageSourcesToUseToolStripMenuItem.Text = "Message sources";
+			// 
+			// parseMsgVMGToolStripMenuItem
+			// 
+			this.parseMsgVMGToolStripMenuItem.Checked = true;
+			this.parseMsgVMGToolStripMenuItem.CheckOnClick = true;
+			this.parseMsgVMGToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.parseMsgVMGToolStripMenuItem.Name = "parseMsgVMGToolStripMenuItem";
+			this.parseMsgVMGToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+			this.parseMsgVMGToolStripMenuItem.Text = "VMG files";
+			// 
+			// parseMsgPredefToolStripMenuItem
+			// 
+			this.parseMsgPredefToolStripMenuItem.Checked = true;
+			this.parseMsgPredefToolStripMenuItem.CheckOnClick = true;
+			this.parseMsgPredefToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.parseMsgPredefToolStripMenuItem.Name = "parseMsgPredefToolStripMenuItem";
+			this.parseMsgPredefToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+			this.parseMsgPredefToolStripMenuItem.Text = "predefmessages folder";
+			// 
+			// parseMsgSymbianToolStripMenuItem
+			// 
+			this.parseMsgSymbianToolStripMenuItem.Checked = true;
+			this.parseMsgSymbianToolStripMenuItem.CheckOnClick = true;
+			this.parseMsgSymbianToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.parseMsgSymbianToolStripMenuItem.Name = "parseMsgSymbianToolStripMenuItem";
+			this.parseMsgSymbianToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+			this.parseMsgSymbianToolStripMenuItem.Text = "Symbian message storage";
 			// 
 			// helpToolStripMenuItem
 			// 
@@ -846,42 +885,14 @@
 			this.statusLabelSelected.Size = new System.Drawing.Size(12, 17);
 			this.statusLabelSelected.Text = "-";
 			// 
-			// messageSourcesToUseToolStripMenuItem
+			// parseMsgBinToolStripMenuItem
 			// 
-			this.messageSourcesToUseToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.parseMsgVMGToolStripMenuItem,
-            this.parseMsgPredefToolStripMenuItem,
-            this.parseMsgSymbianToolStripMenuItem});
-			this.messageSourcesToUseToolStripMenuItem.Name = "messageSourcesToUseToolStripMenuItem";
-			this.messageSourcesToUseToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
-			this.messageSourcesToUseToolStripMenuItem.Text = "Message sources";
-			// 
-			// parseMsgSymbianToolStripMenuItem
-			// 
-			this.parseMsgSymbianToolStripMenuItem.Checked = true;
-			this.parseMsgSymbianToolStripMenuItem.CheckOnClick = true;
-			this.parseMsgSymbianToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.parseMsgSymbianToolStripMenuItem.Name = "parseMsgSymbianToolStripMenuItem";
-			this.parseMsgSymbianToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
-			this.parseMsgSymbianToolStripMenuItem.Text = "Symbian message storage";
-			// 
-			// parseMsgVMGToolStripMenuItem
-			// 
-			this.parseMsgVMGToolStripMenuItem.Checked = true;
-			this.parseMsgVMGToolStripMenuItem.CheckOnClick = true;
-			this.parseMsgVMGToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.parseMsgVMGToolStripMenuItem.Name = "parseMsgVMGToolStripMenuItem";
-			this.parseMsgVMGToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
-			this.parseMsgVMGToolStripMenuItem.Text = "VMG files";
-			// 
-			// parseMsgPredefToolStripMenuItem
-			// 
-			this.parseMsgPredefToolStripMenuItem.Checked = true;
-			this.parseMsgPredefToolStripMenuItem.CheckOnClick = true;
-			this.parseMsgPredefToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.parseMsgPredefToolStripMenuItem.Name = "parseMsgPredefToolStripMenuItem";
-			this.parseMsgPredefToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
-			this.parseMsgPredefToolStripMenuItem.Text = "predefmessages folder";
+			this.parseMsgBinToolStripMenuItem.Checked = true;
+			this.parseMsgBinToolStripMenuItem.CheckOnClick = true;
+			this.parseMsgBinToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.parseMsgBinToolStripMenuItem.Name = "parseMsgBinToolStripMenuItem";
+			this.parseMsgBinToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+			this.parseMsgBinToolStripMenuItem.Text = "Binary encoded messages";
 			// 
 			// FormMain
 			// 
@@ -1011,6 +1022,7 @@
 		private System.Windows.Forms.ToolStripMenuItem parseMsgVMGToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem parseMsgPredefToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem parseMsgSymbianToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem parseMsgBinToolStripMenuItem;
 	}
 }
 
