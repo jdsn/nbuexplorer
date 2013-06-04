@@ -37,8 +37,8 @@ VersionInfoCompany={#MyAppPublisher}
 VersionInfoCopyright={#MyAppPublisher}
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
-WizardImageFile=compiler:WizModernImage-IS.bmp
-WizardSmallImageFile=compiler:WizModernSmallImage-IS.bmp
+WizardImageFile=WizImage.bmp
+WizardSmallImageFile=compiler:WizModernSmallImage.bmp
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
