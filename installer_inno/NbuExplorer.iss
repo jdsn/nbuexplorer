@@ -39,6 +39,7 @@ VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
 WizardImageFile=compiler:WizModernImage-IS.bmp
 WizardSmallImageFile=compiler:WizModernSmallImage-IS.bmp
+UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
