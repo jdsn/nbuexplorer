@@ -9,7 +9,7 @@
 #expr ParseVersion("..\bin\Release\" + MyAppExeName, Version[0], Version[1], Version[2], Version[3])
 #define MyAppVersionFull Str(Version[0]) + "." + Str(Version[1]) + "." + Str(Version[2]) + "." + Str(Version[3])
 #define MyAppVersion Str(Version[0]) + "." + Str(Version[1])
-#define MyAppVersionFile Str(Version[0]) + "_" + Str(Version[1])
+#define MyAppVersionFile Str(Version[0]) + "." + Str(Version[1])
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -28,7 +28,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile={#LicenseFile}
 OutputDir=.\output
-OutputBaseFilename={#MyAppName}_{#MyAppVersionFile}_Setup
+OutputBaseFilename={#MyAppName}_v{#MyAppVersionFile}_Setup
 Compression=lzma
 SolidCompression=yes
 AppCopyright={#MyAppPublisher}
