@@ -5,6 +5,8 @@ Version 3.0
  - added:    dbshell integration for parsing contacts and other info from symbian databases
  - added:    preferences allowing selection of message sources (VMG, predefmessages,
              symbian message storage)
+ - added:    new export format "SMS Backup & Restore" for messages, which allows
+             android users to migrate their messages from nokia backups easily
  - improved: advanced options for installer
  - fixed:    parsing robustness fixes
 
