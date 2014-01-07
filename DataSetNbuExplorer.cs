@@ -81,7 +81,7 @@ namespace NbuExplorer
 			return false;
 		}
 
-		public static void AddMessageFromSymbianMessage(SymbianMessage sm)
+		public static void AddMessage(Message sm)
 		{
 			if (sm.MessageText.Length == 0) return;
 

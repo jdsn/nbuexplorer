@@ -281,7 +281,7 @@ namespace NbuExplorer
 					{
 						try
 						{
-							SymbianMessage sm = new SymbianMessage(ms);
+							Message sm = Message.ReadSymbianMessage(ms);
 							textBoxPreview.Text = sm.ToString();
 						}
 						catch (Exception exc)

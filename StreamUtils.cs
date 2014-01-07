@@ -337,11 +337,11 @@ namespace NbuExplorer
 			{
 				if (ucs2)
 				{
-					msg = string.Format("[{0}/{1}]:{2}", buff[5], buff[4], System.Text.Encoding.BigEndianUnicode.GetString(buff, 6, buff.Length - 6));
+					msg = string.Format(Message.MultipartFormat, buff[5], buff[4], System.Text.Encoding.BigEndianUnicode.GetString(buff, 6, buff.Length - 6));
 				}
 				else
 				{
-					msg = string.Format("[{0}/{1}]:{2}", buff[5], buff[4], StreamUtilsPdu.Decode7bit(buff, len1).Substring(7));
+					msg = string.Format(Message.MultipartFormat, buff[5], buff[4], StreamUtilsPdu.Decode7bit(buff, len1).Substring(7));
 				}
 			}
 			else

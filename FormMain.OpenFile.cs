@@ -141,8 +141,14 @@ namespace NbuExplorer
 										if (name.IndexOf('\\') == -1) name = "root\\" + name + ".csv";
 
 										List<FileInfo> list = findOrCreateFileInfoList(Path.GetDirectoryName(name));
-										list.Add(new FileInfo(Path.GetFileName(name), fs.Position, len));
+										var fi = new FileInfo(Path.GetFileName(name), fs.Position, len);
+										list.Add(fi);
 										fs.Seek(len + 4, SeekOrigin.Current);
+
+										if (name.EndsWith("\\MESSAGES.csv", StringComparison.InvariantCultureIgnoreCase))
+										{
+											parseNfbNfcMessages(fi);
+										}
 									}
 									StreamUtils.Counter += len;
 									break;
@@ -1316,7 +1322,30 @@ namespace NbuExplorer
 				previousMs = null; // reset recovery
 				addLine(string.Format("Parsing ERROR at position {0}: {1}", ms.Position.ToString("X"), exc.Message));
 			}
+		}
 
+		private void parseNfbNfcMessages(FileInfo fi)
+		{
+			try
+			{
+				using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
+				{
+					var sr = new StreamReader(ms, System.Text.Encoding.Unicode);
+					string line;
+					while (ms.Position < ms.Length)
+					{
+						Message m = Message.ReadNfbNfcMessage(sr.ReadLine());
+						if (m != null)
+						{
+							DataSetNbuExplorer.AddMessage(m);
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				addLine(ex.Message);
+			}
 		}
 
 		private void parseSymbianMessage(FileInfo fi)
@@ -1326,9 +1355,9 @@ namespace NbuExplorer
 			{
 				using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
 				{
-					SymbianMessage sm = new SymbianMessage(ms);
+					Message sm = Message.ReadSymbianMessage(ms);
 					fi.FileTime = sm.MessageTime;
-					DataSetNbuExplorer.AddMessageFromSymbianMessage(sm);
+					DataSetNbuExplorer.AddMessage(sm);
 				}
 			}
 			catch (Exception ex)
