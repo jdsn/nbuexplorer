@@ -176,6 +176,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="StreamUtils.cs" />
+    <Compile Include="XmlHelper.cs" />
     <Compile Include="zlib\Adler32.cs">
       <SubType>Code</SubType>
     </Compile>

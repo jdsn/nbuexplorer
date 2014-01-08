@@ -164,6 +164,10 @@ namespace NbuExplorer
 				{
 					System.Diagnostics.Debug.WriteLine(filename);
 					OpenFile(filename, (ofd.FilterIndex == 2));
+					/*if (dataGridViewMessages.Rows.Count > 0)
+					{
+						ExportForAndroid(Path.ChangeExtension(filename, ".xml"), dataGridViewMessages.Rows);
+					}*/
 				}
 			}
 #else
@@ -1102,7 +1106,7 @@ namespace NbuExplorer
 					xw.WriteAttributeString("date", mr.SbrTime.ToString());
 					xw.WriteAttributeString("type", mr.SbrType.ToString());
 					xw.WriteAttributeString("subject", "null");
-					xw.WriteAttributeString("body", mr.messagetext);
+					xw.WriteAttributeString("body", XmlHelper.CleanStringForXml(mr.messagetext));
 					xw.WriteAttributeString("toa", "null");
 					xw.WriteAttributeString("sc_toa", "null");
 					xw.WriteAttributeString("service_center", "null");
