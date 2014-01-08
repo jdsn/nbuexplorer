@@ -84,6 +84,9 @@ namespace NbuExplorer
 
 					try
 					{
+						FileInfo fiPhonebook = null;
+						FileInfo fiMessages = null;
+
 						for (int i = 0; i < count; i++)
 						{
 							uint type = StreamUtils.ReadUInt32(fs);
@@ -145,9 +148,13 @@ namespace NbuExplorer
 										list.Add(fi);
 										fs.Seek(len + 4, SeekOrigin.Current);
 
-										if (name.EndsWith("\\MESSAGES.csv", StringComparison.InvariantCultureIgnoreCase))
+										if (name.EndsWith("\\PHONEBOOK.csv", StringComparison.InvariantCultureIgnoreCase))
 										{
-											parseNfbNfcMessages(fi);
+											fiPhonebook = fi;
+										}
+										else if (name.EndsWith("\\MESSAGES.csv", StringComparison.InvariantCultureIgnoreCase))
+										{
+											fiMessages = fi;
 										}
 									}
 									StreamUtils.Counter += len;
@@ -156,6 +163,12 @@ namespace NbuExplorer
 									throw new ApplicationException(string.Format("Unknown item type {0}", type));
 							}
 						}
+
+						if (fiPhonebook != null)
+							parseNfbNfcPhonebook(fiPhonebook);
+
+						if (fiMessages != null)
+							parseNfbNfcMessages(fiMessages);
 					}
 					catch (Exception exc)
 					{
@@ -1324,6 +1337,47 @@ namespace NbuExplorer
 			}
 		}
 
+		private void parseNfbNfcPhonebook(FileInfo fi)
+		{
+			try
+			{
+				List<Contact> contacts =new List<Contact>();
+
+				using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
+				{
+					var sr = new StreamReader(ms, System.Text.Encoding.Unicode);
+					while (!sr.EndOfStream)
+					{
+						Contact c = Contact.ReadNfbNfcContact(sr.ReadLine());
+						if (c != null)
+						{
+							foreach (string number in c.Phones)
+							{
+								DataSetNbuExplorer.AddPhonebookEntry(number, c.DisplayName);
+							}
+							contacts.Add(c);
+						}
+					}
+				}
+
+				if (contacts.Count > 0)
+				{
+					var node = findOrCreateFileInfoList("Contacts");
+					foreach (var c in contacts)
+					{
+						FileInfoMemory vcf = new FileInfoMemory(c.DisplayName + ".vcf",
+							System.Text.Encoding.UTF8.GetBytes(c.ToVcard()),
+							c.RevDate);
+						node.Add(vcf);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				addLine(ex.Message);
+			}
+		}
+
 		private void parseNfbNfcMessages(FileInfo fi)
 		{
 			try
@@ -1331,8 +1385,7 @@ namespace NbuExplorer
 				using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
 				{
 					var sr = new StreamReader(ms, System.Text.Encoding.Unicode);
-					string line;
-					while (ms.Position < ms.Length)
+					while (!sr.EndOfStream)
 					{
 						Message m = Message.ReadNfbNfcMessage(sr.ReadLine());
 						if (m != null)
