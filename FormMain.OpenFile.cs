@@ -852,7 +852,7 @@ namespace NbuExplorer
 						FileInfoZip item = new FileInfoZip(ze, index, start);
 						findOrCreateFileInfoList(dir).Add(item);
 
-						if (BinMessage.MsgFileNameRegex.IsMatch(item.Filename))
+						if (parseMsgPredefToolStripMenuItem.Checked && BinMessage.MsgFileNameRegex.IsMatch(item.Filename))
 						{
 							long CntBackup = StreamUtils.Counter;
 							try
