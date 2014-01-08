@@ -1,6 +1,11 @@
 History & Changelog
 ===================
 
+Version 3.1
+ - added:    parsing of contacts and messages from nfb & nfc backups
+ - fixed:    xml encoding during export of messages for android
+ - fixed:    ignoring of predefmessages as message source
+
 Version 3.0
  - added:    dbshell integration for parsing contacts and other info from symbian databases
  - added:    preferences allowing selection of message sources (VMG, predefmessages,
