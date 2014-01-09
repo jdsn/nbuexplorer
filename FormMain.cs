@@ -1028,7 +1028,23 @@ namespace NbuExplorer
 
 		private void tsExportMessages_Click(object sender, EventArgs e)
 		{
-			if (dataGridViewMessages.Rows.Count == 0)
+			var msgsToExport = new List<DataSetNbuExplorer.MessageRow>();
+			if (exportOnlySelectedMessagesToolStripMenuItem.Checked)
+			{
+				foreach (DataGridViewRow dvr in dataGridViewMessages.SelectedRows)
+				{
+					msgsToExport.Add((DataSetNbuExplorer.MessageRow)((DataRowView)dvr.DataBoundItem).Row);
+				}
+			}
+			else
+			{
+				foreach (DataGridViewRow dvr in dataGridViewMessages.Rows)
+				{
+					msgsToExport.Add((DataSetNbuExplorer.MessageRow)((DataRowView)dvr.DataBoundItem).Row);
+				}
+			}
+
+			if (msgsToExport.Count == 0)
 			{
 				MessageBox.Show("No messages to export...", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
 				return;
@@ -1048,29 +1064,19 @@ namespace NbuExplorer
 					else if (sfd.FilterIndex == 3) // 'SMS Backup & Restore' xml format
 					{
 						string fileName = sfd.FileName;
-						var rows = dataGridViewMessages.Rows;
-						ExportForAndroid(fileName, rows);
+						ExportForAndroid(fileName, msgsToExport);
 					}
 					else
 					{
 						// text formats (txt and csv)
 						StreamWriter sw = null;
-						System.Text.Encoding enc = (sfd.FilterIndex == 2) ? System.Text.Encoding.Default : System.Text.Encoding.UTF8;
+						bool formatCsv = (sfd.FilterIndex == 2);
+						System.Text.Encoding enc = formatCsv ? System.Text.Encoding.Default : System.Text.Encoding.UTF8;
 						using (sw = new StreamWriter(sfd.FileName, false, enc))
 						{
-							if (dataGridViewMessages.SelectedRows.Count > 1)
+							foreach (var row in msgsToExport)
 							{
-								foreach (DataGridViewRow dvr in dataGridViewMessages.SelectedRows)
-								{
-									writeMessageInTextFormat(sw, dvr, sfd.FilterIndex);
-								}
-							}
-							else
-							{
-								foreach (DataGridViewRow dvr in dataGridViewMessages.Rows)
-								{
-									writeMessageInTextFormat(sw, dvr, sfd.FilterIndex);
-								}
+								writeMessageInTextFormat(sw, row, formatCsv);
 							}
 							sw.Close();
 						}
@@ -1083,7 +1089,7 @@ namespace NbuExplorer
 			}
 		}
 
-		private static void ExportForAndroid(string fileName, DataGridViewRowCollection rows)
+		private static void ExportForAndroid(string fileName, List<DataSetNbuExplorer.MessageRow> rows)
 		{
 			var culture = CultureInfo.GetCultureInfo("en-US");
 			XmlWriterSettings sett = new XmlWriterSettings
@@ -1097,9 +1103,8 @@ namespace NbuExplorer
 				xw.WriteProcessingInstruction("xml-stylesheet", "type=\"text/xsl\" href=\"sms.xsl\"");
 				xw.WriteStartElement("smses");
 				xw.WriteAttributeString("count", rows.Count.ToString());
-				foreach (DataGridViewRow dvr in rows)
+				foreach (var mr in rows)
 				{
-					DataSetNbuExplorer.MessageRow mr = (DataSetNbuExplorer.MessageRow)((DataRowView)dvr.DataBoundItem).Row;
 					xw.WriteStartElement("sms");
 					xw.WriteAttributeString("protocol", "0");
 					xw.WriteAttributeString("address", string.IsNullOrEmpty(mr.number) ? "unknown" : mr.number);
@@ -1121,10 +1126,8 @@ namespace NbuExplorer
 			}
 		}
 
-		private static void writeMessageInTextFormat(StreamWriter sw, DataGridViewRow dvr, int format)
+		private static void writeMessageInTextFormat(StreamWriter sw, DataSetNbuExplorer.MessageRow mr, bool formatCsv)
 		{
-			DataSetNbuExplorer.MessageRow mr = (DataSetNbuExplorer.MessageRow)((DataRowView)dvr.DataBoundItem).Row;
-
 			string msgdirection = "";
 			switch (mr.box)
 			{
@@ -1132,7 +1135,7 @@ namespace NbuExplorer
 				case "O": msgdirection = "to"; break;
 			}
 
-			if (format == 2) // filterindex 2 (csv)
+			if (formatCsv)
 			{
 				sw.WriteLine(string.Format("{0};{1};{2};\"{3}\";\"{4}\"",
 					mr.IstimeNull() ? "" : mr.time.ToString(),

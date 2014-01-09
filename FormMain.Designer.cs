@@ -54,6 +54,7 @@
 			this.parseMsgVMGToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.parseMsgPredefToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.parseMsgSymbianToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.parseMsgBinToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -110,7 +111,8 @@
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.statusLabelTotal = new System.Windows.Forms.ToolStripStatusLabel();
 			this.statusLabelSelected = new System.Windows.Forms.ToolStripStatusLabel();
-			this.parseMsgBinToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.messageExportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.exportOnlySelectedMessagesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStripMain.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPageFileContent.SuspendLayout();
@@ -247,7 +249,8 @@
 			// preferencesToolStripMenuItem
 			// 
 			this.preferencesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.messageSourcesToUseToolStripMenuItem});
+            this.messageSourcesToUseToolStripMenuItem,
+            this.messageExportToolStripMenuItem});
 			this.preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
 			this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(80, 20);
 			this.preferencesToolStripMenuItem.Text = "Preferences";
@@ -289,6 +292,15 @@
 			this.parseMsgSymbianToolStripMenuItem.Name = "parseMsgSymbianToolStripMenuItem";
 			this.parseMsgSymbianToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
 			this.parseMsgSymbianToolStripMenuItem.Text = "Symbian message storage";
+			// 
+			// parseMsgBinToolStripMenuItem
+			// 
+			this.parseMsgBinToolStripMenuItem.Checked = true;
+			this.parseMsgBinToolStripMenuItem.CheckOnClick = true;
+			this.parseMsgBinToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.parseMsgBinToolStripMenuItem.Name = "parseMsgBinToolStripMenuItem";
+			this.parseMsgBinToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+			this.parseMsgBinToolStripMenuItem.Text = "Binary encoded messages";
 			// 
 			// helpToolStripMenuItem
 			// 
@@ -885,14 +897,20 @@
 			this.statusLabelSelected.Size = new System.Drawing.Size(12, 17);
 			this.statusLabelSelected.Text = "-";
 			// 
-			// parseMsgBinToolStripMenuItem
+			// messageExportToolStripMenuItem
 			// 
-			this.parseMsgBinToolStripMenuItem.Checked = true;
-			this.parseMsgBinToolStripMenuItem.CheckOnClick = true;
-			this.parseMsgBinToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.parseMsgBinToolStripMenuItem.Name = "parseMsgBinToolStripMenuItem";
-			this.parseMsgBinToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
-			this.parseMsgBinToolStripMenuItem.Text = "Binary encoded messages";
+			this.messageExportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exportOnlySelectedMessagesToolStripMenuItem});
+			this.messageExportToolStripMenuItem.Name = "messageExportToolStripMenuItem";
+			this.messageExportToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+			this.messageExportToolStripMenuItem.Text = "Message export";
+			// 
+			// exportOnlySelectedToolStripMenuItem
+			// 
+			this.exportOnlySelectedMessagesToolStripMenuItem.CheckOnClick = true;
+			this.exportOnlySelectedMessagesToolStripMenuItem.Name = "exportOnlySelectedToolStripMenuItem";
+			this.exportOnlySelectedMessagesToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+			this.exportOnlySelectedMessagesToolStripMenuItem.Text = "Export only selected";
 			// 
 			// FormMain
 			// 
@@ -1023,6 +1041,8 @@
 		private System.Windows.Forms.ToolStripMenuItem parseMsgPredefToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem parseMsgSymbianToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem parseMsgBinToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem messageExportToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem exportOnlySelectedMessagesToolStripMenuItem;
 	}
 }
 

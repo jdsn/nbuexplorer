@@ -3,6 +3,7 @@ History & Changelog
 
 Version 3.1
  - added:    parsing of contacts and messages from nfb & nfc backups
+ - added:    option to export only selected messages
  - fixed:    xml encoding during export of messages for android
  - fixed:    ignoring of predefmessages as message source
 
