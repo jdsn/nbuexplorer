@@ -297,11 +297,11 @@ namespace NbuExplorer
 				}
 				catch { }
 
-				if (BinMessage.MsgFileNameRegex.IsMatch(fi.Filename))
+				if (Message.MsgFileNameRegex.IsMatch(fi.Filename))
 				{
 					try
 					{
-						BinMessage m = new BinMessage(ms, fi.Filename);
+						Message m = Message.ReadPredefBinMessage(ms, fi.Filename);
 						textBoxPreview.Text = m.ToString();
 					}
 					catch (Exception exc)

@@ -70,7 +70,6 @@
     <Compile Include="AboutBox.Designer.cs">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="BinMessage.cs" />
     <Compile Include="cdbParsing\CdbContactParser.cs" />
     <Compile Include="cdbParsing\Contact.cs" />
     <Compile Include="cdbParsing\DbShell.cs" />

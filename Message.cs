@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace NbuExplorer
 {
@@ -12,44 +13,61 @@ namespace NbuExplorer
 		Outgoing
 	}
 
+	public class MultipartData
+	{
+		public int PartNumber;
+		public int TotalParts;
+		public byte MessageNumber;
+	}
+
 	public class Message
 	{
+		private static byte[] UnicodeZero = new byte[] { 0, 0 };
 		public const string MultipartFormat = "[{0}/{1}]:{2}";
+		public static readonly Regex MsgFileNameRegex = new Regex("[0-9A-F]{47,80}");
 
 		private string messageText = "";
 		public string MessageText
 		{
 			get { return messageText; }
+			private set { messageText = value; }
 		}
 
 		private string phoneNumber = "";
 		public string PhoneNumber
 		{
 			get { return phoneNumber; }
+			private set { phoneNumber = value; }
 		}
 
 		private string name = "";
 		public string Name
 		{
 			get { return name; }
+			private set { name = value; }
 		}
 
 		private string smscNumber = "";
 		public string SmscNumber
 		{
 			get { return smscNumber; }
+			private set { smscNumber = value; }
 		}
 
 		private DateTime messageTime = DateTime.MinValue;
 		public DateTime MessageTime
 		{
 			get { return messageTime; }
+			private set { messageTime = value; }
 		}
+
+		public bool IsDelivery { get; private set; }
 
 		private MessageDirection direction = MessageDirection.Unknown;
 		public MessageDirection Direction
 		{
 			get { return direction; }
+			private set { direction = value; }
 		}
 
 		public string DirectionString
@@ -77,6 +95,10 @@ namespace NbuExplorer
 				}
 			}
 		}
+
+		public Mms Mms { get; private set; }
+
+		public MultipartData MultipartInfo { get; private set; }
 
 		/*private StringBuilder parseLog = new StringBuilder();
 		public string ParseLog
@@ -173,101 +195,101 @@ namespace NbuExplorer
 				return m;
 		}
 
-		public static Message ReadSymbianMessage(Stream ms)
+		public static Message ReadSymbianMessage(Stream s)
 		{
 			int test;
 
-			if (StreamUtils.SeekTo(UnicodeExpander.msgBodyStartSeq, ms))
+			if (StreamUtils.SeekTo(UnicodeExpander.msgBodyStartSeq, s))
 			{
 				Message m = new Message();
 
-				m.messageText = UnicodeExpander.Expand(ms);
+				m.messageText = UnicodeExpander.Expand(s);
 
 				try
 				{
-					test = StreamUtils.ReadUInt16(ms);
+					test = StreamUtils.ReadUInt16(s);
 					if (test != 0x2920) throw new ApplicationException("Not sms");
-					test = StreamUtils.ReadUInt16(ms);
+					test = StreamUtils.ReadUInt16(s);
 					if (test != 0x1834) throw new ApplicationException("Not sms");
 
-					ms.Seek(3, SeekOrigin.Current);
+					s.Seek(3, SeekOrigin.Current);
 					//parseLog.AppendLine(FormMain.buffToString(StreamUtils.ReadBuff(ms, 6)));
 
-					int dirByte = ms.ReadByte();
+					int dirByte = s.ReadByte();
 					if (dirByte == 1 || dirByte == 0)
 					{
 						m.direction = MessageDirection.Unknown;
-						ms.Seek(21 + dirByte, SeekOrigin.Current);
-						m.messageTime = StreamUtils.ReadNokiaDateTime3(ms);
+						s.Seek(21 + dirByte, SeekOrigin.Current);
+						m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
 					}
 					else if (dirByte == 2)
 					{
 						m.direction = MessageDirection.Unknown;
-						ms.Seek(23, SeekOrigin.Current);
+						s.Seek(23, SeekOrigin.Current);
 
-						m.messageTime = StreamUtils.ReadNokiaDateTime3(ms);
-						ms.Seek(2, SeekOrigin.Current);
-						m.smscNumber = StreamUtils.ReadPhoneNumber(ms);
-						test = StreamUtils.ReadUInt16(ms);
+						m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
+						s.Seek(2, SeekOrigin.Current);
+						m.smscNumber = StreamUtils.ReadPhoneNumber(s);
+						test = StreamUtils.ReadUInt16(s);
 						if (test == 0x15)
 						{
 							return m;
 						}
-						m.phoneNumber = StreamUtils.ReadPhoneNumber(ms);
-						test = StreamUtils.ReadUInt16(ms);
+						m.phoneNumber = StreamUtils.ReadPhoneNumber(s);
+						test = StreamUtils.ReadUInt16(s);
 						if (test == 0x0400)
 						{
 							return m;
 						}
-						m.messageTime = StreamUtils.ReadNokiaDateTime3(ms);
+						m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
 					}
 					else if (dirByte == 5 || dirByte == 6)
 					{
 						m.direction = MessageDirection.Outgoing;
-						ms.Seek(20, SeekOrigin.Current);
-						m.messageTime = StreamUtils.ReadNokiaDateTime3(ms);
-						m.phoneNumber = StreamUtils.ReadPhoneNumber(ms);
+						s.Seek(20, SeekOrigin.Current);
+						m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
+						m.phoneNumber = StreamUtils.ReadPhoneNumber(s);
 
-						if (StreamUtils.SeekTo(new byte[] { 0x02, 0x03, 0xC2, 0x01 }, ms))
+						if (StreamUtils.SeekTo(new byte[] { 0x02, 0x03, 0xC2, 0x01 }, s))
 						{
-							ms.Seek(9, SeekOrigin.Current);
-							StreamUtils.ReadNokiaDateTime3(ms);
-							ms.Seek(2, SeekOrigin.Current);
-							m.smscNumber = StreamUtils.ReadPhoneNumber(ms);
+							s.Seek(9, SeekOrigin.Current);
+							StreamUtils.ReadNokiaDateTime3(s);
+							s.Seek(2, SeekOrigin.Current);
+							m.smscNumber = StreamUtils.ReadPhoneNumber(s);
 						}
 					}
 					else if (dirByte == 3 || dirByte == 4)
 					{
-						ms.Seek(2, SeekOrigin.Current);
+						s.Seek(2, SeekOrigin.Current);
 
-						test = ms.ReadByte();
+						test = s.ReadByte();
 						if (test == 0)
 						{
 							m.direction = MessageDirection.Incoming;
-							ms.Seek(20, SeekOrigin.Current);
-							m.messageTime = StreamUtils.ReadNokiaDateTime3(ms);
-							ms.Seek(2, SeekOrigin.Current);
-							m.smscNumber = StreamUtils.ReadPhoneNumber(ms);
-							if (test == 1) ms.ReadByte();
-							ms.Seek(2, SeekOrigin.Current);
-							m.phoneNumber = StreamUtils.ReadPhoneNumber(ms);
+							s.Seek(20, SeekOrigin.Current);
+							m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
+							s.Seek(2, SeekOrigin.Current);
+							m.smscNumber = StreamUtils.ReadPhoneNumber(s);
+							if (test == 1) s.ReadByte();
+							s.Seek(2, SeekOrigin.Current);
+							m.phoneNumber = StreamUtils.ReadPhoneNumber(s);
 						}
 						else if (test == 1)
 						{
 							m.direction = MessageDirection.Outgoing;
-							ms.Seek(25, SeekOrigin.Current);
-							m.phoneNumber = StreamUtils.ReadPhoneNumber(ms);
-							m.name = UnicodeExpander.ReadShortString(ms);
+							s.Seek(25, SeekOrigin.Current);
+							m.phoneNumber = StreamUtils.ReadPhoneNumber(s);
+							m.name = UnicodeExpander.ReadShortString(s);
 
-							test = ms.ReadByte();
+							test = s.ReadByte();
 							if (test == 1)
 							{
-								ms.Seek(2, SeekOrigin.Current);
+								s.Seek(2, SeekOrigin.Current);
 							}
 
-							ms.Seek(21, SeekOrigin.Current);
+							s.Seek(21, SeekOrigin.Current);
 							// TODO: check these values
-							m.messageTime = StreamUtils.ReadNokiaDateTime3(ms);
+							m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
 						}
 						else
 						{
@@ -279,17 +301,11 @@ namespace NbuExplorer
 						throw new ApplicationException(string.Format("Unknown direction ({0})", dirByte));
 					}
 				}
-				catch //(Exception ex)
+				catch
 				{
 					if (m.messageText.Length == 0)
 					{
-						throw new ApplicationException(string.Format("No message found. File size: ({0})", ms.Length));
-					}
-					else
-					{
-						// TODO:
-						/*throw new ApplicationException(string.Format("Parsing error at position [{0}/{1}]: {2}\r\nMessage text found: {3}",
-							ms.Position, ms.Length, ex.Message, messageText), ex);*/
+						throw new ApplicationException(string.Format("No message found. File size: ({0})", s.Length));
 					}
 				}
 
@@ -298,6 +314,245 @@ namespace NbuExplorer
 			else
 			{
 				throw new ApplicationException("Starting sequence not found");
+			}
+		}
+
+		public static Message ReadPredefBinMessage(Stream s, string filename)
+		{
+			Message m = new Message();
+
+			s.Seek(0xB0, SeekOrigin.Begin);
+			int MsgHeaderFlags = s.ReadByte();
+			bool udhi = (MsgHeaderFlags & 0x40) > 0;
+			int MsgType = MsgHeaderFlags & 0x0F;
+			bool ucs2;
+
+			switch (MsgType)
+			{
+				case 0:
+				case 4:
+					m.Direction = MessageDirection.Incoming;
+					m.PhoneNumber = StreamUtilsPdu.ReadPhoneNumber(s);
+
+					s.ReadByte(); // 00 expected
+					ucs2 = (s.ReadByte() == 8);
+
+					try
+					{
+						m.MessageTime = StreamUtilsPdu.ReadDateTime(s);
+					}
+					catch { }
+
+					s.ReadByte();
+
+					m.DecodeMessageBody(udhi, ucs2, s);
+					break;
+				case 1:
+					m.Direction = MessageDirection.Outgoing;
+
+					s.ReadByte();
+
+					m.PhoneNumber = StreamUtilsPdu.ReadPhoneNumber(s);
+					if (m.PhoneNumber == "+35856789123456789123") m.PhoneNumber = "";
+
+					s.ReadByte();
+
+					ucs2 = (s.ReadByte() == 8);
+
+					s.ReadByte();
+
+					m.DecodeMessageBody(udhi, ucs2, s);
+
+					if (string.IsNullOrEmpty(m.PhoneNumber))
+					{
+						s.Seek(0x5F, SeekOrigin.Begin);
+						StreamUtils.SeekTo(UnicodeZero, s);
+						if (s.Position > 0x61)
+						{
+							int len = (int)(s.Position - 0x5F) / 2;
+							s.Seek(0x5F, SeekOrigin.Begin);
+							m.PhoneNumber = StreamUtils.ReadString(s, len);
+						}
+					}
+
+					break;
+				case 0x0C:
+					s.Seek(-1, SeekOrigin.Current);
+					try
+					{
+						m.Mms = new Mms(s, s.Length);
+						m.MessageText = m.Mms.ParseLog;
+					}
+					catch { }
+					break;
+				default:
+					throw new ApplicationException("Unknown message type");
+			}
+
+			if (filename.Length == 55 || filename.Length == 63)
+			{
+				try
+				{
+					string tmp = filename.Substring(8, 8);
+					Int64 sec = Int64.Parse(tmp, System.Globalization.NumberStyles.HexNumber);
+					m.MessageTime = new DateTime(1980, 1, 1).AddSeconds(sec);
+				}
+				catch { }
+			}
+
+			return m;
+		}
+
+		public static Message ReadBinMessage(Stream s)
+		{
+			Message m = new Message();
+
+			s.Seek(4, SeekOrigin.Current);
+			int MsgHeaderFlags = s.ReadByte();
+			bool udhi = ((MsgHeaderFlags & 0x40) > 0);
+			int MsgType = MsgHeaderFlags & 0x0F;
+
+			s.ReadByte();
+			bool ucs2 = (s.ReadByte() == 8);
+			s.ReadByte();
+
+			int test, len, len2;
+			byte[] buff;
+
+			switch (MsgType)
+			{
+				case 0x00:
+				case 0x04: // incoming message
+					m.Direction = MessageDirection.Incoming;
+
+					s.ReadByte();
+					m.MessageTime = StreamUtilsPdu.ReadDateTime(s);
+					s.Seek(8, SeekOrigin.Current);
+					m.PhoneNumber = StreamUtilsPdu.ReadPhoneNumber(s);
+					s.Seek(5, SeekOrigin.Current);
+					m.SmscNumber = StreamUtilsPdu.ReadPhoneNumber(s);
+
+					s.Seek(6, SeekOrigin.Current);
+					len = StreamUtils.ReadUInt16(s);
+					len2 = StreamUtils.ReadUInt16(s);
+					s.Seek(2, SeekOrigin.Current);
+					buff = StreamUtils.ReadBuff(s, len2);
+					m.DecodeMessageText(udhi, ucs2, len, buff);
+					StreamUtils.Counter += len2;
+
+					break;
+				case 0x01: // outgoing message
+					m.Direction = MessageDirection.Outgoing;
+
+					s.Seek(2, SeekOrigin.Current);
+
+					test = s.ReadByte();
+					if (test == 1)
+					{
+						m.MessageTime = StreamUtils.ReadNokiaDateTime2(s).ToLocalTime();
+						s.Seek(7, SeekOrigin.Current);
+					}
+
+					test = s.ReadByte();
+					if (test == 1)
+					{
+						s.Seek(4, SeekOrigin.Current);
+						m.PhoneNumber = StreamUtilsPdu.ReadPhoneNumber(s);
+						s.Seek(5, SeekOrigin.Current);
+						m.SmscNumber = StreamUtilsPdu.ReadPhoneNumber(s);
+					}
+					else
+					{
+						s.Seek(7, SeekOrigin.Current);
+					}
+
+					s.Seek(6, SeekOrigin.Current);
+					len = StreamUtils.ReadUInt16(s);
+					len2 = StreamUtils.ReadUInt16(s);
+					s.Seek(2, SeekOrigin.Current);
+					buff = StreamUtils.ReadBuff(s, len2);
+					m.DecodeMessageText(udhi, ucs2, len, buff);
+					StreamUtils.Counter += len2;
+
+					break;
+				case 0x06: // delivery report message
+					m.Direction = MessageDirection.Incoming;
+
+					s.ReadByte();
+					m.MessageTime = StreamUtilsPdu.ReadDateTime(s);
+					s.Seek(15, SeekOrigin.Current);
+					m.PhoneNumber = StreamUtilsPdu.ReadPhoneNumber(s);
+					s.Seek(5, SeekOrigin.Current);
+					m.SmscNumber = StreamUtilsPdu.ReadPhoneNumber(s);
+					s.Seek(12, SeekOrigin.Current);
+
+					m.MessageText = "Delivery message";
+					m.IsDelivery = true;
+					break;
+				default:
+					throw new ApplicationException("Unknown message type");
+			}
+			return m;
+		}
+
+		private void DecodeMessageBody(bool udhi, bool ucs2, Stream s)
+		{
+			int len = s.ReadByte();
+			byte[] buff;
+			if (ucs2)
+			{
+				buff = StreamUtils.ReadBuff(s, len);
+			}
+			else
+			{
+				int len7 = (int)Math.Ceiling(7.0 * len / 8);
+				buff = StreamUtils.ReadBuff(s, len7);
+			}
+			this.DecodeMessageText(udhi, ucs2, len, buff);
+		}
+
+		private void DecodeMessageText(bool udhi, bool ucs2, int len, byte[] buff)
+		{
+			if (udhi)
+			{
+				int headLength = buff[0];
+				int skipChars = (headLength + 1);
+
+				// multipart
+				if (ucs2)
+				{
+					this.MessageText = System.Text.Encoding.BigEndianUnicode.GetString(buff, skipChars, buff.Length - skipChars);
+				}
+				else
+				{
+					skipChars = (int)Math.Ceiling(skipChars * 8.0 / 7);
+					this.MessageText = StreamUtilsPdu.Decode7bit(buff, len).Substring(skipChars);
+				}
+
+				if (headLength > 4 && buff[2] == 3 && buff[4] > 1)
+				{
+					this.MultipartInfo = new MultipartData { MessageNumber = buff[3], TotalParts = buff[4], PartNumber = buff[5] };
+				}
+				else if (headLength > 5 && buff[2] == 4)
+				{
+					this.MultipartInfo = new MultipartData { MessageNumber = buff[4], TotalParts = buff[5], PartNumber = buff[6] };
+				}
+
+				if (this.MultipartInfo != null)
+				{
+					this.MessageText = string.Format(Message.MultipartFormat, MultipartInfo.PartNumber, MultipartInfo.TotalParts, this.MessageText);
+				}
+			}
+			else
+			{
+				if (ucs2)
+				{
+					this.MessageText = System.Text.Encoding.BigEndianUnicode.GetString(buff);
+				}
+				else
+				{
+					this.MessageText = StreamUtilsPdu.Decode7bit(buff, len);
+				}
 			}
 		}
 

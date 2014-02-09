@@ -852,7 +852,7 @@ namespace NbuExplorer
 						FileInfoZip item = new FileInfoZip(ze, index, start);
 						findOrCreateFileInfoList(dir).Add(item);
 
-						if (parseMsgPredefToolStripMenuItem.Checked && BinMessage.MsgFileNameRegex.IsMatch(item.Filename))
+						if (parseMsgPredefToolStripMenuItem.Checked && Message.MsgFileNameRegex.IsMatch(item.Filename))
 						{
 							long CntBackup = StreamUtils.Counter;
 							try
@@ -860,11 +860,11 @@ namespace NbuExplorer
 								using (MemoryStream ms = new MemoryStream())
 								{
 									StreamUtils.CopyFromStreamToStream(zi, ms, ze.Size);
-									BinMessage msg = new BinMessage(ms, item.Filename);
+									Message msg = Message.ReadPredefBinMessage(ms, item.Filename);
 									if (msg.Mms == null)
 									{
 										addLine(msg.ToString());
-										DataSetNbuExplorer.AddMessageFromBinMessage(msg);
+										DataSetNbuExplorer.AddMessage(msg);
 									}
 									else
 									{
@@ -1725,17 +1725,17 @@ namespace NbuExplorer
 							FileInfo fi = new FileInfo(filename, fs.Position, len);
 							addSymbianFile(sectName, foldername, fi);
 
-							if (parseMsgPredefToolStripMenuItem.Checked && BinMessage.MsgFileNameRegex.IsMatch(filename))
+							if (parseMsgPredefToolStripMenuItem.Checked && Message.MsgFileNameRegex.IsMatch(filename))
 							{
 								try
 								{
 									using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
 									{
-										BinMessage msg = new BinMessage(ms, filename);
+										Message msg = Message.ReadPredefBinMessage(ms, filename);
 										if (msg.Mms == null)
 										{
 											addLine(msg.ToString());
-											DataSetNbuExplorer.AddMessageFromBinMessage(msg);
+											DataSetNbuExplorer.AddMessage(msg);
 										}
 										else
 										{
@@ -2094,11 +2094,10 @@ namespace NbuExplorer
 					int boxnumber = fs.ReadByte();
 
 					string boxname;
-					string boxletter = "U";
 					switch (boxnumber)
 					{
-						case 2: boxname = "Inbox"; boxletter = "I"; break;
-						case 3: boxname = "Sent"; boxletter = "O"; break;
+						case 2: boxname = "Inbox"; break;
+						case 3: boxname = "Sent"; break;
 						case 4: boxname = "Archive"; break;
 						case 5: boxname = "Templates"; break;
 						default: boxname = string.Format("box{0}", boxnumber); break;
@@ -2115,22 +2114,22 @@ namespace NbuExplorer
 						{
 							smsBegin = fs.Position;
 
-							var ms = new BinMessage(boxletter, fs);
+							var ms = Message.ReadBinMessage(fs);
 
-							string dateAsString = (ms.Time > DateTime.MinValue) ? ms.Time.ToString() : "";
-							addLine(string.Format("{0:000} [{1}] {2}; {3}; {4}", j, numToAddr(smsBegin), dateAsString, ms.Number, ms.Text));
+							string dateAsString = (ms.MessageTime > DateTime.MinValue) ? ms.MessageTime.ToString() : "";
+							addLine(string.Format("{0:000} [{1}] {2}; {3}; {4}", j, numToAddr(smsBegin), dateAsString, ms.PhoneNumber, ms.MessageText));
 
-							string filename = string.Format("{0:0000} {1}", j, ms.Number).TrimEnd();
-							partFilesBin.Add(new FileInfo(filename + ".sms", smsBegin, fs.Position - smsBegin, ms.Time));
+							string filename = string.Format("{0:0000} {1}", j, ms.PhoneNumber).TrimEnd();
+							partFilesBin.Add(new FileInfo(filename + ".sms", smsBegin, fs.Position - smsBegin, ms.MessageTime));
 
 							if (!ms.IsDelivery)
 							{
-								byte[] data = System.Text.Encoding.UTF8.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", ms.Number, dateAsString, ms.Text));
-								partFilesTxt.Add(new FileInfoMemory(filename + ".txt", data, ms.Time));
+								byte[] data = System.Text.Encoding.UTF8.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", ms.PhoneNumber, dateAsString, ms.MessageText));
+								partFilesTxt.Add(new FileInfoMemory(filename + ".txt", data, ms.MessageTime));
 
 								if (addMsgToDataSet)
 								{
-									DataSetNbuExplorer.AddMessageFromBinMessage(ms);
+									DataSetNbuExplorer.AddMessage(ms);
 								}
 							}
 						}
