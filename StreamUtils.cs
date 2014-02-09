@@ -279,21 +279,6 @@ namespace NbuExplorer
 
 		public static string Decode7bit(byte[] source, int length)
 		{
-			/* - old version using strings
-			Array.Reverse(source);
-			StringBuilder sb = new StringBuilder();
-
-			foreach (byte b in source) sb.Append(Convert.ToString(b, 2).PadLeft(8, '0'));
-			string binary = sb.ToString().PadRight(length * 7, '0');
-
-			sb = new StringBuilder();
-
-			bool esc = false;
-			for (int i = 1; i <= length; i++)
-			{
-				UInt16 c = GSM2Unicode[Convert.ToByte(binary.Substring(binary.Length - i * 7, 7), 2)];
-			*/
-
 			byte[] data = Convert8to7(source, length);
 			StringBuilder sb = new StringBuilder();
 			bool esc = false;
@@ -328,34 +313,6 @@ namespace NbuExplorer
 				}
 			}
 			return sb.ToString();
-		}
-
-		public static string DecodeMessageText(bool ucs2, int len1, byte[] buff)
-		{
-			string msg;
-			if (buff.Length > 2 && buff[0] == 5 && buff[1] == 0 && buff[2] == 3) // multipart sms
-			{
-				if (ucs2)
-				{
-					msg = string.Format(Message.MultipartFormat, buff[5], buff[4], System.Text.Encoding.BigEndianUnicode.GetString(buff, 6, buff.Length - 6));
-				}
-				else
-				{
-					msg = string.Format(Message.MultipartFormat, buff[5], buff[4], StreamUtilsPdu.Decode7bit(buff, len1).Substring(7));
-				}
-			}
-			else
-			{
-				if (ucs2)
-				{
-					msg = System.Text.Encoding.BigEndianUnicode.GetString(buff);
-				}
-				else
-				{
-					msg = StreamUtilsPdu.Decode7bit(buff, len1);
-				}
-			}
-			return msg;
 		}
 
 		private static byte ReadInvertDecimalByte(Stream s)

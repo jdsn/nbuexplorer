@@ -72,6 +72,7 @@ namespace NbuExplorer
 		{
 			// normalize newlines for comparison
 			text = newLineRex.Replace(text, "\n");
+			if (number == null) number = "";
 
 			DataSetNbuExplorer.MessageRow[] dupl = (DataSetNbuExplorer.MessageRow[])_defaultInstance.Message.Select("number = '" + number.Replace("'", "''") + "'");
 			foreach (DataSetNbuExplorer.MessageRow mr in dupl)

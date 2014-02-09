@@ -131,7 +131,13 @@ namespace NbuExplorer
 			if (!attrs.ContainsKey(key)) return DateTime.MinValue;
 			try
 			{
-				return DateTime.ParseExact(this[key].Substring(0, parseDateFormat.Length), parseDateFormat, System.Globalization.CultureInfo.InvariantCulture);
+				var timeStr = this[key];
+				var time = DateTime.ParseExact(timeStr.Substring(0, parseDateFormat.Length), parseDateFormat, System.Globalization.CultureInfo.InvariantCulture);
+				if (timeStr.EndsWith("Z", StringComparison.Ordinal))
+				{
+					time = DateTime.SpecifyKind(time, DateTimeKind.Utc).ToLocalTime();
+				}
+				return time;
 			}
 			catch
 			{

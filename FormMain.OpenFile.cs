@@ -2115,104 +2115,24 @@ namespace NbuExplorer
 						{
 							smsBegin = fs.Position;
 
-							DateTime dt = DateTime.MinValue;
-							string num = "";
+							var ms = new BinMessage(boxletter, fs);
 
-							fs.Seek(6, SeekOrigin.Current);
-							bool ucs2 = (fs.ReadByte() == 8);
-							fs.ReadByte();
+							string dateAsString = (ms.Time > DateTime.MinValue) ? ms.Time.ToString() : "";
+							addLine(string.Format("{0:000} [{1}] {2}; {3}; {4}", j, numToAddr(smsBegin), dateAsString, ms.Number, ms.Text));
 
-							int test = fs.ReadByte();
+							string filename = string.Format("{0:0000} {1}", j, ms.Number).TrimEnd();
+							partFilesBin.Add(new FileInfo(filename + ".sms", smsBegin, fs.Position - smsBegin, ms.Time));
 
-							if (test == 7) // time is present
+							if (!ms.IsDelivery)
 							{
-								dt = StreamUtilsPdu.ReadDateTime(fs);
-								fs.ReadByte();
-								test = fs.ReadByte();
-								if (test == 7)
+								byte[] data = System.Text.Encoding.UTF8.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", ms.Number, dateAsString, ms.Text));
+								partFilesTxt.Add(new FileInfoMemory(filename + ".txt", data, ms.Time));
+
+								if (addMsgToDataSet)
 								{
-									// delivery message???
-									fs.Seek(13, SeekOrigin.Current);
-									num = StreamUtilsPdu.ReadPhoneNumber(fs);
-									fs.Seek(5, SeekOrigin.Current);
-									StreamUtilsPdu.ReadPhoneNumber(fs); // SMSC?
-									fs.Seek(12, SeekOrigin.Current);
-									addLine(string.Format("{0:000} [{1}] {2}; Delivery message for number {3}", j, numToAddr(smsBegin), dt, num));
-									partFilesBin.Add(new FileInfo(string.Format("{0:0000} {1}.sms", j, num), smsBegin, fs.Position - smsBegin, dt));
-									continue;
-								}
-								else
-								{
-									//addLine(buffToString(StreamUtils.ReadBuff(fs, 6)));
-									fs.Seek(6, SeekOrigin.Current);
-									num = StreamUtilsPdu.ReadPhoneNumber(fs);
-									//addLine(buffToString(StreamUtils.ReadBuff(fs, 5)));
-									fs.Seek(5, SeekOrigin.Current);
-									StreamUtilsPdu.ReadPhoneNumber(fs); // SMSC?
+									DataSetNbuExplorer.AddMessageFromBinMessage(ms);
 								}
 							}
-							else
-							{
-								if (fs.ReadByte() != 0)
-									throw new Exception("00 expected here");
-
-								test = fs.ReadByte();
-								if (test == 1)
-								{
-									dt = StreamUtils.ReadNokiaDateTime2(fs).ToLocalTime();
-									fs.Seek(7, SeekOrigin.Current);
-								}
-
-								test = fs.ReadByte();
-								if (test == 1)
-								{
-									fs.Seek(4, SeekOrigin.Current);
-									num = StreamUtilsPdu.ReadPhoneNumber(fs);
-									fs.Seek(5, SeekOrigin.Current);
-									StreamUtilsPdu.ReadPhoneNumber(fs); // SMSC?
-								}
-								else
-								{
-									fs.Seek(7, SeekOrigin.Current);
-								}
-							}
-
-							//addLine(buffToString(StreamUtils.ReadBuff(fs, 6)));
-							fs.Seek(6, SeekOrigin.Current);
-
-							int len1 = StreamUtils.ReadUInt16(fs);
-							int len2 = StreamUtils.ReadUInt16(fs);
-
-							//addLine(StreamUtils.ReadUInt16(fs).ToString());
-							fs.Seek(2, SeekOrigin.Current);
-
-							byte[] buff = StreamUtils.ReadBuff(fs, len2);
-							StreamUtils.Counter += len2;
-
-							string msg = StreamUtilsPdu.DecodeMessageText(ucs2, len1, buff);
-
-							string dateAsString = (dt > DateTime.MinValue) ? dt.ToString() : "";
-							addLine(string.Format("{0:000} [{1}] {2}; {3}; {4}", j, numToAddr(smsBegin), dateAsString, num, msg));
-
-							string filename = string.Format("{0:0000} {1}", j, num).TrimEnd();
-							partFilesBin.Add(new FileInfo(filename + ".sms", smsBegin, fs.Position - smsBegin, dt));
-							byte[] data = System.Text.Encoding.UTF8.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", num, dateAsString, msg));
-							partFilesTxt.Add(new FileInfoMemory(filename + ".txt", data, dt));
-
-							if (addMsgToDataSet)
-							{
-								DataSetNbuExplorer.MessageRow row;
-								if (string.IsNullOrEmpty(num))
-								{
-									row = DataSetNbuExplorer.DefaultMessageTable.AddMessageRow(boxletter, dt, null, null, msg);
-								}
-								else
-								{
-									row = DataSetNbuExplorer.DefaultMessageTable.AddMessageRow(boxletter, dt, num, DataSetNbuExplorer.NumToName(num), msg);
-								}
-								if (dt == DateTime.MinValue) row.SettimeNull();
-							}
-
 						}
 					}
 				}

@@ -7,6 +7,13 @@ namespace NbuExplorer
 {
 	public class BinMessage
 	{
+		public class MultipartData
+		{
+			public int PartNumber;
+			public int TotalParts;
+			public byte MessageNumber;
+		}
+
 		private static byte[] UnicodeZero = new byte[] { 0, 0 };
 
 		public static readonly Regex MsgFileNameRegex = new Regex("[0-9A-F]{47,80}");
@@ -15,9 +22,15 @@ namespace NbuExplorer
 
 		public string Number { get; private set; }
 
+		public string SmsCenter { get; private set; }
+
 		public DateTime Time { get; private set; }
 
 		public string Text { get; private set; }
+
+		public MultipartData MultipartInfo { get; private set; }
+
+		public bool IsDelivery { get; private set; }
 
 		public Mms Mms { get; private set; }
 
@@ -44,6 +57,7 @@ namespace NbuExplorer
 
 			s.Seek(0xB0, SeekOrigin.Begin);
 			test = s.ReadByte();
+			bool udhi = (test & 0x40) > 0;
 
 			switch (test & 0x0F)
 			{
@@ -76,7 +90,7 @@ namespace NbuExplorer
 						len7 = (int)Math.Ceiling(7.0 * len / 8);
 						buff = StreamUtils.ReadBuff(s, len7);
 					}
-					Text = StreamUtilsPdu.DecodeMessageText(ucs2, len, buff);
+					this.DecodeMessageText(ucs2, udhi, len, buff);
 					break;
 				case 1:
 					BoxLetter = "O";
@@ -103,7 +117,8 @@ namespace NbuExplorer
 						len7 = (int)Math.Ceiling(7.0 * len / 8);
 						buff = StreamUtils.ReadBuff(s, len7);
 					}
-					Text = StreamUtilsPdu.DecodeMessageText(ucs2, len, buff);
+
+					this.DecodeMessageText(ucs2, udhi, len, buff);
 
 					if (string.IsNullOrEmpty(Number))
 					{
@@ -141,6 +156,144 @@ namespace NbuExplorer
 					Time = new DateTime(1980, 1, 1).AddSeconds(sec);
 				}
 				catch { }
+			}
+		}
+
+		public BinMessage(string boxLetter, Stream fs)
+		{
+			this.Time = DateTime.MinValue;
+			this.BoxLetter = boxLetter;
+
+			fs.Seek(4, SeekOrigin.Current);
+			int MsgHeaderFlags = fs.ReadByte();
+			bool udhi = ((MsgHeaderFlags & 0x40) > 0);
+
+			fs.ReadByte();
+			//fs.Seek(6, SeekOrigin.Current);
+			bool ucs2 = (fs.ReadByte() == 8);
+			fs.ReadByte();
+
+			int test = fs.ReadByte();
+
+			if (test == 7) // time is present
+			{
+				this.Time = StreamUtilsPdu.ReadDateTime(fs);
+				fs.ReadByte();
+				test = fs.ReadByte();
+				if (test == 7)
+				{
+					// delivery message???
+					fs.Seek(13, SeekOrigin.Current);
+					this.Number = StreamUtilsPdu.ReadPhoneNumber(fs);
+					fs.Seek(5, SeekOrigin.Current);
+					this.SmsCenter = StreamUtilsPdu.ReadPhoneNumber(fs);
+					fs.Seek(12, SeekOrigin.Current);
+
+					this.Text = "Delivery message";
+					this.IsDelivery = true;
+
+					return;
+				}
+				else
+				{
+					//addLine(buffToString(StreamUtils.ReadBuff(fs, 6)));
+					fs.Seek(6, SeekOrigin.Current);
+					this.Number = StreamUtilsPdu.ReadPhoneNumber(fs);
+					//addLine(buffToString(StreamUtils.ReadBuff(fs, 5)));
+					fs.Seek(5, SeekOrigin.Current);
+					this.SmsCenter = StreamUtilsPdu.ReadPhoneNumber(fs);
+				}
+			}
+			else
+			{
+				if (fs.ReadByte() != 0)
+					throw new Exception("00 expected here");
+
+				test = fs.ReadByte();
+				if (test == 1)
+				{
+					this.Time = StreamUtils.ReadNokiaDateTime2(fs).ToLocalTime();
+					fs.Seek(7, SeekOrigin.Current);
+				}
+
+				test = fs.ReadByte();
+				if (test == 1)
+				{
+					fs.Seek(4, SeekOrigin.Current);
+					this.Number = StreamUtilsPdu.ReadPhoneNumber(fs);
+					fs.Seek(5, SeekOrigin.Current);
+					this.SmsCenter = StreamUtilsPdu.ReadPhoneNumber(fs);
+				}
+				else
+				{
+					fs.Seek(7, SeekOrigin.Current);
+				}
+			}
+
+			//addLine(buffToString(StreamUtils.ReadBuff(fs, 6)));
+			fs.Seek(6, SeekOrigin.Current);
+
+			int len1 = StreamUtils.ReadUInt16(fs);
+			int len2 = StreamUtils.ReadUInt16(fs);
+
+			//addLine(StreamUtils.ReadUInt16(fs).ToString());
+			fs.Seek(2, SeekOrigin.Current);
+
+			byte[] buff = StreamUtils.ReadBuff(fs, len2);
+			StreamUtils.Counter += len2;
+
+			this.DecodeMessageText(ucs2, udhi, len1, buff);
+		}
+
+		public void DecodeMessageText(bool ucs2, bool udhi, int len1, byte[] buff)
+		{
+			if (udhi)
+			{
+				if (buff.Length > 2)
+				{
+					int headLength = buff[0];
+					int skipChars = (headLength + 1);
+
+					// multipart
+					if (ucs2)
+					{
+						this.Text = System.Text.Encoding.BigEndianUnicode.GetString(buff, skipChars, buff.Length - skipChars);
+					}
+					else
+					{
+						skipChars = (int)Math.Ceiling(skipChars * 8.0 / 7);
+						this.Text = StreamUtilsPdu.Decode7bit(buff, len1).Substring(skipChars);
+					}
+
+					if (headLength > 4 && buff[2] == 3 && buff[4] > 1)
+					{
+						this.MultipartInfo = new MultipartData { MessageNumber = buff[3], TotalParts = buff[4], PartNumber = buff[5] };
+					}
+					else if (headLength > 5 && buff[2] == 4)
+					{
+						this.MultipartInfo = new MultipartData { MessageNumber = buff[4], TotalParts = buff[5], PartNumber = buff[6] };
+					}
+
+					if (this.MultipartInfo != null)
+					{
+						this.Text = string.Format(Message.MultipartFormat, MultipartInfo.PartNumber, MultipartInfo.TotalParts, this.Text);
+					}
+				}
+				else
+				{
+					this.Text = "Unsupported message format";
+				}
+			}
+			else
+			{
+				if (ucs2)
+				{
+					this.Text = System.Text.Encoding.BigEndianUnicode.GetString(buff);
+				}
+				else
+				{
+					this.Text = StreamUtilsPdu.Decode7bit(buff, len1);
+				}
 			}
 		}
 
