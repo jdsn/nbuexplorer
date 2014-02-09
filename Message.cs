@@ -15,15 +15,22 @@ namespace NbuExplorer
 
 	public class MultipartData
 	{
+		private const string MultipartFormat = "[{0}/{1}]:{2}";
+
 		public int PartNumber;
 		public int TotalParts;
 		public byte MessageNumber;
+
+		public string AddMultipartPrefix(string s)
+		{
+			return string.Format(MultipartFormat, this.PartNumber, this.TotalParts, s);
+		}
 	}
 
 	public class Message
 	{
 		private static byte[] UnicodeZero = new byte[] { 0, 0 };
-		public const string MultipartFormat = "[{0}/{1}]:{2}";
+		
 		public static readonly Regex MsgFileNameRegex = new Regex("[0-9A-F]{47,80}");
 
 		private string messageText = "";
@@ -100,6 +107,30 @@ namespace NbuExplorer
 
 		public MultipartData MultipartInfo { get; private set; }
 
+		public string MultipartKey
+		{
+			get
+			{
+				if (MultipartInfo == null)
+					return "";
+
+				// properties that are expected to be the same for all parts of one multipart message
+				return string.Format("{0}_{1}_{2}_{3}_{4}_{5}",
+					this.PhoneNumber,
+					this.DirectionBox,
+					this.MultipartInfo.MessageNumber,
+					this.MultipartInfo.TotalParts,
+					this.MessageTime.Year,
+					this.MessageTime.DayOfYear);
+			}
+		}
+
+		public void UpdateTextFromMultipart(string text)
+		{
+			this.MultipartInfo = null;
+			this.MessageText = text;
+		}
+
 		/*private StringBuilder parseLog = new StringBuilder();
 		public string ParseLog
 		{
@@ -133,21 +164,41 @@ namespace NbuExplorer
 						case 1041: // delivery time
 						case 1060: // ???
 							try
-							{ m.messageTime = DateTime.ParseExact(raw, "yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture); }
+							{
+								m.messageTime = DateTime.ParseExact(raw, "yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
+							}
 							catch { }
 							break;
 						case 1049: // multipart info
 							string[] mparr = raw.Split(',');
-							if (raw.StartsWith("6,5,0,3,") && mparr.Length == 7)
+							try
 							{
-								m.messageText = string.Format(MultipartFormat, mparr[6], mparr[5], m.messageText);
+								if (raw.StartsWith("6,5,0,3,") && mparr.Length == 7)
+								{
+									m.MultipartInfo = new MultipartData
+									{
+										MessageNumber = byte.Parse(mparr[4]),
+										TotalParts = int.Parse(mparr[5]),
+										PartNumber = int.Parse(mparr[6])
+									};
+								}
+								else if (raw.StartsWith("7,6,8,4,0,") && mparr.Length == 8)
+								{
+									m.MultipartInfo = new MultipartData
+									{
+										MessageNumber = byte.Parse(mparr[5]),
+										TotalParts = int.Parse(mparr[6]),
+										PartNumber = int.Parse(mparr[7])
+									};
+								}
 							}
-							else if (raw.StartsWith("7,6,8,4,0,") && mparr.Length == 8)
+							catch
+							{ }
+
+							if (m.MultipartInfo != null)
 							{
-								m.messageText = string.Format(MultipartFormat, mparr[7], mparr[6], m.messageText);
+								m.MessageText = m.MultipartInfo.AddMultipartPrefix(m.MessageText);
 							}
-							/*else
-							{ }*/
 							break;
 						case 1080: // sender number
 							m.phoneNumber = raw;
@@ -486,7 +537,7 @@ namespace NbuExplorer
 					m.SmscNumber = StreamUtilsPdu.ReadPhoneNumber(s);
 					s.Seek(12, SeekOrigin.Current);
 
-					m.MessageText = "Delivery message";
+					m.MessageText = "Delivery report message";
 					m.IsDelivery = true;
 					break;
 				default:
@@ -540,7 +591,7 @@ namespace NbuExplorer
 
 				if (this.MultipartInfo != null)
 				{
-					this.MessageText = string.Format(Message.MultipartFormat, MultipartInfo.PartNumber, MultipartInfo.TotalParts, this.MessageText);
+					this.MessageText = this.MultipartInfo.AddMultipartPrefix(this.MessageText);
 				}
 			}
 			else

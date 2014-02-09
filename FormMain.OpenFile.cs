@@ -42,7 +42,7 @@ namespace NbuExplorer
 			textBoxLog.Clear();
 			StreamUtils.Counter = 0;
 
-			DataSetNbuExplorer.DefaultInstance.Clear();
+			DataSetNbuExplorer.Init();
 			treeViewMsgFilter.Nodes[0].Nodes.Clear();
 			treeViewMsgFilter.Nodes[1].Nodes.Clear();
 			treeViewMsgFilter.Nodes[2].Nodes.Clear();
@@ -787,6 +787,8 @@ namespace NbuExplorer
 
 				addLine("");
 				recursiveRenameDuplicates(treeViewDirs.Nodes);
+
+				DataSetNbuExplorer.FinalizeMultiparts();
 
 				#region Prepare message filtering by numbers
 				treeViewMsgFilter.AfterCheck -= new TreeViewEventHandler(treeViewMsgFilter_AfterCheck);
@@ -2072,7 +2074,6 @@ namespace NbuExplorer
 
 		private void parseBinaryMessages(FileStream fs)
 		{
-			bool addMsgToDataSet = (DataSetNbuExplorer.DefaultMessageTable.Select().Length == 0) && parseMsgBinToolStripMenuItem.Checked;
 			long smsBegin = 0;
 			try
 			{
@@ -2127,7 +2128,7 @@ namespace NbuExplorer
 								byte[] data = System.Text.Encoding.UTF8.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", ms.PhoneNumber, dateAsString, ms.MessageText));
 								partFilesTxt.Add(new FileInfoMemory(filename + ".txt", data, ms.MessageTime));
 
-								if (addMsgToDataSet)
+								if (parseMsgBinToolStripMenuItem.Checked)
 								{
 									DataSetNbuExplorer.AddMessage(ms);
 								}

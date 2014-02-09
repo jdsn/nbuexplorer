@@ -1,5 +1,7 @@
-﻿using System.Data;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Text;
 
 namespace NbuExplorer
 {
@@ -18,6 +20,102 @@ namespace NbuExplorer
 		public static DataSetNbuExplorer DefaultInstance
 		{
 			get { return _defaultInstance; }
+		}
+
+		private static Dictionary<string, List<Message>> _multipartMessages = new Dictionary<string, List<Message>>();
+
+		public static void Init()
+		{
+			_defaultInstance.Clear();
+			_multipartMessages.Clear();
+		}
+
+		public static void FinalizeMultiparts()
+		{
+			foreach (var group in _multipartMessages.Values)
+			{
+				int expectedCount = group[0].MultipartInfo.TotalParts;
+
+				if (group.Count == expectedCount)
+				{
+					// ideal situation - just sort and join
+					group.Sort(CompareMessagesByPartNumber);
+					ProcessSortedGroup(group);
+				}
+				else if (group.Count % expectedCount == 0)
+				{
+					// sent multipart messages are often having MessageNumber = 0
+					// which may lead to this situation
+					// we can still try to distinguish parts of one message by time
+					int subgroups = group.Count / expectedCount;
+
+					group.Sort(CompareMessagesByPartNumberAndTime);
+
+					for (int i = 0; i < subgroups; i++)
+					{
+						var subgroup = new List<Message>();
+						bool checkPassed = true;
+						for (int j = 0; j < expectedCount; j++)
+						{
+							var part = group[subgroups * j + i];
+							subgroup.Add(part);
+
+							if (part.MultipartInfo.PartNumber != j + 1 || part.MessageTime == DateTime.MinValue)
+							{
+								// we cannot be sure
+								checkPassed = false;
+							}
+						}
+
+						if (checkPassed)
+						{
+							ProcessSortedGroup(subgroup);
+						}
+						else
+						{
+							ProcessUnjoinableMessages(subgroup);
+						}
+					}
+				}
+				else
+				{
+					// unable to join multipart message automatically
+					// lets keep it as individual messages
+					ProcessUnjoinableMessages(group);
+				}
+			}
+		}
+
+		private static void ProcessUnjoinableMessages(List<Message> group)
+		{
+			foreach (var m in group)
+			{
+				AddMessageInternal(m);
+			}
+		}
+
+		private static void ProcessSortedGroup(List<Message> group)
+		{
+			var sb = new StringBuilder();
+			foreach (var part in group)
+			{
+				sb.Append(part.MessageText.Substring(part.MultipartInfo.AddMultipartPrefix("").Length));
+			}
+			var first = group[0];
+			first.UpdateTextFromMultipart(sb.ToString());
+			AddMessageInternal(first);
+		}
+
+		private static int CompareMessagesByPartNumber(Message m1, Message m2)
+		{
+			return m1.MultipartInfo.PartNumber.CompareTo(m2.MultipartInfo.PartNumber);
+		}
+
+		private static int CompareMessagesByPartNumberAndTime(Message m1, Message m2)
+		{
+			int c = m1.MultipartInfo.PartNumber.CompareTo(m2.MultipartInfo.PartNumber);
+			if (c != 0) return c;
+			return m1.MessageTime.CompareTo(m2.MessageTime);
 		}
 
 		public static MessageDataTable DefaultMessageTable
@@ -82,18 +180,44 @@ namespace NbuExplorer
 			return false;
 		}
 
-		public static void AddMessage(Message sm)
+		public static void AddMessage(Message m)
 		{
-			if (string.IsNullOrEmpty(sm.MessageText))
+			if (string.IsNullOrEmpty(m.MessageText))
 				return;
 
-			if (FindExistingMessage(sm.PhoneNumber, sm.MessageText)) return;
+			if (m.MultipartInfo != null)
+			{
+				string key = m.MultipartKey;
+				if (_multipartMessages.ContainsKey(key))
+				{
+					var existing = _multipartMessages[key];
+					// filter duplicates
+					foreach(var other in existing)
+					{
+						if (other.MessageText.Equals(m.MessageText))
+							return;
+					}
+					existing.Add(m);
+				}
+				else
+				{
+					_multipartMessages[key] = new List<Message> { m };
+				}
+				return;
+			}
 
-			MessageRow row = _defaultInstance.Message.AddMessageRow(sm.DirectionBox,
-				sm.MessageTime,
-				sm.PhoneNumber,
-				string.IsNullOrEmpty(sm.Name) ? NumToName(sm.PhoneNumber) : sm.Name,
-				sm.MessageText);
+			AddMessageInternal(m);
+		}
+
+		private static void AddMessageInternal(Message m)
+		{
+			if (FindExistingMessage(m.PhoneNumber, m.MessageText)) return;
+
+			MessageRow row = _defaultInstance.Message.AddMessageRow(m.DirectionBox,
+						 m.MessageTime,
+						 m.PhoneNumber,
+						 string.IsNullOrEmpty(m.Name) ? NumToName(m.PhoneNumber) : m.Name,
+						 m.MessageText);
 			if (row.time == DateTime.MinValue) row.SettimeNull();
 		}
 
