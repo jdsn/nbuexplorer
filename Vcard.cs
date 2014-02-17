@@ -28,6 +28,8 @@ namespace NbuExplorer
 {
 	public class Vcard
 	{
+		public static bool RecalculateUtcToLocal = false;
+
 		Dictionary<string, string> attrs = new Dictionary<string, string>();
 		List<string> phoneNumbers = new List<string>();
 		string rawData = "";
@@ -133,7 +135,7 @@ namespace NbuExplorer
 			{
 				var timeStr = this[key];
 				var time = DateTime.ParseExact(timeStr.Substring(0, parseDateFormat.Length), parseDateFormat, System.Globalization.CultureInfo.InvariantCulture);
-				if (timeStr.EndsWith("Z", StringComparison.Ordinal))
+				if (RecalculateUtcToLocal && timeStr.EndsWith("Z", StringComparison.Ordinal))
 				{
 					time = DateTime.SpecifyKind(time, DateTimeKind.Utc).ToLocalTime();
 				}

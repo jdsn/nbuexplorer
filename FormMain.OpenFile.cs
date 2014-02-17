@@ -1743,6 +1743,7 @@ namespace NbuExplorer
 										{
 											addLine(msg.Mms.ParseLog);
 										}
+										fi.FileTime = msg.MessageTime;
 									}
 								}
 								catch (Exception ex)

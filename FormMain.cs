@@ -1187,5 +1187,10 @@ namespace NbuExplorer
 			}
 		}
 
+		private void recalculateUTCTimeToLocalToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			Vcard.RecalculateUtcToLocal = recalculateUTCTimeToLocalToolStripMenuItem.Checked;
+		}
+
 	}
 }

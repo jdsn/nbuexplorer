@@ -432,6 +432,7 @@ namespace NbuExplorer
 					try
 					{
 						m.Mms = new Mms(s, s.Length);
+						m.MessageTime = m.Mms.Time;
 						m.MessageText = m.Mms.ParseLog;
 					}
 					catch { }
@@ -481,9 +482,9 @@ namespace NbuExplorer
 					s.Seek(8, SeekOrigin.Current);
 					m.PhoneNumber = StreamUtilsPdu.ReadPhoneNumber(s);
 					s.Seek(5, SeekOrigin.Current);
-					m.SmscNumber = StreamUtilsPdu.ReadPhoneNumber(s);
+					m.SmscNumber = StreamUtilsPdu.ReadPhoneNumber(s, true);
 
-					s.Seek(6, SeekOrigin.Current);
+					s.Seek(4, SeekOrigin.Current);
 					len = StreamUtils.ReadUInt16(s);
 					len2 = StreamUtils.ReadUInt16(s);
 					s.Seek(2, SeekOrigin.Current);
@@ -510,14 +511,14 @@ namespace NbuExplorer
 						s.Seek(4, SeekOrigin.Current);
 						m.PhoneNumber = StreamUtilsPdu.ReadPhoneNumber(s);
 						s.Seek(5, SeekOrigin.Current);
-						m.SmscNumber = StreamUtilsPdu.ReadPhoneNumber(s);
+						m.SmscNumber = StreamUtilsPdu.ReadPhoneNumber(s, true);
 					}
 					else
 					{
-						s.Seek(7, SeekOrigin.Current);
+						s.Seek(9, SeekOrigin.Current);
 					}
 
-					s.Seek(6, SeekOrigin.Current);
+					s.Seek(4, SeekOrigin.Current);
 					len = StreamUtils.ReadUInt16(s);
 					len2 = StreamUtils.ReadUInt16(s);
 					s.Seek(2, SeekOrigin.Current);
@@ -534,8 +535,8 @@ namespace NbuExplorer
 					s.Seek(15, SeekOrigin.Current);
 					m.PhoneNumber = StreamUtilsPdu.ReadPhoneNumber(s);
 					s.Seek(5, SeekOrigin.Current);
-					m.SmscNumber = StreamUtilsPdu.ReadPhoneNumber(s);
-					s.Seek(12, SeekOrigin.Current);
+					m.SmscNumber = StreamUtilsPdu.ReadPhoneNumber(s, true);
+					s.Seek(10, SeekOrigin.Current);
 
 					m.MessageText = "Delivery report message";
 					m.IsDelivery = true;

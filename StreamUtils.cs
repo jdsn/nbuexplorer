@@ -334,11 +334,15 @@ namespace NbuExplorer
 			return new DateTime(year, month, day, hour, min, sec);
 		}
 
-		public static string ReadPhoneNumber(Stream s)
+		public static string ReadPhoneNumber(Stream s, bool lenInBytes = false)
 		{
 			StringBuilder sb = new StringBuilder();
 			int len = s.ReadByte();
 			if (len == 0) return "";
+			if (lenInBytes)
+			{
+				len = (len - 1) * 2;
+			}
 			int type = (s.ReadByte() & 0xF0) >> 4;
 			switch (type)
 			{
