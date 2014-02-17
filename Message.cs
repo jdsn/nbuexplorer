@@ -440,7 +440,7 @@ namespace NbuExplorer
 					throw new ApplicationException("Unknown message type");
 			}
 
-			if (filename.Length == 55 || filename.Length == 63)
+			if (m.messageTime == DateTime.MinValue && filename.Length > 16)
 			{
 				try
 				{
