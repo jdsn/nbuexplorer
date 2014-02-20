@@ -152,18 +152,25 @@ namespace NbuExplorer
 
 		public static void AddMessageFromVmg(Vcard vmg)
 		{
-			if (!vmg.MessageFound) return;
+			if (!vmg.MessageFound || string.IsNullOrEmpty(vmg.MessageBody))
+				return;
 
-			MessageRow row;
+			string number, name;
 			if (vmg.PhoneNumbers.Count > 0)
 			{
-				row = _defaultInstance.Message.AddMessageRow(vmg.MessageBox, vmg.MessageTime, vmg.PhoneNumbers[0], NumToName(vmg.PhoneNumbers[0]), vmg.MessageBody);
+				number = vmg.PhoneNumbers[0];
+				name = NumToName(number);
 			}
 			else
 			{
-				row = _defaultInstance.Message.AddMessageRow(vmg.MessageBox, vmg.MessageTime, null, null, vmg.MessageBody);
+				number = "";
+				name = "";
 			}
 
+			if (FindExistingMessage(number, vmg.MessageBody))
+				return;
+
+			MessageRow row = _defaultInstance.Message.AddMessageRow(vmg.MessageBox, vmg.MessageTime, number, name, vmg.MessageBody);
 			if (row.time == DateTime.MinValue) row.SettimeNull();
 		}
 

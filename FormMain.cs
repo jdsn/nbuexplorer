@@ -36,6 +36,8 @@ namespace NbuExplorer
 		string appTitle = "";
 		FileInfoComparer fic = new FileInfoComparer();
 		System.Globalization.NumberFormatInfo fileSizeFormat;
+		private const int KeyStateShift = 4;
+		private static System.Text.RegularExpressions.Regex rexDuplFileName = new System.Text.RegularExpressions.Regex(@"(.*)\[[0-9]+\]$");
 
 		public FormMain()
 		{
@@ -151,14 +153,29 @@ namespace NbuExplorer
 			return (List<FileInfo>)tn.Tag;
 		}
 
-		private void openToolStripMenuItem_Click(object sender, EventArgs e)
+		private OpenFileDialog CreateOpenFileDialog()
 		{
 			OpenFileDialog ofd = new OpenFileDialog();
 			ofd.Filter = "Nokia backup files|*.nbu;*.nfb;*.nfc;*.arc;*.nbf;*.mms;*.zip;*.cdb|All files (bruteforce scan)|*.*";
 			ofd.Multiselect = true;
+			return ofd;
+		}
+
+		private void openToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			OpenFileDialog ofd = CreateOpenFileDialog();
 			if (ofd.ShowDialog() == DialogResult.OK)
 			{
-				OpenFiles((ofd.FilterIndex == 2), ofd.FileNames);
+				OpenFiles((ofd.FilterIndex == 2), true, ofd.FileNames);
+			}
+		}
+
+		private void addToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			OpenFileDialog ofd = CreateOpenFileDialog();
+			if (ofd.ShowDialog() == DialogResult.OK)
+			{
+				OpenFiles((ofd.FilterIndex == 2), false, ofd.FileNames);
 			}
 		}
 
@@ -173,6 +190,10 @@ namespace NbuExplorer
 			if (treeViewDirs.SelectedNode != null)
 			{
 				recountSelected(treeViewDirs.SelectedNode);
+			}
+			else
+			{
+				return;
 			}
 
 			List<FileInfo> lfi = treeViewDirs.SelectedNode.Tag as List<FileInfo>;
@@ -742,13 +763,6 @@ namespace NbuExplorer
 			}
 		}
 
-		//private static System.Text.RegularExpressions.Regex regexFileName = new System.Text.RegularExpressions.Regex(@"(.*)\[[0-9]+\]$");
-		
-		/*private static int compareByFilenameLength(FileInfo f1, FileInfo f2)
-		{
-			return f1.Filename.Length.CompareTo(f2.Filename.Length);
-		}*/
-
 		private void renameDuplicates(TreeNode node)
 		{
 			List<FileInfo> list = node.Tag as List<FileInfo>;
@@ -757,16 +771,15 @@ namespace NbuExplorer
 			var dict = new Dictionary<string, List<FileInfo>>();
 			foreach (var fi in list)
 			{
-				var fname = fi.Filename.ToLower();
-				/*var ext = Path.GetExtension(fname);
+				var fname = fi.SafeFilename;
+				var ext = Path.GetExtension(fname);
 				fname = Path.GetFileNameWithoutExtension(fname);
-				var m = regexFileName.Match(fname);
+				var m = rexDuplFileName.Match(fname);
 				if (m.Success)
 				{
-					fname = m.Groups[1].Value;
+					fi.Filename = m.Groups[1].Value + ext;
 				}
-				var key = fname + ext;*/
-				var key = fname;
+				var key = fi.Filename.ToLower();
 				if (dict.ContainsKey(key))
 				{
 					dict[key].Add(fi);
@@ -781,7 +794,6 @@ namespace NbuExplorer
 			foreach (var pair in dict)
 			{
 				var group = pair.Value;
-				//group.Sort(compareByFilenameLength);
 				if (group.Count > 1)
 				{
 					// detect and remove duplicates
@@ -846,7 +858,7 @@ namespace NbuExplorer
 			try
 			{
 				string[] dragfiles = (string[])e.Data.GetData("FileDrop");
-				OpenFiles(false, dragfiles);
+				OpenFiles(false, (e.KeyState & KeyStateShift) == 0, dragfiles);
 			}
 			catch (Exception exc)
 			{

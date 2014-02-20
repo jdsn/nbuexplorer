@@ -39,7 +39,7 @@ namespace NbuExplorer
 			FormMain fm = new FormMain();
 			if (args.Length > 0)
 			{
-				fm.OpenFiles(false, args);
+				fm.OpenFiles(false, true, args);
 			}
 
 			Application.Run(fm);

@@ -114,6 +114,7 @@
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.statusLabelTotal = new System.Windows.Forms.ToolStripStatusLabel();
 			this.statusLabelSelected = new System.Windows.Forms.ToolStripStatusLabel();
+			this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStripMain.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPageFileContent.SuspendLayout();
@@ -169,6 +170,7 @@
 			// 
 			this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
+            this.addToolStripMenuItem,
             this.toolStripSeparator2,
             this.exportSelectedFilesToolStripMenuItem,
             this.exportSelectedFolderToolStripMenuItem,
@@ -922,6 +924,13 @@
 			this.statusLabelSelected.Size = new System.Drawing.Size(12, 17);
 			this.statusLabelSelected.Text = "-";
 			// 
+			// addToolStripMenuItem
+			// 
+			this.addToolStripMenuItem.Name = "addToolStripMenuItem";
+			this.addToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
+			this.addToolStripMenuItem.Text = "Add";
+			this.addToolStripMenuItem.Click += new System.EventHandler(this.addToolStripMenuItem_Click);
+			// 
 			// FormMain
 			// 
 			this.AllowDrop = true;
@@ -1054,6 +1063,7 @@
 		private System.Windows.Forms.ToolStripMenuItem messageExportToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem exportOnlySelectedMessagesToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem recalculateUTCTimeToLocalToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem addToolStripMenuItem;
 	}
 }
 

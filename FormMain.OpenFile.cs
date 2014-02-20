@@ -34,20 +34,27 @@ namespace NbuExplorer
 		private bool analyzeRequest = false;
 		private bool dbShellRequest = false;
 
-		public void OpenFiles(bool bruteForceScan, params string[] filenames)
+		public void OpenFiles(bool bruteForceScan, bool clearOnStart, params string[] filenames)
 		{
 			try
 			{
-				PrepareForNewFileset();
+				if (clearOnStart)
+				{
+					PrepareForNewFileset();
+				}
+
 				foreach (string filename in filenames)
 				{
 					AddFile(filename, bruteForceScan);
 				}
-				FinalizeFileset();
 			}
 			catch (Exception exc)
 			{
 				MessageBox.Show(string.Format("Following error occured during parse:\r\n{0}\r\nPlease consider providing this backup to the author of application for analyzing and improving application.", exc.Message), this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+			finally
+			{
+				FinalizeFileset();
 			}
 		}
 
@@ -91,6 +98,7 @@ namespace NbuExplorer
 
 			menuStripMain.Enabled = true;
 			treeViewDirs.Enabled = true;
+
 			saveParsingLogToolStripMenuItem.Enabled = (textBoxLog.Text.Trim().Length > 0);
 			exportAllToolStripMenuItem.Enabled = (treeViewDirs.Nodes.Count > 0);
 			exportToolStripMenuItem.Enabled = exportSelectedFolderToolStripMenuItem.Enabled = (treeViewDirs.SelectedNode != null);
