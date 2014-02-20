@@ -84,6 +84,7 @@ namespace NbuExplorer
 					ProcessUnjoinableMessages(group);
 				}
 			}
+			_multipartMessages.Clear();
 		}
 
 		private static void ProcessUnjoinableMessages(List<Message> group)

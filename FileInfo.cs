@@ -29,6 +29,13 @@ namespace NbuExplorer
 {
 	public class FileInfo
 	{
+		protected string sourcePath;
+		public string SourcePath
+		{
+			get { return sourcePath; }
+			set { sourcePath = value; }
+		}
+
 		protected string filename;
 		public string Filename
 		{
@@ -80,18 +87,19 @@ namespace NbuExplorer
 		{
 		}
 
-		public FileInfo(string filename, long start, long length)
-			: this(filename, start, length, DateTime.MinValue, false)
+		public FileInfo(string sourcePath, string filename, long start, long length)
+			: this(sourcePath, filename, start, length, DateTime.MinValue, false)
 		{
 		}
 
-		public FileInfo(string filename, long start, long length, DateTime fileTime)
-			: this(filename, start, length, fileTime, false)
+		public FileInfo(string sourcePath, string filename, long start, long length, DateTime fileTime)
+			: this(sourcePath, filename, start, length, fileTime, false)
 		{
 		}
 
-		protected FileInfo(string filename, long start, long length, DateTime fileTime, bool compressed)
+		protected FileInfo(string sourcePath, string filename, long start, long length, DateTime fileTime, bool compressed)
 		{
+			this.sourcePath = sourcePath;
 			this.filename = filename;
 			this.start = start;
 			this.length = length;
@@ -99,9 +107,9 @@ namespace NbuExplorer
 			this.compressed = compressed;
 		}
 
-		public virtual void CopyToStream(string sourceNbuFile, Stream fstgt)
+		public virtual void CopyToStream(Stream fstgt)
 		{
-			FileStream fssrc = File.OpenRead(sourceNbuFile);
+			FileStream fssrc = File.OpenRead(sourcePath);
 			try
 			{
 				fssrc.Seek(this.Start, SeekOrigin.Begin);
@@ -117,10 +125,10 @@ namespace NbuExplorer
 			}
 		}
 
-		public MemoryStream GetAsMemoryStream(string sourceNbuFile)
+		public MemoryStream GetAsMemoryStream()
 		{
 			MemoryStream result = new MemoryStream();
-			CopyToStream(sourceNbuFile, result);
+			CopyToStream(result);
 			result.Seek(0, SeekOrigin.Begin);
 			return result;
 		}
@@ -130,8 +138,8 @@ namespace NbuExplorer
 	{
 		long uncompLength = 0;
 
-		public FileinfoCf(string filename, long start, long compLength, long uncompLength, DateTime fileTime)
-			: base(filename, start, compLength, fileTime, true)
+		public FileinfoCf(string sourcePath, string filename, long start, long compLength, long uncompLength, DateTime fileTime)
+			: base(sourcePath, filename, start, compLength, fileTime, true)
 		{
 			this.uncompLength = uncompLength;
 		}
@@ -150,17 +158,17 @@ namespace NbuExplorer
 		protected long subPartStart = 0;
 		protected long subPartLength = 0;
 
-		public FileInfoCfPart(string filename, long startOfFragment, long compressedLengthOfFragment, DateTime fileTime, long subPartStart, long subPartLength)
-			: base(filename, startOfFragment, compressedLengthOfFragment, fileTime, true)
+		public FileInfoCfPart(string sourcePath, string filename, long startOfFragment, long compressedLengthOfFragment, DateTime fileTime, long subPartStart, long subPartLength)
+			: base(sourcePath, filename, startOfFragment, compressedLengthOfFragment, fileTime, true)
 		{
 			this.subPartStart = subPartStart;
 			this.subPartLength = subPartLength;
 		}
 
-		public override void CopyToStream(string sourceNbuFile, Stream fstgt)
+		public override void CopyToStream(Stream fstgt)
 		{
 			MemoryStream ms = new MemoryStream();
-			base.CopyToStream(sourceNbuFile, ms);
+			base.CopyToStream(ms);
 
 			ms.Seek(subPartStart, SeekOrigin.Begin);
 			byte[] buff = new byte[1024];
@@ -234,19 +242,19 @@ namespace NbuExplorer
 			}
 		}
 
-		public FileInfoCfMultiPart(string filename, DateTime fileTime, long totalLength, string root, string dir)
-			: base(filename, 0, 0, fileTime, true)
+		public FileInfoCfMultiPart(string sourcePath, string filename, DateTime fileTime, long totalLength, string root, string dir)
+			: base(sourcePath, filename, 0, 0, fileTime, true)
 		{
 			this.totalLength = totalLength;
 			this.root = root;
 			this.dir = dir;
 		}
 
-		public override void CopyToStream(string sourceNbuFile, Stream fstgt)
+		public override void CopyToStream(Stream fstgt)
 		{
 			foreach (FileInfoCfPart part in parts)
 			{
-				part.CopyToStream(sourceNbuFile, fstgt);
+				part.CopyToStream(fstgt);
 			}
 		}
 	}
@@ -259,13 +267,13 @@ namespace NbuExplorer
 			get { return content; }
 		}
 
-		public override void CopyToStream(string sourceNbuFile, Stream fstgt)
+		public override void CopyToStream(Stream fstgt)
 		{
 			fstgt.Write(content, 0, content.Length);
 		}
 
-		public FileInfoMemory(string filename, byte[] content, DateTime fileTime)
-			: base(filename, 0, content.Length, fileTime)
+		public FileInfoMemory(string sourcePath, string filename, byte[] content, DateTime fileTime)
+			: base(sourcePath, filename, 0, content.Length, fileTime)
 		{
 			this.content = content;
 		}

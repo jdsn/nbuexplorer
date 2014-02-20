@@ -368,7 +368,7 @@ namespace NbuExplorer
 			}
 		}
 
-		public static Message ReadPredefBinMessage(Stream s, string filename)
+		public static Message ReadPredefBinMessage(string currentFileName, Stream s, string filename)
 		{
 			Message m = new Message();
 
@@ -431,7 +431,7 @@ namespace NbuExplorer
 					s.Seek(-1, SeekOrigin.Current);
 					try
 					{
-						m.Mms = new Mms(s, s.Length);
+						m.Mms = new Mms(currentFileName, s, s.Length);
 						m.MessageTime = m.Mms.Time;
 						m.MessageText = m.Mms.ParseLog;
 					}

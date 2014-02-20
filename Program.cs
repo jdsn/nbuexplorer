@@ -37,9 +37,9 @@ namespace NbuExplorer
 			Application.SetCompatibleTextRenderingDefault(false);
 
 			FormMain fm = new FormMain();
-			if (args.Length == 1 && System.IO.File.Exists(args[0]))
+			if (args.Length > 0)
 			{
-				fm.OpenFile(args[0], false);
+				fm.OpenFiles(false, args);
 			}
 
 			Application.Run(fm);

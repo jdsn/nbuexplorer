@@ -65,7 +65,7 @@ namespace NbuExplorer
 			get { return time; }
 		}
 
-		public Mms(Stream s, long end)
+		public Mms(string sourcePath, Stream s, long end)
 		{
 			bool stop = false;
 			bool parseParts = false;
@@ -298,7 +298,7 @@ namespace NbuExplorer
 						filename += ".smil";
 					}
 
-					files.Add(new FileInfo(filename, ctypepos + headlen, datalen, this.time));
+					files.Add(new FileInfo(sourcePath, filename, ctypepos + headlen, datalen, this.time));
 
 					log.AppendFormat("Part {0}: headLength = {1}, dataLength = {2}, ctype = {3}, filename = {4}\r\n", i + 1, headlen, datalen, ctype, filename);
 

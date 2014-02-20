@@ -9,8 +9,9 @@ namespace NbuExplorer
 		private long fileSize;
 		private int itemIndex;
 
-		public FileInfoZip(ZipEntry ze, int itemIndex, long offset)
+		public FileInfoZip(string sourcePath, ZipEntry ze, int itemIndex, long offset)
 		{
+			this.sourcePath = sourcePath;
 			this.offset = offset;
 			this.itemIndex = itemIndex;
 			this.Filename = Path.GetFileName(ze.Name);
@@ -23,9 +24,9 @@ namespace NbuExplorer
 			get { return fileSize; }
 		}
 
-		public override void CopyToStream(string sourceNbuFile, Stream fstgt)
+		public override void CopyToStream(Stream fstgt)
 		{
-			using (FileStream fs = File.OpenRead(sourceNbuFile))
+			using (FileStream fs = File.OpenRead(sourcePath))
 			{
 				fs.Seek(offset, SeekOrigin.Begin);
 				ZipInputStream zs = new ZipInputStream(fs);

@@ -33,7 +33,6 @@ namespace NbuExplorer
 {
 	public partial class FormMain : Form
 	{
-		string currentFileName = "";
 		string appTitle = "";
 		FileInfoComparer fic = new FileInfoComparer();
 		System.Globalization.NumberFormatInfo fileSizeFormat;
@@ -156,26 +155,11 @@ namespace NbuExplorer
 		{
 			OpenFileDialog ofd = new OpenFileDialog();
 			ofd.Filter = "Nokia backup files|*.nbu;*.nfb;*.nfc;*.arc;*.nbf;*.mms;*.zip;*.cdb|All files (bruteforce scan)|*.*";
-#if DEBUG
 			ofd.Multiselect = true;
 			if (ofd.ShowDialog() == DialogResult.OK)
 			{
-				foreach (string filename in ofd.FileNames)
-				{
-					System.Diagnostics.Debug.WriteLine(filename);
-					OpenFile(filename, (ofd.FilterIndex == 2));
-					/*if (dataGridViewMessages.Rows.Count > 0)
-					{
-						ExportForAndroid(Path.ChangeExtension(filename, ".xml"), dataGridViewMessages.Rows);
-					}*/
-				}
+				OpenFiles((ofd.FilterIndex == 2), ofd.FileNames);
 			}
-#else
-			if (ofd.ShowDialog() == DialogResult.OK)
-			{
-				OpenFile(ofd.FileName, (ofd.FilterIndex == 2));
-			}
-#endif
 		}
 
 		private void treeViewDirs_AfterSelect(object sender, TreeViewEventArgs e)
@@ -272,9 +256,7 @@ namespace NbuExplorer
 
 			try
 			{
-				MemoryStream ms = new MemoryStream();
-				fi.CopyToStream(currentFileName, ms);
-				ms.Seek(0, SeekOrigin.Begin);
+				MemoryStream ms = fi.GetAsMemoryStream();
 
 				textBoxPreview.Visible = true;
 				pictureBoxPreview.Visible = false;
@@ -301,7 +283,7 @@ namespace NbuExplorer
 				{
 					try
 					{
-						Message m = Message.ReadPredefBinMessage(ms, fi.Filename);
+						Message m = Message.ReadPredefBinMessage(fi.SourcePath, ms, fi.Filename);
 						textBoxPreview.Text = m.ToString();
 					}
 					catch (Exception exc)
@@ -573,7 +555,7 @@ namespace NbuExplorer
 			FileStream fs = File.Create(targetFilename);
 			try
 			{
-				fi.CopyToStream(currentFileName, fs);
+				fi.CopyToStream(fs);
 			}
 			finally
 			{
@@ -736,8 +718,8 @@ namespace NbuExplorer
 		{
 			if (f1.FileSize != f2.FileSize) return false;
 
-			using (MemoryStream ms1 = f1.GetAsMemoryStream(currentFileName))
-			using (MemoryStream ms2 = f2.GetAsMemoryStream(currentFileName))
+			using (MemoryStream ms1 = f1.GetAsMemoryStream())
+			using (MemoryStream ms2 = f2.GetAsMemoryStream())
 			{
 				while (ms1.Position < ms1.Length)
 				{
@@ -760,35 +742,75 @@ namespace NbuExplorer
 			}
 		}
 
+		//private static System.Text.RegularExpressions.Regex regexFileName = new System.Text.RegularExpressions.Regex(@"(.*)\[[0-9]+\]$");
+		
+		/*private static int compareByFilenameLength(FileInfo f1, FileInfo f2)
+		{
+			return f1.Filename.Length.CompareTo(f2.Filename.Length);
+		}*/
+
 		private void renameDuplicates(TreeNode node)
 		{
 			List<FileInfo> list = node.Tag as List<FileInfo>;
 			if (list == null || list.Count < 2) return;
-			List<string> usednames = new List<string>();
 
-			for (int i = list.Count - 1; i > -1; i--)
+			var dict = new Dictionary<string, List<FileInfo>>();
+			foreach (var fi in list)
 			{
-				bool remove = false;
-				FileInfo fi = list[i];
-				string lowername = fi.Filename.ToLower();
-				if (usednames.Contains(lowername))
+				var fname = fi.Filename.ToLower();
+				/*var ext = Path.GetExtension(fname);
+				fname = Path.GetFileNameWithoutExtension(fname);
+				var m = regexFileName.Match(fname);
+				if (m.Success)
 				{
-					for (int j = list.Count - 1; j > i; j--)
+					fname = m.Groups[1].Value;
+				}
+				var key = fname + ext;*/
+				var key = fname;
+				if (dict.ContainsKey(key))
+				{
+					dict[key].Add(fi);
+				}
+				else
+				{
+					dict[key] = new List<FileInfo> { fi };
+				}
+			}
+
+			List<string> usednames = new List<string>();
+			foreach (var pair in dict)
+			{
+				var group = pair.Value;
+				//group.Sort(compareByFilenameLength);
+				if (group.Count > 1)
+				{
+					// detect and remove duplicates
+					for (int i = group.Count - 1; i > 0; i--)
 					{
-						FileInfo fi2 = list[j];
-						if (fi.Filename.ToLower() == fi2.Filename.ToLower() && compareFileByContent(fi, fi2))
+						var fi = group[i];
+						for (int j = i - 1; j > -1; j--)
 						{
-							remove = true;
-							addLine(string.Format("Removing duplicated file '{1}\\{0}'", fi2.Filename, node.Text));
-							list.RemoveAt(j);
+							if (compareFileByContent(fi, group[j]))
+							{
+								addLine(string.Format("Removing duplicated file '{1}\\{0}'", fi.Filename, node.FullPath));
+								list.Remove(fi);
+								group.RemoveAt(i);
+								break;
+							}
 						}
 					}
 
-					if (!remove)
+					// first file in group will use original name
+					usednames.Add(group[0].Filename.ToLower());
+
+					// rename remaining files starting with second one in group
+					for (int i = 1; i < group.Count; i++)
 					{
-						int counter = 0;
+						var fi = group[i];
+						int counter = i - 1;
 						string filename = Path.GetFileNameWithoutExtension(fi.Filename);
 						string ext = Path.GetExtension(fi.Filename);
+						string lowername;
 						do
 						{
 							counter++;
@@ -796,9 +818,13 @@ namespace NbuExplorer
 							lowername = fi.Filename.ToLower();
 						}
 						while (usednames.Contains(lowername));
+						usednames.Add(lowername);
 					}
 				}
-				if (!remove) usednames.Add(lowername);
+				else
+				{
+					usednames.Add(pair.Key);
+				}
 			}
 		}
 
@@ -820,7 +846,7 @@ namespace NbuExplorer
 			try
 			{
 				string[] dragfiles = (string[])e.Data.GetData("FileDrop");
-				OpenFile(dragfiles[0], false);
+				OpenFiles(false, dragfiles);
 			}
 			catch (Exception exc)
 			{
@@ -832,12 +858,9 @@ namespace NbuExplorer
 		{
 			SaveFileDialog sfd = new SaveFileDialog();
 			sfd.Filter = "*.txt|*.txt";
-			sfd.FileName = Path.GetFileNameWithoutExtension(currentFileName) + "_log";
 			if (sfd.ShowDialog() == DialogResult.OK)
 			{
 				StreamWriter sw = new StreamWriter(sfd.FileName);
-				sw.WriteLine(currentFileName);
-				sw.WriteLine();
 				sw.Write(textBoxLog.Text);
 				sw.Close();
 			}
@@ -1176,7 +1199,7 @@ namespace NbuExplorer
 					using (MemoryStream infoStream = DragFile.GetFileDescriptor(filesInfo),
 										contentStream = new MemoryStream())
 					{
-						fi.CopyToStream(currentFileName, contentStream);
+						fi.CopyToStream(contentStream);
 
 						dataObject.SetData(DragFile.CFSTR_FILEDESCRIPTORW, infoStream);
 						dataObject.SetData(DragFile.CFSTR_FILECONTENTS, contentStream);
@@ -1191,6 +1214,5 @@ namespace NbuExplorer
 		{
 			Vcard.RecalculateUtcToLocal = recalculateUTCTimeToLocalToolStripMenuItem.Checked;
 		}
-
 	}
 }

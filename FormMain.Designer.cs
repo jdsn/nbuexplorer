@@ -30,13 +30,13 @@
 		{
 			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
-			System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("Inbox");
-			System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("Outbox");
-			System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("Others");
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Inbox");
+			System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Outbox");
+			System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Others");
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
 			this.textBoxLog = new System.Windows.Forms.TextBox();
 			this.menuStripMain = new System.Windows.Forms.MenuStrip();
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -57,6 +57,7 @@
 			this.parseMsgBinToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.messageExportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exportOnlySelectedMessagesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.recalculateUTCTimeToLocalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -113,7 +114,6 @@
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.statusLabelTotal = new System.Windows.Forms.ToolStripStatusLabel();
 			this.statusLabelSelected = new System.Windows.Forms.ToolStripStatusLabel();
-			this.recalculateUTCTimeToLocalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStripMain.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPageFileContent.SuspendLayout();
@@ -318,6 +318,14 @@
 			this.exportOnlySelectedMessagesToolStripMenuItem.Name = "exportOnlySelectedMessagesToolStripMenuItem";
 			this.exportOnlySelectedMessagesToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
 			this.exportOnlySelectedMessagesToolStripMenuItem.Text = "Export only selected";
+			// 
+			// recalculateUTCTimeToLocalToolStripMenuItem
+			// 
+			this.recalculateUTCTimeToLocalToolStripMenuItem.CheckOnClick = true;
+			this.recalculateUTCTimeToLocalToolStripMenuItem.Name = "recalculateUTCTimeToLocalToolStripMenuItem";
+			this.recalculateUTCTimeToLocalToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
+			this.recalculateUTCTimeToLocalToolStripMenuItem.Text = "Recalculate UTC time to local";
+			this.recalculateUTCTimeToLocalToolStripMenuItem.Click += new System.EventHandler(this.recalculateUTCTimeToLocalToolStripMenuItem_Click);
 			// 
 			// helpToolStripMenuItem
 			// 
@@ -727,19 +735,19 @@
 			this.treeViewMsgFilter.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.treeViewMsgFilter.Location = new System.Drawing.Point(0, 0);
 			this.treeViewMsgFilter.Name = "treeViewMsgFilter";
-			treeNode4.Checked = true;
-			treeNode4.Name = "NodeInbox";
-			treeNode4.Text = "Inbox";
-			treeNode5.Checked = true;
-			treeNode5.Name = "NodeOutbox";
-			treeNode5.Text = "Outbox";
-			treeNode6.Checked = true;
-			treeNode6.Name = "NodeOthers";
-			treeNode6.Text = "Others";
+			treeNode1.Checked = true;
+			treeNode1.Name = "NodeInbox";
+			treeNode1.Text = "Inbox";
+			treeNode2.Checked = true;
+			treeNode2.Name = "NodeOutbox";
+			treeNode2.Text = "Outbox";
+			treeNode3.Checked = true;
+			treeNode3.Name = "NodeOthers";
+			treeNode3.Text = "Others";
 			this.treeViewMsgFilter.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode4,
-            treeNode5,
-            treeNode6});
+            treeNode1,
+            treeNode2,
+            treeNode3});
 			this.treeViewMsgFilter.Size = new System.Drawing.Size(159, 322);
 			this.treeViewMsgFilter.TabIndex = 0;
 			this.treeViewMsgFilter.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.treeViewMsgFilter_AfterCheck);
@@ -768,40 +776,40 @@
 			this.dataGridViewMessages.AllowUserToDeleteRows = false;
 			this.dataGridViewMessages.AllowUserToOrderColumns = true;
 			this.dataGridViewMessages.AllowUserToResizeRows = false;
-			dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Control;
-			dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.WindowText;
-			dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-			this.dataGridViewMessages.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+			dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+			this.dataGridViewMessages.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
 			this.dataGridViewMessages.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.dataGridViewMessages.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colMessageTime,
             this.colMessageNumber,
             this.colMessageName,
             this.colMessageText});
-			dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Window;
-			dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.ControlText;
-			dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-			this.dataGridViewMessages.DefaultCellStyle = dataGridViewCellStyle7;
+			dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Window;
+			dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.ControlText;
+			dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+			this.dataGridViewMessages.DefaultCellStyle = dataGridViewCellStyle3;
 			this.dataGridViewMessages.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.dataGridViewMessages.Location = new System.Drawing.Point(0, 0);
 			this.dataGridViewMessages.Name = "dataGridViewMessages";
 			this.dataGridViewMessages.ReadOnly = true;
-			dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Control;
-			dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.WindowText;
-			dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-			this.dataGridViewMessages.RowHeadersDefaultCellStyle = dataGridViewCellStyle8;
+			dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+			dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+			this.dataGridViewMessages.RowHeadersDefaultCellStyle = dataGridViewCellStyle4;
 			this.dataGridViewMessages.RowHeadersVisible = false;
 			this.dataGridViewMessages.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.dataGridViewMessages.Size = new System.Drawing.Size(390, 164);
@@ -812,9 +820,9 @@
 			// colMessageTime
 			// 
 			this.colMessageTime.DataPropertyName = "time";
-			dataGridViewCellStyle6.Format = "dd.MM.yyyy HH:mm:ss";
-			dataGridViewCellStyle6.NullValue = "Unknown";
-			this.colMessageTime.DefaultCellStyle = dataGridViewCellStyle6;
+			dataGridViewCellStyle2.Format = "dd.MM.yyyy HH:mm:ss";
+			dataGridViewCellStyle2.NullValue = "Unknown";
+			this.colMessageTime.DefaultCellStyle = dataGridViewCellStyle2;
 			this.colMessageTime.HeaderText = "Time";
 			this.colMessageTime.Name = "colMessageTime";
 			this.colMessageTime.ReadOnly = true;
@@ -913,14 +921,6 @@
 			this.statusLabelSelected.Name = "statusLabelSelected";
 			this.statusLabelSelected.Size = new System.Drawing.Size(12, 17);
 			this.statusLabelSelected.Text = "-";
-			// 
-			// recalculateUTCTimeToLocalToolStripMenuItem
-			// 
-			this.recalculateUTCTimeToLocalToolStripMenuItem.CheckOnClick = true;
-			this.recalculateUTCTimeToLocalToolStripMenuItem.Name = "recalculateUTCTimeToLocalToolStripMenuItem";
-			this.recalculateUTCTimeToLocalToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
-			this.recalculateUTCTimeToLocalToolStripMenuItem.Text = "Recalculate UTC time to local";
-			this.recalculateUTCTimeToLocalToolStripMenuItem.Click += new System.EventHandler(this.recalculateUTCTimeToLocalToolStripMenuItem_Click);
 			// 
 			// FormMain
 			// 

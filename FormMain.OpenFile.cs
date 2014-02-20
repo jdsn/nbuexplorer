@@ -34,13 +34,26 @@ namespace NbuExplorer
 		private bool analyzeRequest = false;
 		private bool dbShellRequest = false;
 
-		public void OpenFile(string nbufilename, bool bruteForceScan)
+		public void OpenFiles(bool bruteForceScan, params string[] filenames)
 		{
-			this.Text = Path.GetFileName(nbufilename) + " - " + appTitle;
-			currentFileName = nbufilename;
+			try
+			{
+				PrepareForNewFileset();
+				foreach (string filename in filenames)
+				{
+					AddFile(filename, bruteForceScan);
+				}
+				FinalizeFileset();
+			}
+			catch (Exception exc)
+			{
+				MessageBox.Show(string.Format("Following error occured during parse:\r\n{0}\r\nPlease consider providing this backup to the author of application for analyzing and improving application.", exc.Message), this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+		}
 
+		public void PrepareForNewFileset()
+		{
 			textBoxLog.Clear();
-			StreamUtils.Counter = 0;
 
 			DataSetNbuExplorer.Init();
 			treeViewMsgFilter.Nodes[0].Nodes.Clear();
@@ -54,17 +67,58 @@ namespace NbuExplorer
 			recountTotal();
 			statusLabelSelected.Text = "-";
 
-			this.menuStripMain.Enabled = false;
-			this.treeViewDirs.Enabled = false;
-			this.Cursor = Cursors.AppStarting;
 			this.analyzeRequest = false;
 			this.dbShellRequest = false;
 
-			FileStream fs = null;
-			try
+			this.menuStripMain.Enabled = false;
+			this.treeViewDirs.Enabled = false;
+			this.Cursor = Cursors.AppStarting;
+		}
+
+		public void FinalizeFileset()
+		{
+			addLine("");
+			recursiveRenameDuplicates(treeViewDirs.Nodes);
+			DataSetNbuExplorer.FinalizeMultiparts();
+
+			#region Prepare message filtering by numbers
+			treeViewMsgFilter.AfterCheck -= new TreeViewEventHandler(treeViewMsgFilter_AfterCheck);
+			buildFilterSubNodes(treeViewMsgFilter.Nodes[0], "I");
+			buildFilterSubNodes(treeViewMsgFilter.Nodes[1], "O");
+			buildFilterSubNodes(treeViewMsgFilter.Nodes[2], "U");
+			treeViewMsgFilter_AfterCheck(this, new TreeViewEventArgs(null));
+			#endregion
+
+			menuStripMain.Enabled = true;
+			treeViewDirs.Enabled = true;
+			saveParsingLogToolStripMenuItem.Enabled = (textBoxLog.Text.Trim().Length > 0);
+			exportAllToolStripMenuItem.Enabled = (treeViewDirs.Nodes.Count > 0);
+			exportToolStripMenuItem.Enabled = exportSelectedFolderToolStripMenuItem.Enabled = (treeViewDirs.SelectedNode != null);
+
+			recountTotal();
+
+			this.Cursor = Cursors.Default;
+
+			if (analyzeRequest)
 			{
-				fs = File.OpenRead(currentFileName);
-				long nbufilesize = fs.Length;
+				MessageBox.Show("Unknown structure type found. Please consider providing this backup to the author of application for analyzing and improving application.", this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+			}
+
+			if (dbShellRequest)
+			{
+				MessageBox.Show("Symbian contact database detected but dbshell was not found. If you are interested in contacts from this database see readme, section dbshell integration for instructions.", this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+			}
+		}
+
+		public void AddFile(string currentFileName, bool bruteForceScan)
+		{
+			StreamUtils.Counter = 0;
+
+			using (FileStream fs = File.OpenRead(currentFileName))
+			{
+				this.Text = Path.GetFileName(currentFileName) + " - " + appTitle;
+				addLine(Path.GetFileName(currentFileName));
+				addLine("");
 
 				string fileext = Path.GetExtension(currentFileName).ToLower();
 
@@ -128,7 +182,7 @@ namespace NbuExplorer
 												}
 
 												List<FileInfo> l2 = findOrCreateFileInfoList(homeDir + "\\" + Path.GetDirectoryName(fileNames[index]));
-												l2.Add(new FileInfo(Path.GetFileName(fileNames[index]), list[j].Start, list[j].FileSize));
+												l2.Add(new FileInfo(currentFileName, Path.GetFileName(fileNames[index]), list[j].Start, list[j].FileSize));
 												list.RemoveAt(j);
 
 												addLine(fileNames[index]);
@@ -144,7 +198,7 @@ namespace NbuExplorer
 										if (name.IndexOf('\\') == -1) name = "root\\" + name + ".csv";
 
 										List<FileInfo> list = findOrCreateFileInfoList(Path.GetDirectoryName(name));
-										var fi = new FileInfo(Path.GetFileName(name), fs.Position, len);
+										var fi = new FileInfo(currentFileName, Path.GetFileName(name), fs.Position, len);
 										list.Add(fi);
 										fs.Seek(len + 4, SeekOrigin.Current);
 
@@ -226,7 +280,7 @@ namespace NbuExplorer
 
 							if (MessageBox.Show("Unknown structure type found, process cannot continue. Please consider providing this backup to the author of application for analyzing and improving application.\r\n\r\nIf you need to get your contacts, messages and calendar items, you can try brute force scan mode. Would you like to do it now?", this.appTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
 							{
-								OpenFile(nbufilename, true);
+								AddFile(currentFileName, true);
 								return;
 							}
 
@@ -275,7 +329,7 @@ namespace NbuExplorer
 									fs.Seek(12, SeekOrigin.Current); // ???
 
 									partFiles = findOrCreateFileInfoList(sect.name + "/" + foldername);
-									partFiles.Add(new FileInfo(filename, fileStartAddr, fileSize, fileTime));
+									partFiles.Add(new FileInfo(currentFileName, filename, fileStartAddr, fileSize, fileTime));
 									fileStartAddr += fileSize;
 									StreamUtils.Counter += fileSize;
 								}
@@ -302,7 +356,7 @@ namespace NbuExplorer
 											fs.Seek(folderAddr + 4, SeekOrigin.Begin);
 											foldername = StreamUtils.ReadString(fs);
 											addLine(string.Format("\r\nFolder BEGIN {0}, name: '{1}'", numToAddr(folderAddr), foldername));
-											parseFolderVcard(fs, contactList, sect.name, sect.name + "\\" + foldername);
+											parseFolderVcard(currentFileName, fs, contactList, sect.name, sect.name + "\\" + foldername);
 										}
 										catch (Exception exc)
 										{
@@ -318,7 +372,7 @@ namespace NbuExplorer
 									try
 									{
 										fs.Seek(partStartAddr + 0x2C, SeekOrigin.Begin);
-										parseFolderVcard(fs, contactList, sect.name, sect.name);
+										parseFolderVcard(currentFileName, fs, contactList, sect.name, sect.name);
 									}
 									catch (Exception exc)
 									{
@@ -340,7 +394,7 @@ namespace NbuExplorer
 								{
 									fs.Seek(4, SeekOrigin.Current);
 									int len = StreamUtils.ReadUInt16(fs) * 2;
-									partFiles.Add(new FileInfo(string.Format("{0}.txt", numToName(i + 1)), fs.Position, len));
+									partFiles.Add(new FileInfo(currentFileName, string.Format("{0}.txt", numToName(i + 1)), fs.Position, len));
 									fs.Seek(len, SeekOrigin.Current);
 									StreamUtils.Counter += len;
 								}
@@ -403,13 +457,13 @@ namespace NbuExplorer
 									long zipOffset = fs.Position;
 									ZipInputStream zi = new ZipInputStream(fs);
 									zi.IsStreamOwner = false;
-									parseFolderZip(zi, zipOffset, sect.name);
+									parseFolderZip(currentFileName, zi, zipOffset, sect.name);
 									fs.Seek(partPos, SeekOrigin.Begin);
 								}
 								else if (sect.name2 == "Messages" && count == 0)
 								{
 									fs.Seek(partStartAddr, SeekOrigin.Begin);
-									parseBinaryMessages(fs);
+									parseBinaryMessages(currentFileName, fs);
 									fs.Seek(partPos, SeekOrigin.Begin);
 								}
 								else
@@ -429,7 +483,7 @@ namespace NbuExplorer
 
 										try
 										{
-											parseFolder(fs, start, sect.name);
+											parseFolder(currentFileName, fs, start, sect.name);
 										}
 										catch (Exception ex)
 										{
@@ -517,7 +571,7 @@ namespace NbuExplorer
 								List<FileInfo> list = findOrCreateFileInfoList(dir);
 								if (filename.Length > 0 && lenComp > 8)
 								{
-									list.Add(new FileinfoCf(filename, startAddr, lenComp, lenUncomp, DateTime.MinValue));
+									list.Add(new FileinfoCf(currentFileName, filename, startAddr, lenComp, lenUncomp, DateTime.MinValue));
 								}
 
 								StreamUtils.Counter += lenComp;
@@ -546,7 +600,7 @@ namespace NbuExplorer
 									lenComp = StreamUtils.ReadUInt32(fs);
 									lenUncomp = StreamUtils.ReadUInt32(fs);
 
-									FileinfoCf fi = new FileinfoCf(numToAddr(fs.Position), fs.Position, lenComp, lenUncomp, DateTime.MinValue);
+									FileinfoCf fi = new FileinfoCf(currentFileName, numToAddr(fs.Position), fs.Position, lenComp, lenUncomp, DateTime.MinValue);
 									compFr.Add(fi);
 
 									addLine(fi.Filename + " - compressed fragment");
@@ -594,7 +648,7 @@ namespace NbuExplorer
 									addLine(filename + " - size: " + lenComp + " / " + lenUncomp);
 									filename = Path.GetFileName(filename);
 
-									FileinfoCf fic = new FileinfoCf(filename, fs.Position, lenComp, lenUncomp, DateTime.MinValue);
+									FileinfoCf fic = new FileinfoCf(currentFileName, filename, fs.Position, lenComp, lenUncomp, DateTime.MinValue);
 
 									addSymbianFile("", dir, fic);
 
@@ -627,13 +681,13 @@ namespace NbuExplorer
 				else if (!bruteForceScan && (fileext == ".nbf" || fileext == ".zip"))
 				{
 					ZipInputStream zi = new ZipInputStream(fs);
-					parseFolderZip(zi, 0, "");
+					parseFolderZip(currentFileName, zi, 0, "");
 				}
 				#endregion
 				#region mms
 				else if (!bruteForceScan && (fileext == ".mms"))
 				{
-					Mms m = new Mms(fs, fs.Length);
+					Mms m = new Mms(currentFileName, fs, fs.Length);
 					addLine(m.ParseLog);
 					var list = findOrCreateFileInfoList(m.Subject);
 					list.AddRange(m.Files);
@@ -643,7 +697,7 @@ namespace NbuExplorer
 				#region cdb
 				else if (!bruteForceScan && (fileext == ".cdb"))
 				{
-					addLine("Parsing contacts from " + nbufilename + ":\r\n");
+					addLine("Parsing contacts from " + currentFileName + ":\r\n");
 
 					if (DbShell.Ready)
 					{
@@ -651,18 +705,18 @@ namespace NbuExplorer
 						{
 							DbShell.PrepareWorkDir();
 
-							var tables = DbShell.DumpTables(nbufilename, "identitytable", "phone", "emailtable", "contacts");
+							var tables = DbShell.DumpTables(currentFileName, "identitytable", "phone", "emailtable", "contacts");
 
 							var phonebook = CdbContactParser.ParseTableDumps(tables);
 
-							string dir = Path.GetFileNameWithoutExtension(nbufilename);
+							string dir = Path.GetFileNameWithoutExtension(currentFileName);
 
 							if (phonebook.Count > 0)
 							{
 								var node = findOrCreateFileInfoList(dir);
 								foreach (KeyValuePair<string, Contact> pair in phonebook)
 								{
-									FileInfoMemory vcf = new FileInfoMemory(pair.Value.DisplayName + ".vcf",
+									FileInfoMemory vcf = new FileInfoMemory(currentFileName, pair.Value.DisplayName + ".vcf",
 										System.Text.Encoding.UTF8.GetBytes(pair.Value.ToVcard()),
 										pair.Value.RevDate);
 									node.Add(vcf);
@@ -723,7 +777,7 @@ namespace NbuExplorer
 								filename = DataSetNbuExplorer.FindPhoneBookEntry(filename).name;
 							}
 							catch { }
-							files.Add(new FileInfo(filename + ".vmg", Pattern.Msg.StartIndex, Pattern.Msg.Length, msg.MessageTime));
+							files.Add(new FileInfo(currentFileName, filename + ".vmg", Pattern.Msg.StartIndex, Pattern.Msg.Length, msg.MessageTime));
 							StreamUtils.Counter += Pattern.Msg.Length;
 							addLine(numToProgressAndAddr(Pattern.Msg.StartIndex, fs.Length) + "\tmessage: " + filename);
 
@@ -744,10 +798,10 @@ namespace NbuExplorer
 							files = findOrCreateFileInfoList(NokiaConstants.ptContacts);
 							filename = name;
 							if (filename.Length == 0) filename = numToName(files.Count + 1);
-							files.Add(new FileInfo(filename + ".vcf", Pattern.Contact.StartIndex, Pattern.Contact.Length, time));
+							files.Add(new FileInfo(currentFileName, filename + ".vcf", Pattern.Contact.StartIndex, Pattern.Contact.Length, time));
 							if (contact.Photo != null)
 							{
-								files.Add(new FileInfoMemory(filename + "." + contact.PhotoExtension, contact.Photo, time));
+								files.Add(new FileInfoMemory(currentFileName, filename + "." + contact.PhotoExtension, contact.Photo, time));
 							}
 							StreamUtils.Counter += Pattern.Contact.Length;
 							addLine(numToProgressAndAddr(Pattern.Contact.StartIndex, fs.Length) + "\tcontact: " + filename);
@@ -761,7 +815,7 @@ namespace NbuExplorer
 							files = findOrCreateFileInfoList("Calendar\\" + calendar["X-EPOCAGENDAENTRYTYPE"]);
 							filename = calendar["SUMMARY"];
 							if (filename.Length == 0) filename = numToName(files.Count + 1);
-							files.Add(new FileInfo(filename + ".vcs", Pattern.Calendar.StartIndex, Pattern.Calendar.Length, calendar.GetDateTime("DTSTART")));
+							files.Add(new FileInfo(currentFileName, filename + ".vcs", Pattern.Calendar.StartIndex, Pattern.Calendar.Length, calendar.GetDateTime("DTSTART")));
 							StreamUtils.Counter += Pattern.Calendar.Length;
 							addLine(numToProgressAndAddr(Pattern.Calendar.StartIndex, fs.Length) + "\tcalendar: " + filename);
 						}
@@ -774,7 +828,7 @@ namespace NbuExplorer
 							files = findOrCreateFileInfoList(NokiaConstants.ptBookmarks);
 							filename = calendar["TITLE"];
 							if (filename.Length == 0) filename = numToName(files.Count + 1);
-							files.Add(new FileInfo(filename + ".url", Pattern.Bookmark.StartIndex, Pattern.Bookmark.Length));
+							files.Add(new FileInfo(currentFileName, filename + ".url", Pattern.Bookmark.StartIndex, Pattern.Bookmark.Length));
 							StreamUtils.Counter += Pattern.Bookmark.Length;
 							addLine(numToProgressAndAddr(Pattern.Bookmark.StartIndex, fs.Length) + "\tbookmark: " + filename);
 						}
@@ -783,54 +837,12 @@ namespace NbuExplorer
 				#endregion
 
 				addLine("");
-				addLine(string.Format("Done, file coverage: {0:0.##}%", 100 * (float)StreamUtils.Counter / nbufilesize));
-
+				addLine(string.Format("Done, file coverage: {0:0.##}%", 100 * (float)StreamUtils.Counter / fs.Length));
 				addLine("");
-				recursiveRenameDuplicates(treeViewDirs.Nodes);
-
-				DataSetNbuExplorer.FinalizeMultiparts();
-
-				#region Prepare message filtering by numbers
-				treeViewMsgFilter.AfterCheck -= new TreeViewEventHandler(treeViewMsgFilter_AfterCheck);
-				buildFilterSubNodes(treeViewMsgFilter.Nodes[0], "I");
-				buildFilterSubNodes(treeViewMsgFilter.Nodes[1], "O");
-				buildFilterSubNodes(treeViewMsgFilter.Nodes[2], "U");
-				treeViewMsgFilter_AfterCheck(this, new TreeViewEventArgs(null));
-				#endregion
-
-			}
-			catch (Exception exc)
-			{
-				MessageBox.Show(string.Format("Following error occured during parse:\r\n{0}\r\nPlease consider providing this backup to the author of application for analyzing and improving application.", exc.Message), this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
-				analyzeRequest = false;
-			}
-			finally
-			{
-				if (fs != null) fs.Close();
-
-				menuStripMain.Enabled = true;
-				treeViewDirs.Enabled = true;
-				saveParsingLogToolStripMenuItem.Enabled = (textBoxLog.Text.Trim().Length > 0);
-				exportAllToolStripMenuItem.Enabled = (treeViewDirs.Nodes.Count > 0);
-				exportToolStripMenuItem.Enabled = exportSelectedFolderToolStripMenuItem.Enabled = (treeViewDirs.SelectedNode != null);
-
-				recountTotal();
-
-				this.Cursor = Cursors.Default;
-			}
-
-			if (analyzeRequest)
-			{
-				MessageBox.Show("Unknown structure type found. Please consider providing this backup to the author of application for analyzing and improving application.", this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
-			}
-
-			if (dbShellRequest)
-			{
-				MessageBox.Show("Symbian contact database detected but dbshell was not found. If you are interested in contacts from this database see readme, section dbshell integration for instructions.", this.appTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
 		}
 
-		private void parseFolderZip(ZipInputStream zi, long start, string sectName)
+		private void parseFolderZip(string currentFileName, ZipInputStream zi, long start, string sectName)
 		{
 			ZipEntry ze;
 			int index = 0;
@@ -851,7 +863,7 @@ namespace NbuExplorer
 					else
 					{
 						string dir = Path.GetDirectoryName(sectName + "\\" + ze.Name);
-						FileInfoZip item = new FileInfoZip(ze, index, start);
+						FileInfoZip item = new FileInfoZip(currentFileName, ze, index, start);
 						findOrCreateFileInfoList(dir).Add(item);
 
 						if (parseMsgPredefToolStripMenuItem.Checked && Message.MsgFileNameRegex.IsMatch(item.Filename))
@@ -862,7 +874,7 @@ namespace NbuExplorer
 								using (MemoryStream ms = new MemoryStream())
 								{
 									StreamUtils.CopyFromStreamToStream(zi, ms, ze.Size);
-									Message msg = Message.ReadPredefBinMessage(ms, item.Filename);
+									Message msg = Message.ReadPredefBinMessage(currentFileName, ms, item.Filename);
 									if (msg.Mms == null)
 									{
 										addLine(msg.ToString());
@@ -896,7 +908,7 @@ namespace NbuExplorer
 								if (crd.Photo != null)
 								{
 									string filename = Path.ChangeExtension(item.Filename, "." + crd.PhotoExtension);
-									findOrCreateFileInfoList(dir).Add(new FileInfoMemory(filename, crd.Photo, item.FileTime));
+									findOrCreateFileInfoList(dir).Add(new FileInfoMemory(currentFileName, filename, crd.Photo, item.FileTime));
 								}
 							}
 							catch (Exception ex)
@@ -973,7 +985,7 @@ namespace NbuExplorer
 				if (sb.Length > 0)
 				{
 					var node = findOrCreateFileInfoList("Messages\\" + fi.Filename);
-					FileInfoMemory fi2 = new FileInfoMemory("log.txt",
+					FileInfoMemory fi2 = new FileInfoMemory(fi.SourcePath, "log.txt",
 						System.Text.Encoding.UTF8.GetBytes(sb.ToString()),
 						DateTime.MinValue);
 					node.Add(fi2);
@@ -1008,7 +1020,7 @@ namespace NbuExplorer
 					{
 						DateTime rev = DbShell.ParseDateTime((string)row[0]);
 						var node = findOrCreateFileInfoList("Memo\\" + fi.Filename);
-						FileInfoMemory fi2 = new FileInfoMemory(string.Format("{0:0000}.txt", cnt++),
+						FileInfoMemory fi2 = new FileInfoMemory(fi.SourcePath, string.Format("{0:0000}.txt", cnt++),
 							System.Text.Encoding.UTF8.GetBytes((string)row[1]),
 							rev);
 						node.Add(fi2);
@@ -1048,7 +1060,7 @@ namespace NbuExplorer
 					var node = findOrCreateFileInfoList("Contacts\\" + fi.Filename);
 					foreach (KeyValuePair<string, Contact> pair in phonebook)
 					{
-						FileInfoMemory vcf = new FileInfoMemory(pair.Value.DisplayName + ".vcf",
+						FileInfoMemory vcf = new FileInfoMemory(fi.SourcePath, pair.Value.DisplayName + ".vcf",
 							System.Text.Encoding.UTF8.GetBytes(pair.Value.ToVcard()),
 							pair.Value.RevDate);
 						node.Add(vcf);
@@ -1067,7 +1079,7 @@ namespace NbuExplorer
 			DbShell.PrepareWorkDir();
 			var tempFile = Path.Combine(DbShell.workDir, DbShell.workFile);
 			var fs = File.Create(tempFile);
-			fi.CopyToStream(currentFileName, fs);
+			fi.CopyToStream(fs);
 			fs.Close();
 			return tempFile;
 		}
@@ -1095,7 +1107,7 @@ namespace NbuExplorer
 			MemoryStream ms = new MemoryStream();
 			try
 			{
-				fi.CopyToStream(currentFileName, ms);
+				fi.CopyToStream(ms);
 				if (ms.Length != lenUncomp)
 				{
 					addLine(string.Format("WARNING: uncompressed size ({0}) differs from expected ({1})", ms.Length, lenUncomp));
@@ -1151,7 +1163,7 @@ namespace NbuExplorer
 				long missingLength = currentIncompleteMultipartFile.MissingLength;
 				if (missingLength > ms.Length)
 				{
-					currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.RawSize, fi.FileTime, 0, ms.Length));
+					currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart(fi.SourcePath, "", fi.Start, fi.RawSize, fi.FileTime, 0, ms.Length));
 					StreamUtils.Counter += ms.Length;
 					addLine("still incomplete file, continue on next fragment...");
 				}
@@ -1164,7 +1176,7 @@ namespace NbuExplorer
 					else
 					{
 						addLine(string.Format("multipart file '{0}' complete.", currentIncompleteMultipartFile.Filename));
-						currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.RawSize, fi.FileTime, 0, missingLength));
+						currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart(fi.SourcePath, "", fi.Start, fi.RawSize, fi.FileTime, 0, missingLength));
 						addSymbianFile(currentIncompleteMultipartFile.Root, currentIncompleteMultipartFile.Dir, currentIncompleteMultipartFile);
 					}
 					currentIncompleteMultipartFile = null;
@@ -1316,14 +1328,14 @@ namespace NbuExplorer
 					{
 						if (ms.Length >= ms.Position + fsize)
 						{
-							FileInfoCfPart ficp = new FileInfoCfPart(fname, fi.Start, fi.RawSize, DateTime.MinValue, ms.Position, fsize);
+							FileInfoCfPart ficp = new FileInfoCfPart(fi.SourcePath, fname, fi.Start, fi.RawSize, DateTime.MinValue, ms.Position, fsize);
 							addSymbianFile(rootFolder, dir, ficp);
 							StreamUtils.Counter += fsize;
 						}
 						else
 						{
-							currentIncompleteMultipartFile = new FileInfoCfMultiPart(fname, DateTime.MinValue, fsize, rootFolder, dir);
-							currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart("", fi.Start, fi.RawSize, DateTime.MinValue, ms.Position, ms.Length - ms.Position));
+							currentIncompleteMultipartFile = new FileInfoCfMultiPart(fi.SourcePath, fname, DateTime.MinValue, fsize, rootFolder, dir);
+							currentIncompleteMultipartFile.Parts.Add(new FileInfoCfPart(fi.SourcePath, "", fi.Start, fi.RawSize, DateTime.MinValue, ms.Position, ms.Length - ms.Position));
 							StreamUtils.Counter += (ms.Length - ms.Position);
 							addLine("incomplete file, continue on next fragment...");
 						}
@@ -1345,7 +1357,7 @@ namespace NbuExplorer
 			{
 				List<Contact> contacts =new List<Contact>();
 
-				using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
+				using (MemoryStream ms = fi.GetAsMemoryStream())
 				{
 					var sr = new StreamReader(ms, System.Text.Encoding.Unicode);
 					while (!sr.EndOfStream)
@@ -1367,7 +1379,7 @@ namespace NbuExplorer
 					var node = findOrCreateFileInfoList("Contacts");
 					foreach (var c in contacts)
 					{
-						FileInfoMemory vcf = new FileInfoMemory(c.DisplayName + ".vcf",
+						FileInfoMemory vcf = new FileInfoMemory(fi.SourcePath, c.DisplayName + ".vcf",
 							System.Text.Encoding.UTF8.GetBytes(c.ToVcard()),
 							c.RevDate);
 						node.Add(vcf);
@@ -1384,7 +1396,7 @@ namespace NbuExplorer
 		{
 			try
 			{
-				using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
+				using (MemoryStream ms = fi.GetAsMemoryStream())
 				{
 					var sr = new StreamReader(ms, System.Text.Encoding.Unicode);
 					while (!sr.EndOfStream)
@@ -1408,7 +1420,7 @@ namespace NbuExplorer
 			long cnt = StreamUtils.Counter;
 			try
 			{
-				using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
+				using (MemoryStream ms = fi.GetAsMemoryStream())
 				{
 					Message sm = Message.ReadSymbianMessage(ms);
 					fi.FileTime = sm.MessageTime;
@@ -1425,7 +1437,7 @@ namespace NbuExplorer
 			}
 		}
 
-		private void parseFolder(FileStream fs, long start, string sectName)
+		private void parseFolder(string currentFileName, FileStream fs, long start, string sectName)
 		{
 			int count;
 			List<FileInfo> partFiles;
@@ -1471,7 +1483,7 @@ namespace NbuExplorer
 
 							try
 							{
-								Mms m = new Mms(fs, fileStart + len - 1);
+								Mms m = new Mms(currentFileName, fs, fileStart + len - 1);
 								fileTime = m.Time;
 
 								addLine(filename + ":");
@@ -1494,7 +1506,7 @@ namespace NbuExplorer
 								fileTime = DateTime.MinValue;
 							}
 
-							partFiles.Add(new FileInfo(string.Format("{0}.mms", filename), fileStart, len, fileTime));
+							partFiles.Add(new FileInfo(currentFileName, string.Format("{0}.mms", filename), fileStart, len, fileTime));
 
 							fs.Seek(fileStart + len, SeekOrigin.Begin);
 						}
@@ -1517,7 +1529,7 @@ namespace NbuExplorer
 								name = name + " " + ((phe != null) ? phe.name : num);
 							}
 
-							partFiles.Add(new FileInfo(string.Format("{0}.vmg", name), mstart, len, time));
+							partFiles.Add(new FileInfo(currentFileName, string.Format("{0}.vmg", name), mstart, len, time));
 
 							if (parseMsgVMGToolStripMenuItem.Checked)
 							{
@@ -1537,10 +1549,10 @@ namespace NbuExplorer
 					switch (tst)
 					{
 						case 0x0301: // contacts
-							parseContacts(fs);
+							parseContacts(currentFileName, fs);
 							break;
 						case 0x0302: // groups
-							parseGroups(fs);
+							parseGroups(currentFileName, fs);
 							break;
 						case 0x0312: // calendar - events
 						case 0x0313: // calendar - todos
@@ -1656,7 +1668,7 @@ namespace NbuExplorer
 
 									addLine("fragment: " + filename);
 
-									FileinfoCf fi = new FileinfoCf(filename, fs.Position, lenComp, lenUncomp, DateTime.MinValue);
+									FileinfoCf fi = new FileinfoCf(currentFileName, filename, fs.Position, lenComp, lenUncomp, DateTime.MinValue);
 									parseCompressedFragment(sectName, fi, lenUncomp);
 									partFiles.Add(fi);
 									fs.Seek(lenComp, SeekOrigin.Current);
@@ -1724,16 +1736,16 @@ namespace NbuExplorer
 							long len = StreamUtils.ReadUInt32(fs);
 							fs.Seek(2, SeekOrigin.Current);
 
-							FileInfo fi = new FileInfo(filename, fs.Position, len);
+							FileInfo fi = new FileInfo(currentFileName, filename, fs.Position, len);
 							addSymbianFile(sectName, foldername, fi);
 
 							if (parseMsgPredefToolStripMenuItem.Checked && Message.MsgFileNameRegex.IsMatch(filename))
 							{
 								try
 								{
-									using (MemoryStream ms = fi.GetAsMemoryStream(currentFileName))
+									using (MemoryStream ms = fi.GetAsMemoryStream())
 									{
-										Message msg = Message.ReadPredefBinMessage(ms, filename);
+										Message msg = Message.ReadPredefBinMessage(currentFileName, ms, filename);
 										if (msg.Mms == null)
 										{
 											addLine(msg.ToString());
@@ -1760,7 +1772,7 @@ namespace NbuExplorer
 			}
 		}
 
-		private void parseFolderVcard(FileStream fs, List<FileInfo> contactList, string sectName, string rootFolderPath)
+		private void parseFolderVcard(string currentFileName, FileStream fs, List<FileInfo> contactList, string sectName, string rootFolderPath)
 		{
 			int count = StreamUtils.ReadUInt32asInt(fs);
 
@@ -1832,7 +1844,7 @@ namespace NbuExplorer
 
 				if (string.IsNullOrEmpty(name)) name = numToName(i + 1);
 
-				FileInfo fi = new FileInfo(string.Format(filenameTemplate, name), start, vclen, time);
+				FileInfo fi = new FileInfo(currentFileName, string.Format(filenameTemplate, name), start, vclen, time);
 				partFiles.Add(fi);
 				if (sectName == NokiaConstants.ptContacts)
 				{
@@ -1841,12 +1853,12 @@ namespace NbuExplorer
 
 				if (crd.Photo != null)
 				{
-					partFiles.Add(new FileInfoMemory(name + "." + crd.PhotoExtension, crd.Photo, time));
+					partFiles.Add(new FileInfoMemory(currentFileName, name + "." + crd.PhotoExtension, crd.Photo, time));
 				}
 			}
 		}
 
-		private void parseContacts(FileStream fs)
+		private void parseContacts(string currentFileName, FileStream fs)
 		{
 			int count = StreamUtils.ReadUInt32asInt(fs);
 			for (int j = 0; j < count; j++)
@@ -1879,7 +1891,7 @@ namespace NbuExplorer
 							int size = StreamUtils.ReadUInt32asInt(fs);
 							fs.Seek(2, SeekOrigin.Current);
 							List<FileInfo> partFiles = findOrCreateFileInfoList(NokiaConstants.ptContacts + "\\" + Path.GetFileName(foldername));
-							partFiles.Add(new FileInfo(filename, fs.Position, size));
+							partFiles.Add(new FileInfo(currentFileName, filename, fs.Position, size));
 							StreamUtils.Counter += size;
 							fs.Seek(size, SeekOrigin.Current);
 							break;
@@ -1917,7 +1929,7 @@ namespace NbuExplorer
 			}
 		}
 
-		private void parseGroups(FileStream fs)
+		private void parseGroups(string currentFileName, FileStream fs)
 		{
 			int count = StreamUtils.ReadUInt16(fs);
 			for (int j = 0; j < count; j++)
@@ -1948,7 +1960,7 @@ namespace NbuExplorer
 							fs.Seek(2, SeekOrigin.Current);
 
 							List<FileInfo> partFiles = findOrCreateFileInfoList(NokiaConstants.ptGroups + "\\" + grName);
-							partFiles.Add(new FileInfo(filename, fs.Position, size));
+							partFiles.Add(new FileInfo(currentFileName, filename, fs.Position, size));
 							StreamUtils.Counter += size;
 
 							fs.Seek(size, SeekOrigin.Current);
@@ -2073,7 +2085,7 @@ namespace NbuExplorer
 			}
 		}
 
-		private void parseBinaryMessages(FileStream fs)
+		private void parseBinaryMessages(string currentFileName, FileStream fs)
 		{
 			long smsBegin = 0;
 			try
@@ -2122,12 +2134,12 @@ namespace NbuExplorer
 							addLine(string.Format("{0:000} [{1}] {2}; {3}; {4}", j, numToAddr(smsBegin), dateAsString, ms.PhoneNumber, ms.MessageText));
 
 							string filename = string.Format("{0:0000} {1}", j, ms.PhoneNumber).TrimEnd();
-							partFilesBin.Add(new FileInfo(filename + ".sms", smsBegin, fs.Position - smsBegin, ms.MessageTime));
+							partFilesBin.Add(new FileInfo(currentFileName, filename + ".sms", smsBegin, fs.Position - smsBegin, ms.MessageTime));
 
 							if (!ms.IsDelivery)
 							{
 								byte[] data = System.Text.Encoding.UTF8.GetBytes(string.Format("{0}\r\n{1}\r\n{2}", ms.PhoneNumber, dateAsString, ms.MessageText));
-								partFilesTxt.Add(new FileInfoMemory(filename + ".txt", data, ms.MessageTime));
+								partFilesTxt.Add(new FileInfoMemory(currentFileName, filename + ".txt", data, ms.MessageTime));
 
 								if (parseMsgBinToolStripMenuItem.Checked)
 								{
