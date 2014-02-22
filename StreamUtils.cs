@@ -145,12 +145,6 @@ namespace NbuExplorer
 			}
 		}
 
-		public static string ReadPhoneNumber(Stream s)
-		{
-			int len = s.ReadByte() / 4;
-			return ReadShortString(s, len);
-		}
-
 		public static bool SeekTo(byte[] sequence, Stream s)
 		{
 			int index = 0;

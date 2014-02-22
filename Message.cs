@@ -259,12 +259,14 @@ namespace NbuExplorer
 				try
 				{
 					test = StreamUtils.ReadUInt16(s);
-					if (test != 0x2920) throw new ApplicationException("Not sms");
-					test = StreamUtils.ReadUInt16(s);
-					if (test != 0x1834) throw new ApplicationException("Not sms");
+					if (test != 0x1834)
+					{
+						if (test != 0x2920) throw new ApplicationException("Not sms");
+						test = StreamUtils.ReadUInt16(s);
+						if (test != 0x1834) throw new ApplicationException("Not sms");
+					}
 
 					s.Seek(3, SeekOrigin.Current);
-					//parseLog.AppendLine(FormMain.buffToString(StreamUtils.ReadBuff(ms, 6)));
 
 					int dirByte = s.ReadByte();
 					if (dirByte == 1 || dirByte == 0)
@@ -276,37 +278,58 @@ namespace NbuExplorer
 					else if (dirByte == 2)
 					{
 						m.direction = MessageDirection.Unknown;
-						s.Seek(23, SeekOrigin.Current);
 
-						m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
 						s.Seek(2, SeekOrigin.Current);
-						m.smscNumber = StreamUtils.ReadPhoneNumber(s);
-						test = StreamUtils.ReadUInt16(s);
-						if (test == 0x15)
+						test = s.ReadByte();
+						if (test == 1)
 						{
-							return m;
+							s.Seek(25, SeekOrigin.Current);
+							m.phoneNumber = UnicodeExpander.ReadShortString(s);
 						}
-						m.phoneNumber = StreamUtils.ReadPhoneNumber(s);
-						test = StreamUtils.ReadUInt16(s);
-						if (test == 0x0400)
+						else
 						{
-							return m;
+							s.Seek(20, SeekOrigin.Current);
+							m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
+							s.Seek(2, SeekOrigin.Current);
+							m.smscNumber = UnicodeExpander.ReadShortString(s);
+							s.ReadByte();
+							test = s.ReadByte();
+							if (test > 0)
+							{
+								m.phoneNumber = UnicodeExpander.ReadShortString(s);
+							}
 						}
-						m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
 					}
-					else if (dirByte == 5 || dirByte == 6)
+					else if (dirByte == 5 || dirByte == 6 || dirByte == 7 || dirByte == 9 || dirByte == 10)
 					{
 						m.direction = MessageDirection.Outgoing;
-						s.Seek(20, SeekOrigin.Current);
-						m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
-						m.phoneNumber = StreamUtils.ReadPhoneNumber(s);
 
-						if (StreamUtils.SeekTo(new byte[] { 0x02, 0x03, 0xC2, 0x01 }, s))
+						s.Seek(2, SeekOrigin.Current);
+						test = s.ReadByte();
+						if (test > 0)
 						{
-							s.Seek(9, SeekOrigin.Current);
-							StreamUtils.ReadNokiaDateTime3(s);
-							s.Seek(2, SeekOrigin.Current);
-							m.smscNumber = StreamUtils.ReadPhoneNumber(s);
+							s.Seek(17, SeekOrigin.Current);
+							try
+							{
+								m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
+							}
+							catch { }
+							m.phoneNumber = UnicodeExpander.ReadShortString(s);
+							m.name = UnicodeExpander.ReadShortString(s);
+						}
+						else
+						{
+							s.Seek(16, SeekOrigin.Current);
+							m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
+							m.phoneNumber = UnicodeExpander.ReadShortString(s);
+
+							if (StreamUtils.SeekTo(new byte[] { 0x02, 0x03, 0xC2, 0x01 }, s))
+							{
+								s.Seek(9, SeekOrigin.Current);
+								StreamUtils.ReadNokiaDateTime3(s);
+								s.Seek(2, SeekOrigin.Current);
+								m.smscNumber = UnicodeExpander.ReadShortString(s);
+							}
 						}
 					}
 					else if (dirByte == 3 || dirByte == 4)
@@ -320,27 +343,46 @@ namespace NbuExplorer
 							s.Seek(20, SeekOrigin.Current);
 							m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
 							s.Seek(2, SeekOrigin.Current);
-							m.smscNumber = StreamUtils.ReadPhoneNumber(s);
-							if (test == 1) s.ReadByte();
-							s.Seek(2, SeekOrigin.Current);
-							m.phoneNumber = StreamUtils.ReadPhoneNumber(s);
+							m.smscNumber = UnicodeExpander.ReadShortString(s);
+
+							s.ReadByte();
+							test = s.ReadByte();
+
+							if (test == 6)
+							{
+								s.ReadByte();
+								test = s.ReadByte();
+							}
+
+							if (test > 0)
+							{
+								m.phoneNumber = UnicodeExpander.ReadShortString(s);
+							}
 						}
 						else if (test == 1)
 						{
-							m.direction = MessageDirection.Outgoing;
-							s.Seek(25, SeekOrigin.Current);
-							m.phoneNumber = StreamUtils.ReadPhoneNumber(s);
+							m.direction = MessageDirection.Unknown;
+
+							s.Seek(17, SeekOrigin.Current);
+							try
+							{
+								m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
+							}
+							catch { }
+
+							m.phoneNumber = UnicodeExpander.ReadShortString(s);
 							m.name = UnicodeExpander.ReadShortString(s);
 
-							test = s.ReadByte();
-							if (test == 1)
+							if (m.MessageTime == DateTime.MinValue)
 							{
-								s.Seek(2, SeekOrigin.Current);
+								test = s.ReadByte();
+								if (test == 1)
+								{
+									s.Seek(2, SeekOrigin.Current);
+								}
+								s.Seek(21, SeekOrigin.Current);
+								m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
 							}
-
-							s.Seek(21, SeekOrigin.Current);
-							// TODO: check these values
-							m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
 						}
 						else
 						{
@@ -364,7 +406,7 @@ namespace NbuExplorer
 			}
 			else
 			{
-				throw new ApplicationException("Starting sequence not found");
+				throw new ApplicationException(string.Format("Starting sequence not found. File size: ({0})", s.Length));
 			}
 		}
 

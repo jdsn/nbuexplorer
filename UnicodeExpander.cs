@@ -96,7 +96,7 @@ namespace NbuExplorer
 			{
 				throw new FormatException("Invalid string length");
 			}
-			len = len << 2;
+			len = len >> 2;
 			string result = Expand(s, len);
 			if (result.Contains("\x0"))
 			{
