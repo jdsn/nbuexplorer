@@ -1,6 +1,13 @@
 History & Changelog
 ===================
 
+Version 3.2
+ - added:    joining of multipart messages (from binary and predef storage)
+ - added:    merging of multiple backup files (ability to open more files at once)
+ - added:    option to recalculate VMG timestamps from UTC to local time
+ - improved: parsing robustness fixes
+ - improved: detection of duplicate messages is more efficient
+
 Version 3.1
  - added:    parsing of contacts and messages from nfb & nfc backups
  - added:    option to export only selected messages
