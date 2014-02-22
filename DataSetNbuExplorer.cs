@@ -9,6 +9,7 @@ namespace NbuExplorer
 	public partial class DataSetNbuExplorer
 	{
 		private static System.Text.RegularExpressions.Regex newLineRex = new System.Text.RegularExpressions.Regex("[\r\n]+");
+		private static System.Security.Cryptography.MD5 md5alg = System.Security.Cryptography.MD5.Create();
 
 		static DataSetNbuExplorer()
 		{
@@ -167,25 +168,25 @@ namespace NbuExplorer
 				name = "";
 			}
 
-			if (FindExistingMessage(number, vmg.MessageBody))
+			string hash;
+			if (FindExistingMessage(number, vmg.MessageBody, out hash))
 				return;
 
-			MessageRow row = _defaultInstance.Message.AddMessageRow(vmg.MessageBox, vmg.MessageTime, number, name, vmg.MessageBody);
+			MessageRow row = _defaultInstance.Message.AddMessageRow(vmg.MessageBox, vmg.MessageTime, number, name, vmg.MessageBody, hash);
 			if (row.time == DateTime.MinValue) row.SettimeNull();
 		}
 
-		public static bool FindExistingMessage(string number, string text)
+		public static bool FindExistingMessage(string number, string text, out string hash)
 		{
 			// normalize newlines for comparison
 			text = newLineRex.Replace(text, "\n");
 			if (number == null) number = "";
 
-			DataSetNbuExplorer.MessageRow[] dupl = (DataSetNbuExplorer.MessageRow[])_defaultInstance.Message.Select("number = '" + number.Replace("'", "''") + "'");
-			foreach (DataSetNbuExplorer.MessageRow mr in dupl)
-			{
-				if (newLineRex.Replace(mr.messagetext, "\n") == text) return true;
-			}
-			return false;
+			var tmp = md5alg.ComputeHash(System.Text.Encoding.UTF8.GetBytes(number + "|" + text));
+			hash = BitConverter.ToString(tmp).Replace("-", "");
+
+			DataSetNbuExplorer.MessageRow[] dupl = (DataSetNbuExplorer.MessageRow[])_defaultInstance.Message.Select("hash = '" + hash + "'");
+			return dupl.Length > 0;
 		}
 
 		public static void AddMessage(Message m)
@@ -219,13 +220,18 @@ namespace NbuExplorer
 
 		private static void AddMessageInternal(Message m)
 		{
-			if (FindExistingMessage(m.PhoneNumber, m.MessageText)) return;
+			string hash;
+			if (FindExistingMessage(m.PhoneNumber, m.MessageText, out hash))
+			{
+				return;
+			}
 
 			MessageRow row = _defaultInstance.Message.AddMessageRow(m.DirectionBox,
 						 m.MessageTime,
 						 m.PhoneNumber,
 						 string.IsNullOrEmpty(m.Name) ? NumToName(m.PhoneNumber) : m.Name,
-						 m.MessageText);
+						 m.MessageText,
+						 hash);
 			if (row.time == DateTime.MinValue) row.SettimeNull();
 		}
 
