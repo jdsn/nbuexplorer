@@ -73,6 +73,8 @@ namespace NbuExplorer
 			listViewFiles_SelectedIndexChanged(this, EventArgs.Empty);
 
 			recountTotal();
+
+			recalculateUTCTimeToLocalToolStripMenuItem_Click(this, EventArgs.Empty);
 		}
 
 		private void addLine(string line)
@@ -1224,7 +1226,9 @@ namespace NbuExplorer
 
 		private void recalculateUTCTimeToLocalToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			Vcard.RecalculateUtcToLocal = recalculateUTCTimeToLocalToolStripMenuItem.Checked;
+			bool enabled = recalculateUTCTimeToLocalToolStripMenuItem.Checked;
+			Message.RecalculateUtcToLocal = enabled;
+			Vcard.RecalculateUtcToLocal = enabled;
 		}
 	}
 }

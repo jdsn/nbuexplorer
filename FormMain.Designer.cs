@@ -41,6 +41,7 @@
 			this.menuStripMain = new System.Windows.Forms.MenuStrip();
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
 			this.exportSelectedFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exportSelectedFolderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -114,7 +115,6 @@
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.statusLabelTotal = new System.Windows.Forms.ToolStripStatusLabel();
 			this.statusLabelSelected = new System.Windows.Forms.ToolStripStatusLabel();
-			this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStripMain.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPageFileContent.SuspendLayout();
@@ -192,6 +192,13 @@
 			this.openToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
 			this.openToolStripMenuItem.Text = "&Open";
 			this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+			// 
+			// addToolStripMenuItem
+			// 
+			this.addToolStripMenuItem.Name = "addToolStripMenuItem";
+			this.addToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
+			this.addToolStripMenuItem.Text = "Add";
+			this.addToolStripMenuItem.Click += new System.EventHandler(this.addToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator2
 			// 
@@ -323,7 +330,9 @@
 			// 
 			// recalculateUTCTimeToLocalToolStripMenuItem
 			// 
+			this.recalculateUTCTimeToLocalToolStripMenuItem.Checked = true;
 			this.recalculateUTCTimeToLocalToolStripMenuItem.CheckOnClick = true;
+			this.recalculateUTCTimeToLocalToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.recalculateUTCTimeToLocalToolStripMenuItem.Name = "recalculateUTCTimeToLocalToolStripMenuItem";
 			this.recalculateUTCTimeToLocalToolStripMenuItem.Size = new System.Drawing.Size(229, 22);
 			this.recalculateUTCTimeToLocalToolStripMenuItem.Text = "Recalculate UTC time to local";
@@ -923,13 +932,6 @@
 			this.statusLabelSelected.Name = "statusLabelSelected";
 			this.statusLabelSelected.Size = new System.Drawing.Size(12, 17);
 			this.statusLabelSelected.Text = "-";
-			// 
-			// addToolStripMenuItem
-			// 
-			this.addToolStripMenuItem.Name = "addToolStripMenuItem";
-			this.addToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
-			this.addToolStripMenuItem.Text = "Add";
-			this.addToolStripMenuItem.Click += new System.EventHandler(this.addToolStripMenuItem_Click);
 			// 
 			// FormMain
 			// 

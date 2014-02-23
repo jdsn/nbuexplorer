@@ -29,6 +29,8 @@ namespace NbuExplorer
 
 	public class Message
 	{
+		public static bool RecalculateUtcToLocal = false;
+
 		private static byte[] UnicodeZero = new byte[] { 0, 0 };
 		
 		public static readonly Regex MsgFileNameRegex = new Regex("[0-9A-F]{47,80}");
@@ -300,7 +302,7 @@ namespace NbuExplorer
 							}
 						}
 					}
-					else if (dirByte == 5 || dirByte == 6 || dirByte == 7 || dirByte == 9 || dirByte == 10)
+					else if (dirByte > 4 && dirByte < 11)
 					{
 						m.direction = MessageDirection.Outgoing;
 
@@ -383,6 +385,16 @@ namespace NbuExplorer
 								s.Seek(21, SeekOrigin.Current);
 								m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
 							}
+						}
+						else if (test == 2)
+						{
+							s.Seek(25, SeekOrigin.Current);
+							m.phoneNumber = UnicodeExpander.ReadShortString(s);
+							m.name = UnicodeExpander.ReadShortString(s);
+							s.Seek(27, SeekOrigin.Current);
+							m.MessageText = UnicodeExpander.ReadShortString(s);
+							s.Seek(23, SeekOrigin.Current);
+							m.messageTime = StreamUtils.ReadNokiaDateTime3(s);
 						}
 						else
 						{
@@ -490,6 +502,11 @@ namespace NbuExplorer
 					string tmp = filename.Substring(8, 8);
 					Int64 sec = Int64.Parse(tmp, System.Globalization.NumberStyles.HexNumber);
 					m.MessageTime = new DateTime(1980, 1, 1).AddSeconds(sec);
+
+					if (RecalculateUtcToLocal)
+					{
+						m.MessageTime = m.MessageTime.ToLocalTime();
+					}
 				}
 				catch { }
 			}

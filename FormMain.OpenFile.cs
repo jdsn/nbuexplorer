@@ -689,6 +689,7 @@ namespace NbuExplorer
 				else if (!bruteForceScan && (fileext == ".nbf" || fileext == ".zip"))
 				{
 					ZipInputStream zi = new ZipInputStream(fs);
+					zi.IsStreamOwner = false;
 					parseFolderZip(currentFileName, zi, 0, "");
 				}
 				#endregion
@@ -885,12 +886,7 @@ namespace NbuExplorer
 									Message msg = Message.ReadPredefBinMessage(currentFileName, ms, item.Filename);
 									if (msg.Mms == null)
 									{
-										addLine(msg.ToString());
 										DataSetNbuExplorer.AddMessage(msg);
-									}
-									else
-									{
-										addLine(msg.Mms.ParseLog);
 									}
 								}
 							}
@@ -1756,12 +1752,7 @@ namespace NbuExplorer
 										Message msg = Message.ReadPredefBinMessage(currentFileName, ms, filename);
 										if (msg.Mms == null)
 										{
-											addLine(msg.ToString());
 											DataSetNbuExplorer.AddMessage(msg);
-										}
-										else
-										{
-											addLine(msg.Mms.ParseLog);
 										}
 										fi.FileTime = msg.MessageTime;
 									}
