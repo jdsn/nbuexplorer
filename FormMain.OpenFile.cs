@@ -839,44 +839,63 @@ namespace NbuExplorer
 						}
 						#endregion
 
-						#region mp4
-						if (mP4ToolStripMenuItem.Checked && Pattern.Mp4.Step((byte)current, fs.Position))
+						#region media
+						if (mP4ToolStripMenuItem.Checked && Pattern.Media.Step((byte)current, fs.Position))
 						{
-							long start = Pattern.Mp4.StartIndex - 4;
+							long start = Pattern.Media.StartIndex - 4;
 							fs.Seek(start, SeekOrigin.Begin);
 							int len = StreamUtils.ReadInt32BigEndian(fs);
-							fs.Seek(len - 4, SeekOrigin.Current);
+							fs.Seek(4, SeekOrigin.Current);
+							var ftyp = StreamUtils.ReadShortString(fs, 4);
 
-							bool done = false;
-							while (!done && fs.Position < fs.Length)
+							switch (ftyp)
 							{
-								len = StreamUtils.ReadInt32BigEndian(fs);
-								string type = StreamUtils.ReadShortString(fs, 4);
-
-								switch (type)
-								{
-									case "free":
-									case "mdat":
-									case "moov":
-									case "uuid":
-										fs.Seek(len - 8, SeekOrigin.Current);
-										break;
-									case "ftyp": // start of another file
-									default:
-										fs.Seek(-8, SeekOrigin.Current);
-										done = true;
-										break;
-								}
+								case "mp42":
+									ftyp = "mp4";
+									break;
+								case "3gp4":
+								case "3gp5":
+									ftyp = "3gp";
+									break;
+								default:
+									ftyp = null;
+									break;
 							}
 
-							files = findOrCreateFileInfoList("Multimedia");
-							filename = numToAddr(start) + ".mp4";
-							var file = new FileInfo(currentFileName, filename, start, fs.Position - start);
-							files.Add(file);
-							addLine(numToProgressAndAddr(start, fs.Length) + "\tmultimedia: " + filename);
+							if (!string.IsNullOrEmpty(ftyp))
+							{
+								fs.Seek(len - 12, SeekOrigin.Current);
 
-							StreamUtils.Counter += file.FileSize;
+								bool done = false;
+								while (!done && fs.Position < fs.Length)
+								{
+									len = StreamUtils.ReadInt32BigEndian(fs);
+									string type = StreamUtils.ReadShortString(fs, 4);
 
+									switch (type)
+									{
+										case "free":
+										case "mdat":
+										case "moov":
+										case "uuid":
+											fs.Seek(len - 8, SeekOrigin.Current);
+											break;
+										case "ftyp": // start of another file
+										default:
+											fs.Seek(-8, SeekOrigin.Current);
+											done = true;
+											break;
+									}
+								}
+
+								files = findOrCreateFileInfoList("Multimedia");
+								filename = numToAddr(start) + "." + ftyp;
+								var file = new FileInfo(currentFileName, filename, start, fs.Position - start);
+								files.Add(file);
+								addLine(numToProgressAndAddr(start, fs.Length) + "\tmultimedia: " + filename);
+
+								StreamUtils.Counter += file.FileSize;
+							}
 							continue;
 						}
 						#endregion
