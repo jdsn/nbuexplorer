@@ -750,7 +750,7 @@ namespace NbuExplorer
 				#region bruteforce
 				else
 				{
-					addLine("Scanning for vcards (contacts, messages, calendar items, bookmarks)...");
+					addLine("Bruteforce scanning...");
 					addLine("");
 
 					List<FileInfo> files;
@@ -764,83 +764,196 @@ namespace NbuExplorer
 					{
 						if (fs.Position % 2048 == 0)
 						{
-							pr = (int)(20 * fs.Position / fs.Length);
+							pr = (int)(50 * fs.Position / fs.Length);
 							if (pr != pr2)
 							{
-								addLine(string.Format("{0:00}%", pr * 5));
+								addLine(string.Format("{0:00}%", pr * 2));
 								pr2 = pr;
 							}
 							Application.DoEvents();
 						}
 
-						if (Pattern.Msg.Step((byte)current, fs.Position))
+						#region jpeg
+						if (jPGToolStripMenuItem.Checked && Pattern.Jpeg.Step((byte)current, fs.Position))
 						{
-							Vcard msg = new Vcard(Pattern.Msg.GetCaptureAsString(fs));
-							string box = msg["X-MESSAGE-TYPE"];
-							if (box.Length == 0) box = msg["X-IRMC-BOX"];
-							files = findOrCreateFileInfoList(NokiaConstants.ptMessages + "\\" + box);
-							filename = numToName(files.Count + 1);
-							try
+							current = fs.ReadByte();
+							if (current != 0xFF) // not jpeg
+								continue;
+
+							current = fs.ReadByte(); // 0xE0 or 0xE1 expected
+
+							int len = StreamUtils.ReadUInt16BigEndian(fs);
+							string type = StreamUtils.ReadShortString(fs, 4);
+
+							if (type != "JFIF" && type != "Exif")
 							{
-								filename = msg.PhoneNumbers[0];
-								filename = DataSetNbuExplorer.FindPhoneBookEntry(filename).name;
+								// probably not jpeg - rewind back
+								fs.Seek(Pattern.Jpeg.StartIndex + 1, SeekOrigin.Begin);
+								continue;
 							}
-							catch { }
-							files.Add(new FileInfo(currentFileName, filename + ".vmg", Pattern.Msg.StartIndex, Pattern.Msg.Length, msg.MessageTime));
-							StreamUtils.Counter += Pattern.Msg.Length;
-							addLine(numToProgressAndAddr(Pattern.Msg.StartIndex, fs.Length) + "\tmessage: " + filename);
 
-							DataSetNbuExplorer.AddMessageFromVmg(msg);
-						}
+							fs.Seek(len - 6, SeekOrigin.Current);
 
-						if (Pattern.Msg.Active) continue;
+							bool done = false;
 
-						if (Pattern.Contact.Step((byte)current, fs.Position))
-						{
-							Vcard contact = new Vcard(Pattern.Contact.GetCaptureAsString(fs));
-							string name = contact.Name;
-							DateTime time = contact.GetDateTime("REV");
-							foreach (string number in contact.PhoneNumbers)
+							while (!done)
 							{
-								DataSetNbuExplorer.AddPhonebookEntry(number, name);
+								current = fs.ReadByte();
+
+								if (current != 0xff)
+								{
+									// not jpeg - rewind back
+									fs.Seek(Pattern.Jpeg.StartIndex + 1, SeekOrigin.Begin);
+									break;
+								}
+
+								current = fs.ReadByte();
+
+								if (current == 0xD8) // unexpected start of another image
+								{
+									fs.Seek(-2, SeekOrigin.Current);
+									break;
+								}
+
+								switch (current)
+								{
+									case 0xD9: // end marker
+										files = findOrCreateFileInfoList("Images");
+										filename = numToAddr(Pattern.Jpeg.StartIndex) + ".jpg";
+										var file = new FileInfo(currentFileName, filename, Pattern.Jpeg.StartIndex, fs.Position - Pattern.Jpeg.StartIndex);
+										files.Add(file);
+										addLine(numToProgressAndAddr(Pattern.Jpeg.StartIndex, fs.Length) + "\timage: " + filename);
+										StreamUtils.Counter += file.FileSize;
+										done = true;
+										break;
+									case 0xDA: // we are in data area, it should be safe to seek to end marker
+										StreamUtils.SeekTo(Pattern.JpegEndSeq, fs);
+										goto case 0xD9;
+									default: // area to skip
+										len = StreamUtils.ReadUInt16BigEndian(fs);
+										fs.Seek(len - 2, SeekOrigin.Current);
+										break;
+								}
 							}
-							files = findOrCreateFileInfoList(NokiaConstants.ptContacts);
-							filename = name;
-							if (filename.Length == 0) filename = numToName(files.Count + 1);
-							files.Add(new FileInfo(currentFileName, filename + ".vcf", Pattern.Contact.StartIndex, Pattern.Contact.Length, time));
-							if (contact.Photo != null)
+							continue;
+						}
+						#endregion
+
+						#region mp4
+						if (mP4ToolStripMenuItem.Checked && Pattern.Mp4.Step((byte)current, fs.Position))
+						{
+							long start = Pattern.Mp4.StartIndex - 4;
+							fs.Seek(start, SeekOrigin.Begin);
+							int len = StreamUtils.ReadInt32BigEndian(fs);
+							fs.Seek(len - 4, SeekOrigin.Current);
+
+							bool done = false;
+							while (!done && fs.Position < fs.Length)
 							{
-								files.Add(new FileInfoMemory(currentFileName, filename + "." + contact.PhotoExtension, contact.Photo, time));
+								len = StreamUtils.ReadInt32BigEndian(fs);
+								string type = StreamUtils.ReadShortString(fs, 4);
+
+								switch (type)
+								{
+									case "free":
+									case "mdat":
+									case "moov":
+									case "uuid":
+										fs.Seek(len - 8, SeekOrigin.Current);
+										break;
+									case "ftyp": // start of another file
+									default:
+										fs.Seek(-8, SeekOrigin.Current);
+										done = true;
+										break;
+								}
 							}
-							StreamUtils.Counter += Pattern.Contact.Length;
-							addLine(numToProgressAndAddr(Pattern.Contact.StartIndex, fs.Length) + "\tcontact: " + filename);
+
+							files = findOrCreateFileInfoList("Multimedia");
+							filename = numToAddr(start) + ".mp4";
+							var file = new FileInfo(currentFileName, filename, start, fs.Position - start);
+							files.Add(file);
+							addLine(numToProgressAndAddr(start, fs.Length) + "\tmultimedia: " + filename);
+
+							StreamUtils.Counter += file.FileSize;
+
+							continue;
 						}
+						#endregion
 
-						if (Pattern.Contact.Active) continue;
-
-						if (Pattern.Calendar.Step((byte)current, fs.Position))
+						#region vcards
+						if (vCardsToolStripMenuItem.Checked)
 						{
-							Vcard calendar = new Vcard(Pattern.Calendar.GetCaptureAsString(fs));
-							files = findOrCreateFileInfoList("Calendar\\" + calendar["X-EPOCAGENDAENTRYTYPE"]);
-							filename = calendar["SUMMARY"];
-							if (filename.Length == 0) filename = numToName(files.Count + 1);
-							files.Add(new FileInfo(currentFileName, filename + ".vcs", Pattern.Calendar.StartIndex, Pattern.Calendar.Length, calendar.GetDateTime("DTSTART")));
-							StreamUtils.Counter += Pattern.Calendar.Length;
-							addLine(numToProgressAndAddr(Pattern.Calendar.StartIndex, fs.Length) + "\tcalendar: " + filename);
-						}
+							if (Pattern.Msg.Step((byte)current, fs.Position))
+							{
+								Vcard msg = new Vcard(Pattern.Msg.GetCaptureAsString(fs));
+								string box = msg["X-MESSAGE-TYPE"];
+								if (box.Length == 0) box = msg["X-IRMC-BOX"];
+								files = findOrCreateFileInfoList(NokiaConstants.ptMessages + "\\" + box);
+								filename = numToName(files.Count + 1);
+								try
+								{
+									filename = msg.PhoneNumbers[0];
+									filename = DataSetNbuExplorer.FindPhoneBookEntry(filename).name;
+								}
+								catch { }
+								files.Add(new FileInfo(currentFileName, filename + ".vmg", Pattern.Msg.StartIndex, Pattern.Msg.Length, msg.MessageTime));
+								StreamUtils.Counter += Pattern.Msg.Length;
+								addLine(numToProgressAndAddr(Pattern.Msg.StartIndex, fs.Length) + "\tmessage: " + filename);
 
-						if (Pattern.Calendar.Active) continue;
+								DataSetNbuExplorer.AddMessageFromVmg(msg);
+							}
 
-						if (Pattern.Bookmark.Step((byte)current, fs.Position))
-						{
-							Vcard calendar = new Vcard(Pattern.Bookmark.GetCaptureAsString(fs));
-							files = findOrCreateFileInfoList(NokiaConstants.ptBookmarks);
-							filename = calendar["TITLE"];
-							if (filename.Length == 0) filename = numToName(files.Count + 1);
-							files.Add(new FileInfo(currentFileName, filename + ".url", Pattern.Bookmark.StartIndex, Pattern.Bookmark.Length));
-							StreamUtils.Counter += Pattern.Bookmark.Length;
-							addLine(numToProgressAndAddr(Pattern.Bookmark.StartIndex, fs.Length) + "\tbookmark: " + filename);
+							if (Pattern.Msg.Active) continue;
+
+							if (Pattern.Contact.Step((byte)current, fs.Position))
+							{
+								Vcard contact = new Vcard(Pattern.Contact.GetCaptureAsString(fs));
+								string name = contact.Name;
+								DateTime time = contact.GetDateTime("REV");
+								foreach (string number in contact.PhoneNumbers)
+								{
+									DataSetNbuExplorer.AddPhonebookEntry(number, name);
+								}
+								files = findOrCreateFileInfoList(NokiaConstants.ptContacts);
+								filename = name;
+								if (filename.Length == 0) filename = numToName(files.Count + 1);
+								files.Add(new FileInfo(currentFileName, filename + ".vcf", Pattern.Contact.StartIndex, Pattern.Contact.Length, time));
+								if (contact.Photo != null)
+								{
+									files.Add(new FileInfoMemory(currentFileName, filename + "." + contact.PhotoExtension, contact.Photo, time));
+								}
+								StreamUtils.Counter += Pattern.Contact.Length;
+								addLine(numToProgressAndAddr(Pattern.Contact.StartIndex, fs.Length) + "\tcontact: " + filename);
+							}
+
+							if (Pattern.Contact.Active) continue;
+
+							if (Pattern.Calendar.Step((byte)current, fs.Position))
+							{
+								Vcard calendar = new Vcard(Pattern.Calendar.GetCaptureAsString(fs));
+								files = findOrCreateFileInfoList("Calendar\\" + calendar["X-EPOCAGENDAENTRYTYPE"]);
+								filename = calendar["SUMMARY"];
+								if (filename.Length == 0) filename = numToName(files.Count + 1);
+								files.Add(new FileInfo(currentFileName, filename + ".vcs", Pattern.Calendar.StartIndex, Pattern.Calendar.Length, calendar.GetDateTime("DTSTART")));
+								StreamUtils.Counter += Pattern.Calendar.Length;
+								addLine(numToProgressAndAddr(Pattern.Calendar.StartIndex, fs.Length) + "\tcalendar: " + filename);
+							}
+
+							if (Pattern.Calendar.Active) continue;
+
+							if (Pattern.Bookmark.Step((byte)current, fs.Position))
+							{
+								Vcard calendar = new Vcard(Pattern.Bookmark.GetCaptureAsString(fs));
+								files = findOrCreateFileInfoList(NokiaConstants.ptBookmarks);
+								filename = calendar["TITLE"];
+								if (filename.Length == 0) filename = numToName(files.Count + 1);
+								files.Add(new FileInfo(currentFileName, filename + ".url", Pattern.Bookmark.StartIndex, Pattern.Bookmark.Length));
+								StreamUtils.Counter += Pattern.Bookmark.Length;
+								addLine(numToProgressAndAddr(Pattern.Bookmark.StartIndex, fs.Length) + "\tbookmark: " + filename);
+							}
 						}
+						#endregion
 					}
 				}
 				#endregion

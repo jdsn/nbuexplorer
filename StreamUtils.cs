@@ -58,11 +58,27 @@ namespace NbuExplorer
 			return BitConverter.ToUInt32(buff, 0);
 		}
 
+		public static Int32 ReadInt32BigEndian(Stream s)
+		{
+			byte[] buff = new byte[4];
+			s.Read(buff, 0, buff.Length);
+			Array.Reverse(buff);
+			return BitConverter.ToInt32(buff, 0);
+		}
+
 		public static UInt16 ReadUInt16(Stream s)
 		{
 			byte[] buff = new byte[2];
 			s.Read(buff, 0, buff.Length);
 			Counter += buff.Length;
+			return BitConverter.ToUInt16(buff, 0);
+		}
+
+		public static UInt16 ReadUInt16BigEndian(Stream s)
+		{
+			byte[] buff = new byte[2];
+			s.Read(buff, 0, buff.Length);
+			Array.Reverse(buff);
 			return BitConverter.ToUInt16(buff, 0);
 		}
 
@@ -203,6 +219,9 @@ namespace NbuExplorer
 
 		public static void CopyFromStreamToStream(Stream src, Stream dst, long bytesCount)
 		{
+			if (bytesCount == 0)
+				return;
+
 			byte[] buff = new byte[1024];
 			long rest = bytesCount;
 			while (true)

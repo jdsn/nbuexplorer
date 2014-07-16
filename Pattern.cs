@@ -32,6 +32,10 @@ namespace NbuExplorer
 		public static Pattern Contact = new Pattern("BEGIN:VCARD", "END:VCARD", Encoding.UTF8);
 		public static Pattern Calendar = new Pattern("BEGIN:VCALENDAR", "END:VCALENDAR", Encoding.UTF8);
 		public static Pattern Bookmark = new Pattern("BEGIN:VBKM", "END:VBKM", Encoding.UTF8);
+		public static Pattern Jpeg = new Pattern(new byte[] { 0xFF, 0xD8 });
+		public static Pattern Mp4 = new Pattern(new byte[] { 0x66, 0x74, 0x79, 0x70, 0x6D, 0x70, 0x34, 0x32 });
+
+		public static byte[] JpegEndSeq = new byte[] { 0xFF, 0xD9 };
 
 		private Encoding enc;
 		private byte[] startSeq;
@@ -43,6 +47,18 @@ namespace NbuExplorer
 			enc = encoding;
 			startSeq = enc.GetBytes(start);
 			endSeq = enc.GetBytes(end);
+		}
+
+		public Pattern(byte[] start)
+			: this(start, new byte[] { })
+		{
+		}
+
+		public Pattern(byte[] start, byte[] end)
+		{
+			enc = Encoding.Unicode;
+			startSeq = start;
+			endSeq = end;
 		}
 
 		private long startIndex = 0;
@@ -88,8 +104,12 @@ namespace NbuExplorer
 					if (index == startSeq.Length)
 					{
 						index = 0;
-						active = true;
 						startIndex = pos - startSeq.Length;
+						if (endSeq.Length == 0)
+						{
+							return true;
+						}
+						active = true;
 					}
 				}
 				else index = 0;

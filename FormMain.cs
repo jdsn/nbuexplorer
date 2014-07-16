@@ -1195,7 +1195,7 @@ namespace NbuExplorer
 
 		private void listViewFiles_MouseDown(object sender, MouseEventArgs e)
 		{
-			if (e.Button == System.Windows.Forms.MouseButtons.Left)
+			if (e.Button == System.Windows.Forms.MouseButtons.Left && allowDragDropToolStripMenuItem.Checked)
 			{
 				ListViewItem li = listViewFiles.GetItemAt(e.X, e.Y);
 				if (li != null)
@@ -1210,16 +1210,20 @@ namespace NbuExplorer
 						WriteTime = fi.FileTimeIsValid ? fi.FileTime : DateTime.Now
 					};
 
-					using (MemoryStream infoStream = DragFile.GetFileDescriptor(filesInfo),
-										contentStream = new MemoryStream())
+					try
 					{
-						fi.CopyToStream(contentStream);
+						using (MemoryStream infoStream = DragFile.GetFileDescriptor(filesInfo),
+											contentStream = new MemoryStream())
+						{
+							fi.CopyToStream(contentStream);
 
-						dataObject.SetData(DragFile.CFSTR_FILEDESCRIPTORW, infoStream);
-						dataObject.SetData(DragFile.CFSTR_FILECONTENTS, contentStream);
-						dataObject.SetData(DragFile.CFSTR_PERFORMEDDROPEFFECT, null);
-						DoDragDrop(dataObject, DragDropEffects.Copy);
+							dataObject.SetData(DragFile.CFSTR_FILEDESCRIPTORW, infoStream);
+							dataObject.SetData(DragFile.CFSTR_FILECONTENTS, contentStream);
+							dataObject.SetData(DragFile.CFSTR_PERFORMEDDROPEFFECT, null);
+							DoDragDrop(dataObject, DragDropEffects.Copy);
+						}
 					}
+					catch { }
 				}
 			}
 		}
