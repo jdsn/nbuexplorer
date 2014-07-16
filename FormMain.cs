@@ -822,8 +822,10 @@ namespace NbuExplorer
 					{
 						var fi = group[i];
 						int counter = i - 1;
-						string filename = Path.GetFileNameWithoutExtension(fi.Filename);
-						string ext = Path.GetExtension(fi.Filename);
+						var lastDotPos = fi.Filename.LastIndexOf('.');
+						var hasFileExt = lastDotPos != -1 && lastDotPos < fi.Filename.Length - 1;
+						string filename = hasFileExt ? fi.Filename.Substring(0, lastDotPos) : fi.Filename;
+						string ext = hasFileExt ? fi.Filename.Substring(lastDotPos) : string.Empty;
 						string lowername;
 						do
 						{
