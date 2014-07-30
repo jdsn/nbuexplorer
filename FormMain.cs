@@ -977,17 +977,17 @@ namespace NbuExplorer
 		private void buildFilterSubNodes(TreeNode tn, string box)
 		{
 			tn.Nodes.Clear();
-			List<string> nums = new List<string>();
+			List<string> names = new List<string>();
 			foreach (DataSetNbuExplorer.MessageRow mr in DataSetNbuExplorer.DefaultMessageTable.Select("box='" + box + "'", "name"))
 			{
-				if (mr.IsnumberNull()) continue;
-				if (!nums.Contains(mr.number))
+				if (mr.IsnameNull()) continue;
+				if (!names.Contains(mr.name))
 				{
 					TreeNode subnode = tn.Nodes.Add(mr.name);
-					subnode.Tag = mr.number;
+					subnode.Tag = mr.name;
 					subnode.Checked = tn.Checked;
-					nums.Add(mr.number);
-					int cnt = Convert.ToInt32(DataSetNbuExplorer.DefaultMessageTable.Compute("COUNT(box)", "box='" + box + "' AND number='" + mr.number + "'"));
+					names.Add(mr.name);
+					int cnt = Convert.ToInt32(DataSetNbuExplorer.DefaultMessageTable.Compute("COUNT(box)", "box='" + box + "' AND name='" + mr.name.Replace("'","''") + "'"));
 					subnode.Text += string.Format(" ({0})", cnt);
 				}
 			}
@@ -1050,7 +1050,7 @@ namespace NbuExplorer
 				return;
 			}
 
-			sbout.Append(" AND number IN(");
+			sbout.Append(" AND name IN(");
 
 			bool first = true;
 			foreach (TreeNode ch in tn.Nodes)
@@ -1059,7 +1059,7 @@ namespace NbuExplorer
 				{
 					if (!first) sbout.Append(",");
 					else first = false;
-					sbout.Append("'" + ch.Tag.ToString() + "'");
+					sbout.Append("'" + ch.Tag.ToString().Replace("'","''") + "'");
 				}
 			}
 			sbout.Append("))");

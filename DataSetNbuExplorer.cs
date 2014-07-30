@@ -130,9 +130,15 @@ namespace NbuExplorer
 			get { return _defaultInstance.Message.DefaultView; }
 		}
 
+		private static string NormalizePhoneNumber(string number)
+		{
+			return number.Replace("+", "00");
+		}
+
 		public static void AddPhonebookEntry(string number, string name)
 		{
 			if (string.IsNullOrEmpty(number) || string.IsNullOrEmpty(name)) return;
+			number = NormalizePhoneNumber(number);
 			if (_defaultInstance.PhoneBook.FindBynumber(number) == null)
 			{
 				_defaultInstance.PhoneBook.AddPhoneBookRow(number, name);
@@ -141,13 +147,26 @@ namespace NbuExplorer
 
 		public static PhoneBookRow FindPhoneBookEntry(string number)
 		{
+			number = NormalizePhoneNumber(number);
 			PhoneBookRow row = _defaultInstance.PhoneBook.FindBynumber(number);
+			if (row == null && number.Length > 6)
+			{
+				DataRow[] rows = _defaultInstance.PhoneBook.Select("number LIKE '%" + number.Substring(number.Length - 6) + "'");
+				foreach (PhoneBookRow r in rows)
+				{
+					if (r.number.EndsWith(number) || number.EndsWith(r.number))
+					{
+						AddPhonebookEntry(number, r.name);
+						return r;
+					}
+				}
+			}
 			return row;
 		}
 
 		public static string NumToName(string number)
 		{
-			PhoneBookRow row = _defaultInstance.PhoneBook.FindBynumber(number);
+			PhoneBookRow row = FindPhoneBookEntry(number);
 			return (row == null) ? number : row.name;
 		}
 
