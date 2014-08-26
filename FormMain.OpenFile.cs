@@ -750,6 +750,8 @@ namespace NbuExplorer
 				#region bruteforce
 				else
 				{
+					Pattern.ResetAll();
+
 					addLine("Bruteforce scanning...");
 					addLine("");
 
@@ -897,6 +899,28 @@ namespace NbuExplorer
 								StreamUtils.Counter += file.FileSize;
 							}
 							continue;
+						}
+						#endregion
+
+						#region pkzip
+						if (zIPArchivesToolStripMenuItem.Checked && Pattern.PkZip.Step((byte)current, fs.Position))
+						{
+							fs.Seek(4, SeekOrigin.Current);
+							int test1 = StreamUtils.ReadUInt16(fs);
+							int test2 = StreamUtils.ReadUInt16(fs);
+							if (test1 != test2) // multipart or invalid archive
+							{
+								continue;
+							}
+							fs.Seek(8, SeekOrigin.Current);
+							int commentLength = StreamUtils.ReadUInt16(fs);
+
+							files = findOrCreateFileInfoList("ZIP archives");
+							filename = numToAddr(Pattern.PkZip.StartIndex) + ".zip";
+							var file = new FileInfo(currentFileName, filename, Pattern.PkZip.StartIndex, fs.Position + commentLength - Pattern.PkZip.StartIndex);
+							files.Add(file);
+							addLine(numToProgressAndAddr(Pattern.PkZip.StartIndex, fs.Length) + "\tarchive: " + filename);
+							StreamUtils.Counter += file.FileSize;
 						}
 						#endregion
 

@@ -34,6 +34,7 @@ namespace NbuExplorer
 		public static Pattern Bookmark = new Pattern("BEGIN:VBKM", "END:VBKM", Encoding.UTF8);
 		public static Pattern Jpeg = new Pattern(new byte[] { 0xFF, 0xD8 });
 		public static Pattern Media = new Pattern(new byte[] { 0x66, 0x74, 0x79, 0x70 });
+		public static Pattern PkZip = new Pattern(new byte[] { 0x50, 0x4B, 0x03, 0x04 }, new byte[] { 0x50, 0x4B, 0x05, 0x06 });
 
 		public static byte[] JpegEndSeq = new byte[] { 0xFF, 0xD9 };
 
@@ -41,6 +42,17 @@ namespace NbuExplorer
 		private byte[] startSeq;
 		private byte[] endSeq;
 		private int index = 0;
+
+		public static void ResetAll()
+		{
+			Msg.Reset();
+			Contact.Reset();
+			Calendar.Reset();
+			Bookmark.Reset();
+			Jpeg.Reset();
+			Media.Reset();
+			PkZip.Reset();
+		}
 
 		public Pattern(string start, string end, Encoding encoding)
 		{
@@ -107,6 +119,7 @@ namespace NbuExplorer
 						startIndex = pos - startSeq.Length;
 						if (endSeq.Length == 0)
 						{
+							length = startSeq.Length;
 							return true;
 						}
 						active = true;
@@ -129,6 +142,13 @@ namespace NbuExplorer
 		public string GetCaptureAsString(Stream s)
 		{
 			return enc.GetString(GetCapture(s));
+		}
+
+		private void Reset()
+		{
+			active = false;
+			index = 0;
+			startIndex = 0;
 		}
 	}
 }
