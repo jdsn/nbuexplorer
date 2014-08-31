@@ -1,6 +1,18 @@
 History & Changelog
 ===================
 
+Version 3.3
+ - added:    brute force scanning for JPEG images, 3GP/MP4 videos
+             and zip archives
+ - added:    option to enable drag&drop (disabled by default)
+ - improved: option to recalculate UTC times enabled by default and applied
+             also on predefsent messages
+ - improved: phone number to contact name matching for messages
+ - improved: minor improvement in symbian message parsing
+ - changed:  log verbosity decreased for messages
+ - fixed:    "Illegal characters in path" error during file deduplication
+ - fixed:    bug in parsing nbf & zip files
+
 Version 3.2
  - added:    joining of multipart messages (from binary and predef storage)
  - added:    merging of multiple backup files (ability to open more files at once)

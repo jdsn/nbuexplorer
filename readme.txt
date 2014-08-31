@@ -14,7 +14,7 @@ Main features
 ===================
 - View content of nbu, nbf, nfb, nfc and arc backup files
 - Extract individual files from backup files
-- Brute force scan for vcard phone data in any file
+- Brute force scan for vcard and other phone data in any file
 
 System requirements
 ===================
@@ -101,6 +101,10 @@ in one backup section, but hold as separated parts in another section).
 If you want to filter these duplicates out, you can disable unwanted source
 types individually.
 
+There are also other options affecting either behavior of application's UI
+(like drag & drop functionality) or parsing (like time recalculation or data
+formats to be searched by bruteforce scan).
+
 File parsing log
 -------------------
 The last tab of the application main form called "File parsing log" can be
@@ -121,9 +125,12 @@ structure. This method can be used for corrupted backups or backups on which
 the standard method fails. It is also suitable for different (than nbu) file
 formats which preserve data in vcard form (for example communication center
 cache files such as PCCSContact.db, PCCSSMS.db).
+Some other file formats which can be recognized by typical start/end sequence
+like jpeg images, 3gp videos and zip archives are now supported as well.
 Bruteforce mode is automatically used when opening a file with other extensions
-than nbu, nfb or nfc. For nbu files, it will be used when option "All files
-(bruteforce scan)" in the file type filter of open file dialog is  selected.
+than typical bakucp files (nbu, nfb, nfc etc.). For these files, it will be used
+when option "All files (bruteforce scan)" in the file type filter of open file
+dialog is selected.
 
 Contact
 ===================
