@@ -1678,22 +1678,30 @@ namespace NbuExplorer
 							byte[] buff = new byte[len];
 							fs.Read(buff, 0, buff.Length);
 
-							Vcard crd = new Vcard(System.Text.Encoding.Unicode.GetString(buff));
-							DateTime time = crd.MessageTime;
-
-							string name = numToName(j + 1);
-							if (crd.PhoneNumbers.Count > 0)
+							try
 							{
-								string num = crd.PhoneNumbers[0];
-								var phe = DataSetNbuExplorer.FindPhoneBookEntry(num);
-								name = name + " " + ((phe != null) ? phe.name : num);
+								Vcard crd = new Vcard(System.Text.Encoding.Unicode.GetString(buff));
+								DateTime time = crd.MessageTime;
+
+								string name = numToName(j + 1);
+								if (crd.PhoneNumbers.Count > 0)
+								{
+									string num = crd.PhoneNumbers[0];
+									var phe = DataSetNbuExplorer.FindPhoneBookEntry(num);
+									name = name + " " + ((phe != null) ? phe.name : num);
+								}
+
+								partFiles.Add(new FileInfo(currentFileName, string.Format("{0}.vmg", name), mstart, len, time));
+
+								if (parseMsgVMGToolStripMenuItem.Checked)
+								{
+									DataSetNbuExplorer.AddMessageFromVmg(crd);
+								}
 							}
-
-							partFiles.Add(new FileInfo(currentFileName, string.Format("{0}.vmg", name), mstart, len, time));
-
-							if (parseMsgVMGToolStripMenuItem.Checked)
+							catch (Exception ex)
 							{
-								DataSetNbuExplorer.AddMessageFromVmg(crd);
+								analyzeRequest = true;
+								addLine(ex.Message);
 							}
 						}
 

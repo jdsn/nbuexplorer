@@ -151,7 +151,7 @@ namespace NbuExplorer
 			PhoneBookRow row = _defaultInstance.PhoneBook.FindBynumber(number);
 			if (row == null && number.Length > 6)
 			{
-				DataRow[] rows = _defaultInstance.PhoneBook.Select("number LIKE '%" + number.Substring(number.Length - 6) + "'");
+				DataRow[] rows = _defaultInstance.PhoneBook.Select("number LIKE '%" + number.Substring(number.Length - 6).Replace("'","''") + "'");
 				foreach (PhoneBookRow r in rows)
 				{
 					if (r.number.EndsWith(number) || number.EndsWith(r.number))
