@@ -80,6 +80,9 @@ namespace NbuExplorer.cdbParsing
 					tmp.Append(";");
 				}
 
+				if (value == null)
+					continue;
+
 				foreach (char c in value)
 				{
 					if (c < ' ' || c == '=' || c == ';' || c > '~')
@@ -210,6 +213,17 @@ namespace NbuExplorer.cdbParsing
 			}
 
 			return c;
+		}
+
+		public bool IsEmpty
+		{
+			get
+			{
+				return
+					LastName == null &&
+					FirstName == null &&
+					Phones.Count == 0;
+			}
 		}
 	}
 }

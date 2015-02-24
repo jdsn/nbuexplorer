@@ -118,6 +118,8 @@ namespace NbuExplorer
 			}
 		}
 
+		delegate string StringReadMethod(Stream s);
+
 		public void AddFile(string currentFileName, bool bruteForceScan)
 		{
 			StreamUtils.Counter = 0;
@@ -133,9 +135,21 @@ namespace NbuExplorer
 				#region nfb & nfc format
 				if (!bruteForceScan && (fileext == ".nfb" || fileext == ".nfc"))
 				{
-					fs.Seek(4, SeekOrigin.Begin);
-					addLine("Phone model:\t" + StreamUtils.ReadString2(fs)); // RM
-					addLine("Phone name:\t" + StreamUtils.ReadString2(fs)); // nazev
+					int encoding = StreamUtils.ReadUInt32asInt(fs);
+					StringReadMethod read;
+					switch (encoding)
+					{
+						case 2:
+							read = StreamUtils.ReadString3;
+							break;
+						//case 3: 
+						default:
+							read = StreamUtils.ReadString2;
+							break;
+					}
+
+					addLine("Phone model:\t" + read(fs));
+					addLine("Phone name:\t" + read(fs));
 					addLine("");
 
 					int count = StreamUtils.ReadUInt32asInt(fs);
@@ -155,11 +169,11 @@ namespace NbuExplorer
 							switch (type)
 							{
 								case 2: // folder
-									name = StreamUtils.ReadString2(fs);
+									name = read(fs);
 									addLine(string.Format("Folder '{0}' found", name));
 									break;
 								case 1: // file
-									name = StreamUtils.ReadString2(fs).TrimStart('\\');
+									name = read(fs).TrimStart('\\');
 									UInt32 len = StreamUtils.ReadUInt32(fs);
 
 									if (name.EndsWith("FolderIndex"))
@@ -1515,21 +1529,30 @@ namespace NbuExplorer
 		{
 			try
 			{
-				List<Contact> contacts =new List<Contact>();
+				List<Contact> contacts = new List<Contact>();
 
 				using (MemoryStream ms = fi.GetAsMemoryStream())
 				{
 					var sr = new StreamReader(ms, System.Text.Encoding.Unicode);
 					while (!sr.EndOfStream)
 					{
-						Contact c = Contact.ReadNfbNfcContact(sr.ReadLine());
-						if (c != null)
+						var line = sr.ReadLine();
+						try
 						{
-							foreach (string number in c.Phones)
+							Contact c = Contact.ReadNfbNfcContact(line);
+							if (c != null && !c.IsEmpty)
 							{
-								DataSetNbuExplorer.AddPhonebookEntry(number, c.DisplayName);
+								foreach (string number in c.Phones)
+								{
+									DataSetNbuExplorer.AddPhonebookEntry(number, c.DisplayName);
+								}
+								contacts.Add(c);
 							}
-							contacts.Add(c);
+						}
+						catch (Exception ex)
+						{
+							addLine(string.Format("Error parsing contact: {0}", line));
+							addLine(ex.Message);
 						}
 					}
 				}

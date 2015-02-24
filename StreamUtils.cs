@@ -94,6 +94,12 @@ namespace NbuExplorer
 			return ReadString(s, len);
 		}
 
+		public static string ReadString3(Stream s)
+		{
+			int len = ReadUInt32asInt(s);
+			return ReadShortString(s, len);
+		}
+
 		public static string ReadString(Stream s, int len)
 		{
 			byte[] buff = ReadBuff(s, len * 2);
