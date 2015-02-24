@@ -43,7 +43,7 @@ namespace NbuExplorer
 					group.Sort(CompareMessagesByPartNumber);
 					ProcessSortedGroup(group);
 				}
-				else if (group.Count % expectedCount == 0)
+				else if (expectedCount > 0 && group.Count % expectedCount == 0)
 				{
 					// sent multipart messages are often having MessageNumber = 0
 					// which may lead to this situation
